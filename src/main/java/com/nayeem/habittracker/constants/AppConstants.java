@@ -1,8 +1,13 @@
 package com.nayeem.habittracker.constants;
 
-import org.springframework.context.annotation.Configuration;
+/**
+ * Application-wide constants. Not a Spring bean — holds compile-time values only.
+ */
+public final class AppConstants {
 
-@Configuration
-public class AppConstants {
+    /** springdoc security scheme name; see SwaggerConfig. */
     public static final String JWT_TOKEN = "jwtToken";
+
+    private AppConstants() {
+    }
 }
