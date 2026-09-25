@@ -31,3 +31,9 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Logs ###
+# logging.file.path / logback-spring.xml write outside the repo (see docs plan v3 §0.2),
+# these are a safety net for stray local runs.
+*.log
+logfiles/
