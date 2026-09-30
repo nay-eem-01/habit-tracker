@@ -37,6 +37,21 @@ The step-by-step plan and overall progress are in `docs/ROADMAP.md`; decisions a
 
 ---
 
+## 2026-09-30 (roadmap 2.1)
+
+**Done**
+- `POST /api/auth/register` (201) — creates a LOCAL user and signs straight in;
+  400 `VALIDATION_FAILED` / `USER_INVALID_TIMEZONE`, 409 `USER_EMAIL_TAKEN`.
+- `POST /api/auth/login` (200) — one answer, 401 `AUTH_INVALID_CREDENTIALS`, for unknown email,
+  wrong password and Google-only accounts; an unknown email still spends a BCrypt check (hash of a
+  random value made at startup) so timing doesn't reveal which emails exist.
+- `GET /api/auth/me` — the signed-in `UserResponse`. `/api/ping` is gone.
+- `AuthTokenResponse` record: `accessToken`, `tokenType` `Bearer`, `expiresIn` (900), `user`. No
+  refresh token yet — 2.2 adds it as an httpOnly cookie, never in the body.
+- `RegisterRequest`/`LoginRequest`/`AuthTokenResponse` mask the password/token in `toString`.
+- Login failures are logged by user id or reason — never the email or password.
+- `AuthIntegrationTest` (6); `SecurityIntegrationTest` now uses `/me`. 37 tests pass.
+
 ## 2026-09-30 (roadmap 1.3 — Phase 1 done)
 
 **Done**
