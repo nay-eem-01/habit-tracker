@@ -8,8 +8,13 @@ import org.springframework.data.repository.query.Param;
 
 import java.time.Instant;
 import java.time.LocalDate;
+import java.util.List;
 
 interface HabitLogRepository extends JpaRepository<HabitLog, Long> {
+
+    /** Days the habit was done (count reached its target), for streaks and stats. */
+    @Query("select l.logDate from HabitLog l where l.habit.id = :habitId and l.completedCount >= l.habit.targetCount")
+    List<LocalDate> findDoneDays(@Param("habitId") Long habitId);
 
     Page<HabitLog> findAllByHabitIdAndLogDateBetween(Long habitId, LocalDate from, LocalDate to, Pageable pageable);
 

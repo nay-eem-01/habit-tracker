@@ -8,7 +8,7 @@ The step-by-step plan and overall progress are in `docs/ROADMAP.md`; decisions a
 
 ## Where we are
 
-- **Phases 0–3 done** (2.3 Google sign-in deferred) — 19 of 26 steps. 0–2 are on `staging`;
+- **Phases 0–3 done** (2.3 Google sign-in deferred) — 20 of 26 steps. 0–2 are on `staging`;
   Phase 3 is on step branches waiting for PRs (below).
 - **The core habit tracker so far:** register / login / refresh / logout, and habits — create,
   list, get, replace, archive — daily, on chosen weekdays, or N times a week. Check-ins and streaks
@@ -45,6 +45,19 @@ The step-by-step plan and overall progress are in `docs/ROADMAP.md`; decisions a
 | Week starts on Monday for every user (`PLAN.md` §8b) — per-user week start if anyone asks | later | nothing |
 
 ---
+
+## 2026-09-30 (roadmap 4.4)
+
+**Done**
+- `GET /api/habits/{id}/streak` → `{current, longest, unit}`; start = the habit's creation day and
+  today = the user's today, both in their timezone. `HabitProgressService` holds the read-side
+  numbers (stats join it in 4.5).
+- `HabitLogRepository.findDoneDays` — days whose count reached the habit's target.
+- `StreakApiIntegrationTest` (2). 101 tests pass.
+
+**Known behaviour**
+- "Done" uses the habit's *current* `targetCount`, so raising the target later re-judges past days.
+  Fine for M1; a per-log target snapshot would fix it if it ever matters.
 
 ## 2026-09-30 (roadmap 4.3)
 
