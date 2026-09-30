@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 import java.util.UUID;
@@ -23,6 +24,7 @@ public class AuthService {
     private final UserService userService;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
+    private final RefreshTokenService refreshTokenService;
 
     /** Hash of a random value nobody knows; only used to spend equal time on a failed lookup. */
     private String dummyHash;
@@ -33,7 +35,8 @@ public class AuthService {
     }
 
     /** Creates a LOCAL account and signs it straight in. */
-    public AuthTokenResponse register(RegisterRequest request) {
+    @Transactional
+    public AuthResult register(RegisterRequest request) {
         String hash = passwordEncoder.encode(request.getPassword());
         User user = userService.createLocalUser(request.getEmail(), hash, request.getName(), request.getTimezone());
         return issueTokens(user);
@@ -43,7 +46,8 @@ public class AuthService {
      * One answer for every failure — unknown email, wrong password, Google-only account — so the
      * response doesn't reveal which accounts exist.
      */
-    public AuthTokenResponse login(LoginRequest request) {
+    @Transactional
+    public AuthResult login(LoginRequest request) {
         Optional<User> found = userService.findByEmail(request.getEmail());
         String hash = found.map(User::getPasswordHash).orElse(null);
         if (hash == null) {
@@ -61,12 +65,25 @@ public class AuthService {
         return issueTokens(user);
     }
 
+    /** Rotates the refresh token: the presented one dies, a new pair is issued. */
+    @Transactional(noRollbackFor = ApplicationException.class)
+    public AuthResult refresh(String refreshToken) {
+        Long userId = refreshTokenService.consume(refreshToken);
+        return issueTokens(userService.getById(userId));
+    }
+
+    public void logout(String refreshToken) {
+        refreshTokenService.revoke(refreshToken);
+    }
+
     public UserResponse me(Long userId) {
         return UserResponse.from(userService.getById(userId));
     }
 
-    private AuthTokenResponse issueTokens(User user) {
+    private AuthResult issueTokens(User user) {
         String accessToken = jwtService.generateAccessToken(user.getId(), user.getEmail());
-        return AuthTokenResponse.bearer(accessToken, jwtService.accessTokenTtlSeconds(), UserResponse.from(user));
+        AuthTokenResponse body =
+                AuthTokenResponse.bearer(accessToken, jwtService.accessTokenTtlSeconds(), UserResponse.from(user));
+        return new AuthResult(body, refreshTokenService.issue(user));
     }
 }

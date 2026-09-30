@@ -31,6 +31,7 @@ public class SecurityConfig {
             "/api/auth/register",
             "/api/auth/login",
             "/api/auth/refresh",
+            "/api/auth/logout",
             "/actuator/health",
             "/swagger-ui.html",
             "/swagger-ui/**",
@@ -47,7 +48,8 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 // Access tokens travel in a header, not a cookie, so there is nothing for CSRF to
-                // ride on. Revisit for the refresh cookie in 2.2 (security-checklist).
+                // ride on. The refresh cookie is SameSite=Strict and scoped to /api/auth, which
+                // keeps cross-site requests from sending it (see AuthController).
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
