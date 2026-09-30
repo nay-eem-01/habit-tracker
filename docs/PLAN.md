@@ -448,12 +448,11 @@ the reference docs rather than assuming.
 
 ## 10. Where the project stands (2026-09-30)
 
-**On `staging`:** project skeleton with dependencies, Swagger, logback writing outside the repo,
-`open-in-view=false`, jjwt on the classpath (PRs #1, #2).
+**On `staging`** (PRs #1–#14): skeleton, Swagger, logging; Phase 0 (error envelope, correlation
+ids, Testcontainers, auditing); Phase 1 (`User` with timezone, `RefreshToken`, JWT security over
+every path); auth 2.1–2.2 (register, login, me, refresh with rotation and reuse detection, logout).
+Everything `feat/user-service` drafted, fixed. 44 tests on real PostgreSQL.
 
-**On step branches, waiting for PRs:** Phase 0 (error envelope, correlation ids, Testcontainers,
-auditing), Phase 1 (`User`, `RefreshToken`, JWT security over every path) and 2.1–2.2
-(register, login, me, refresh with rotation and reuse detection, logout) — everything
-`feat/user-service` drafted, fixed. 44 tests on real PostgreSQL.
+**Deferred:** 2.3 Google sign-in (§4.5) — picked up later.
 
-**Next:** 2.3 Google OAuth2, then Phase 3 (habits). Details: `ROADMAP.md`.
+**Next:** Phase 3 (habits). Details: `ROADMAP.md`.

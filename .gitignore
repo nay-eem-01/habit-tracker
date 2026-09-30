@@ -43,3 +43,6 @@ logfiles/
 
 ### Local secrets ###
 .env
+
+### Claude Code / IntelliJ MCP (machine-specific port) ###
+.mcp.json
