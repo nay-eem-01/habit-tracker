@@ -53,6 +53,29 @@ class StreakApiIntegrationTest extends IntegrationTest {
     }
 
     @Test
+    void statsFromRealCheckIns() throws Exception {
+        String token = bearerFor("stats@example.com");
+        Integer habitId = dailyHabitCreatedDaysAgo(token, 60, 1);
+        for (int daysAgo : new int[]{0, 1, 2, 3}) {
+            checkIn(token, habitId, today.minusDays(daysAgo), 1);
+        }
+        // older than the 7-day check-in limit, so written straight to the table
+        for (int daysAgo : new int[]{10, 20}) {
+            jdbcTemplate.update("""
+                    insert into habit_logs (habit_id, log_date, completed_count, created_at)
+                    values (?, ?, 1, now())""", habitId, today.minusDays(daysAgo));
+        }
+
+        mockMvc.perform(get("/api/habits/{id}/stats", habitId).header(HttpHeaders.AUTHORIZATION, token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.payload.last7Days.done").value(4))
+                .andExpect(jsonPath("$.payload.last7Days.expected").value(7.0))
+                .andExpect(jsonPath("$.payload.last7Days.rate").value(0.57))
+                .andExpect(jsonPath("$.payload.last30Days.done").value(6))
+                .andExpect(jsonPath("$.payload.last30Days.rate").value(0.2));
+    }
+
+    @Test
     void someoneElsesStreakIsNotFound() throws Exception {
         Integer habitId = dailyHabitCreatedDaysAgo(bearerFor("streak.owner@example.com"), 0, 1);
         mockMvc.perform(get("/api/habits/{id}/streak", habitId)
