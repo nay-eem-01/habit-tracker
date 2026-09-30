@@ -8,30 +8,28 @@ The step-by-step plan and overall progress are in `docs/ROADMAP.md`; decisions a
 
 ## Where we are
 
-- **Phases 0–3 done** (2.3 Google sign-in deferred) — 15 of 21 steps. 0–2 are on `staging`;
-  Phase 3 is on step branches waiting for PRs (below).
-- **The core habit tracker so far:** register / login / refresh / logout, and habits — create,
-  list, get, replace, archive — daily, on chosen weekdays, or N times a week. Check-ins and streaks
-  (Phase 4) are next.
-- **After M1:** goals, resources, levels, dashboard and AI insights are designed in `PLAN.md` §11
-  (M2–M6); nothing there starts before Phase 4 is merged.
-- Open PRs, in order: `docs/dev-log-after-merge` → `staging`; `docs/product-roadmap` → `staging`;
-  `feat/habit-entity`, `feat/habit-create-read`, `feat/habit-update-archive` → `feat/habits-base`;
-  then `feat/habits-base` → `staging`.
+- **Phases 0–4 done** (2.3 Google sign-in deferred) — 21 of 26 steps. **The core loop works:**
+  account → habits → daily check-ins → strict streaks → 7/30-day stats, all in the user's timezone.
+  0–2 are on `staging`; Phases 3–4 are on step branches waiting for PRs.
+- Open PRs, in order (links in the chat): `docs/dev-log-after-merge` → `staging`;
+  `docs/product-roadmap` → `staging`; 3.1–3.3 → `feat/habits-base`, then → `staging`;
+  4.0–4.5 → `feat/checkins-base`, then → `staging`.
+- **Next in M1: Phase 5 — reminders and notifications** (`PLAN.md` §12.2). After M1: goals,
+  resources, levels, dashboard and AI insights (`PLAN.md` §11).
 - Branch flow: step branch from the previous step's branch → PR into the phase's base branch →
-  base PRs into `staging`. Claude commits, pushes and opens the PRs; Nayeem merges. Commits carry
-  Nayeem's name only.
-- Tests need Docker running (Testcontainers). 69 tests pass.
+  base PRs into `staging`. Claude commits and pushes and gives PR links (no `gh` on the machine);
+  Nayeem opens and merges. Commits carry Nayeem's name only.
+- Tests need Docker running (Testcontainers). 110 tests pass.
 - To run locally: PostgreSQL running, and `db_user_name`, `db_password`, `JWT_SECRET` (≥ 32 bytes)
   set.
 
 ## Next up
 
-1. Phase 4 — base `feat/checkins-base`: 4.1 `HabitLog` + check-in upsert → 4.2 logs → 4.3 streak
-   calculator → 4.4 streak endpoint → 4.5 stats. "Today" in the user's timezone.
-2. Then M2 Goals → M3 Resources → M4 Levels → M5 Dashboard → M6 AI (`PLAN.md` §11); confirm the
-   milestone's open question (§11.6) first.
-3. Later: 2.3 Google sign-in.
+1. Phase 5 — base `feat/reminders-base`: 5.1 reminder time on habits → 5.2 notifications table and
+   API → 5.3 minute scheduler → 5.4 email channel (Q11 first: in-app + email? SMTP?).
+2. Before any shared deploy: Flyway (D.1), production profile (D.2).
+3. Then M2 Goals → M3 Resources → M4 Levels → M5 Dashboard → M6 AI (`PLAN.md` §11).
+4. Later: 2.3 Google sign-in.
 
 ## Open items
 
@@ -45,6 +43,78 @@ The step-by-step plan and overall progress are in `docs/ROADMAP.md`; decisions a
 | Week starts on Monday for every user (`PLAN.md` §8b) — per-user week start if anyone asks | later | nothing |
 
 ---
+
+## 2026-09-30 (roadmap 4.5 — Phase 4 done, the core loop works)
+
+**Done**
+- `GET /api/habits/{id}/stats` → `last7Days` / `last30Days`: `{days, done, expected, rate}`.
+  `StatsCalculator` (pure): window clipped to the habit's first day; today counted only once done;
+  weekday habits count scheduled days only; N-per-week expects `N × days / 7`, rate capped at 1;
+  `rate` null while nothing was expected yet.
+- Corrected `PLAN.md` §12.1: check-ins on unscheduled days count for neither streak nor rate (they
+  would push a rate past 100 %); they stay in the logs.
+- `StatsCalculatorTest` (8), stats case in `StreakApiIntegrationTest`. 110 tests pass.
+
+## 2026-09-30 (roadmap 4.4)
+
+**Done**
+- `GET /api/habits/{id}/streak` → `{current, longest, unit}`; start = the habit's creation day and
+  today = the user's today, both in their timezone. `HabitProgressService` holds the read-side
+  numbers (stats join it in 4.5).
+- `HabitLogRepository.findDoneDays` — days whose count reached the habit's target.
+- `StreakApiIntegrationTest` (2). 101 tests pass.
+
+**Known behaviour**
+- "Done" uses the habit's *current* `targetCount`, so raising the target later re-judges past days.
+  Fine for M1; a per-log target snapshot would fix it if it ever matters.
+
+## 2026-09-30 (roadmap 4.3)
+
+**Done**
+- `StreakCalculator.calculate(type, config, doneDays, start, today)` → `Streak(current, longest,
+  unit)`. Pure Java, "today" passed in.
+  - `DAILY` / `SPECIFIC_DAYS` (`DAYS`): walks from the habit's first day to today over scheduled
+    days; an undone scheduled day resets the run; today undone doesn't; unscheduled days (and
+    check-ins on them) are skipped.
+  - `X_TIMES_PER_WEEK` (`WEEKS`): Monday–Sunday weeks with ≥ N done days; the current week and the
+    habit's first week never break the run; extra days in a week don't count twice.
+- `StreakCalculatorTest` (16, nested per frequency type, incl. month/year boundary). 99 tests pass.
+
+## 2026-09-30 (roadmap 4.2)
+
+**Done**
+- `GET /api/habits/{id}/logs?from&to&page&size` — inclusive dates, newest first; default the last
+  30 days up to the user's today; `from` after `to` or a span over 366 days → 400. Archived habits'
+  logs stay readable; someone else's → 404.
+- `HabitLogsIntegrationTest` (3). 83 tests pass.
+
+## 2026-09-30 (roadmap 4.1)
+
+**Done**
+- New `checkin` package. `HabitLog extends AuditModel`: `habit`, `logDate` (user's calendar day),
+  `completedCount`, `note`; unique `(habit_id, log_date)`; `isDone()` = count ≥ the habit's target.
+- `POST /api/habits/{id}/checkin` — body optional (empty = "mark today done"); `completedCount` is
+  the day's **absolute** total (retry-safe, 0 undoes); note omitted = kept, `""` = cleared.
+- One-statement upsert (`INSERT … ON CONFLICT … DO UPDATE … RETURNING id`); audit columns passed in
+  because native SQL skips JPA auditing.
+- Date rules (`PLAN.md` §12.1): not future, ≤ 7 days back, not before the habit existed →
+  400 `LOG_DATE_OUT_OF_RANGE`; archived habit → 409 `HABIT_ARCHIVED`; someone else's → 404.
+- `HabitService.getOwnedHabit` (public) for other features; `ClockConfig` — one injectable UTC
+  `Clock`.
+- `CheckInDateRulesTest` (4), `CheckInIntegrationTest` (6), `CheckInConcurrencyIntegrationTest`
+  (8 threads → 1 row; stable over 4 runs). 80 tests pass.
+
+## 2026-09-30 (roadmap 4.0 — check-in rules, reminders into M1)
+
+**Decided** (`PLAN.md` §12)
+- Check-in sets the day's absolute count (retry-safe), one-statement upsert; dates: not future,
+  not before the habit existed, at most 7 days back; archived habits can't be checked in.
+- Streak/stats details: unscheduled check-ins count for stats, not streaks; the day/week in progress
+  and the habit's first (partial) week never break a streak.
+- **Reminders and notifications move into M1** as Phase 5 (Nayeem, 2026-09-30): per-habit reminder
+  time in the user's timezone, a minute scheduler, in-app notifications, then email. Push waits for
+  a frontend. Q11 (channels / email provider) before 5.4.
+- Roadmap is now 26 steps.
 
 ## 2026-09-30 (roadmap 3.3 — Phase 3 done)
 
