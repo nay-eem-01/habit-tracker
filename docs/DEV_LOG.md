@@ -8,7 +8,7 @@ The step-by-step plan and overall progress are in `docs/ROADMAP.md`; decisions a
 
 ## Where we are
 
-- **Phases 0–3 done** (2.3 Google sign-in deferred) — 16 of 26 steps. 0–2 are on `staging`;
+- **Phases 0–3 done** (2.3 Google sign-in deferred) — 17 of 26 steps. 0–2 are on `staging`;
   Phase 3 is on step branches waiting for PRs (below).
 - **The core habit tracker so far:** register / login / refresh / logout, and habits — create,
   list, get, replace, archive — daily, on chosen weekdays, or N times a week. Check-ins and streaks
@@ -45,6 +45,22 @@ The step-by-step plan and overall progress are in `docs/ROADMAP.md`; decisions a
 | Week starts on Monday for every user (`PLAN.md` §8b) — per-user week start if anyone asks | later | nothing |
 
 ---
+
+## 2026-09-30 (roadmap 4.1)
+
+**Done**
+- New `checkin` package. `HabitLog extends AuditModel`: `habit`, `logDate` (user's calendar day),
+  `completedCount`, `note`; unique `(habit_id, log_date)`; `isDone()` = count ≥ the habit's target.
+- `POST /api/habits/{id}/checkin` — body optional (empty = "mark today done"); `completedCount` is
+  the day's **absolute** total (retry-safe, 0 undoes); note omitted = kept, `""` = cleared.
+- One-statement upsert (`INSERT … ON CONFLICT … DO UPDATE … RETURNING id`); audit columns passed in
+  because native SQL skips JPA auditing.
+- Date rules (`PLAN.md` §12.1): not future, ≤ 7 days back, not before the habit existed →
+  400 `LOG_DATE_OUT_OF_RANGE`; archived habit → 409 `HABIT_ARCHIVED`; someone else's → 404.
+- `HabitService.getOwnedHabit` (public) for other features; `ClockConfig` — one injectable UTC
+  `Clock`.
+- `CheckInDateRulesTest` (4), `CheckInIntegrationTest` (6), `CheckInConcurrencyIntegrationTest`
+  (8 threads → 1 row; stable over 4 runs). 80 tests pass.
 
 ## 2026-09-30 (roadmap 4.0 — check-in rules, reminders into M1)
 

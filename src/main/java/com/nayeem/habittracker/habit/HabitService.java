@@ -66,6 +66,14 @@ public class HabitService {
         return HabitResponse.from(habit);
     }
 
+    /**
+     * The user's habit, for other features that work on it (check-ins); 404 when it isn't theirs.
+     * Call inside a transaction if you need its lazy {@code user}.
+     */
+    public Habit getOwnedHabit(Long userId, Long habitId) {
+        return find(userId, habitId);
+    }
+
     Habit find(Long userId, Long habitId) {
         return habitRepository.findByIdAndUserId(habitId, userId)
                 .orElseThrow(() -> new ApplicationException(ErrorCode.HABIT_NOT_FOUND));

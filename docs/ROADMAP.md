@@ -12,7 +12,7 @@ branch and PRs into the phase base, in order; the base PRs into `staging` when t
 
 **Legend:** ✅ done · 🔄 in progress · ⬜ not started · ⏸ deferred
 
-**Progress:** Phase 4 of 5 · 16 of 26 steps done (plus 2 pre-deploy steps)
+**Progress:** Phase 4 of 5 · 17 of 26 steps done (plus 2 pre-deploy steps)
 
 ## Where we are (2026-09-30)
 
@@ -75,7 +75,7 @@ Base branch: `feat/checkins-base`. "Today" is in the user's timezone (`PLAN.md` 
 | # | Step | Status |
 |---|---|---|
 | 4.0 | Record the check-in rules and the reminders plan (`PLAN.md` §12) | ✅ |
-| 4.1 | `HabitLog` entity, unique `(habit_id, log_date)`; `POST /api/habits/{id}/checkin` as an upsert | ⬜ |
+| 4.1 | `HabitLog` entity, unique `(habit_id, log_date)`; `POST /api/habits/{id}/checkin` as an upsert | ✅ |
 | 4.2 | `GET /api/habits/{id}/logs` (date range, paginated) | ⬜ |
 | 4.3 | Streak calculator — current and longest, strict, computed on read; days for `DAILY`/`SPECIFIC_DAYS`, Mon–Sun weeks for `X_TIMES_PER_WEEK`; unit-tested per frequency type | ⬜ |
 | 4.4 | `GET /api/habits/{id}/streak` | ⬜ |
