@@ -29,7 +29,10 @@ public enum ErrorCode {
     USER_INVALID_TIMEZONE(HttpStatus.BAD_REQUEST, "Unknown timezone"),
 
     HABIT_NOT_FOUND(HttpStatus.NOT_FOUND, "Habit not found"),
-    HABIT_INVALID_FREQUENCY(HttpStatus.BAD_REQUEST, "The schedule doesn't match the frequency type");
+    HABIT_INVALID_FREQUENCY(HttpStatus.BAD_REQUEST, "The schedule doesn't match the frequency type"),
+    HABIT_ARCHIVED(HttpStatus.CONFLICT, "This habit is archived; unarchive it first"),
+
+    LOG_DATE_OUT_OF_RANGE(HttpStatus.BAD_REQUEST, "You can't check in for that date");
 
     private final HttpStatus status;
     private final String defaultMessage;
