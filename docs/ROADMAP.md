@@ -12,7 +12,7 @@ branch and PRs into the phase base, in order; the base PRs into `staging` when t
 
 **Legend:** ✅ done · 🔄 in progress · ⬜ not started · ⏸ deferred
 
-**Progress:** Phase 3 of 4 · 12 of 21 steps done (plus 2 pre-deploy steps)
+**Progress:** Phase 3 of 4 · 13 of 21 steps done (plus 2 pre-deploy steps)
 
 ## Where we are (2026-09-30)
 
@@ -58,13 +58,13 @@ Base branch: `feat/auth-base`.
 | 2.2 | `POST /api/auth/refresh` (rotate, httpOnly cookie) and `POST /api/auth/logout` (revoke); §4.4 definition of done as an integration test | ✅ |
 | 2.3 | Google OAuth2 login — find, create or link by email; success handler issues app JWT + refresh cookie (§4.5) | ⏸ later — decided 2026-09-30 |
 
-## Phase 3 — Habits (plan §5 step 6)
+## Phase 3 — Habits (plan §5 step 6) 🔄
 
 Base branch: `feat/habits-base`.
 
 | # | Step | Status |
 |---|---|---|
-| 3.1 | `Habit` entity + `FrequencyType` (`DAILY`, `SPECIFIC_DAYS`, `X_TIMES_PER_WEEK` — `PLAN.md` §8b), `frequencyConfig` as `jsonb` (hypersistence-utils), repository scoped by `user_id` | ⬜ |
+| 3.1 | `Habit` entity + `FrequencyType` (`DAILY`, `SPECIFIC_DAYS`, `X_TIMES_PER_WEEK` — `PLAN.md` §8b), `frequencyConfig` as `jsonb` (Hibernate's native JSON mapping), repository scoped by `user_id` | ✅ |
 | 3.2 | Create / get / list (paginated) habits | ⬜ |
 | 3.3 | Update, archive (soft delete), unarchive; user A cannot see or edit user B's habits (integration test) | ⬜ |
 
