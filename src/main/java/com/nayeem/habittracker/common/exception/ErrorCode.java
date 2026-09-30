@@ -26,7 +26,10 @@ public enum ErrorCode {
 
     USER_EMAIL_TAKEN(HttpStatus.CONFLICT, "An account with this email already exists"),
     USER_NOT_FOUND(HttpStatus.NOT_FOUND, "User not found"),
-    USER_INVALID_TIMEZONE(HttpStatus.BAD_REQUEST, "Unknown timezone");
+    USER_INVALID_TIMEZONE(HttpStatus.BAD_REQUEST, "Unknown timezone"),
+
+    HABIT_NOT_FOUND(HttpStatus.NOT_FOUND, "Habit not found"),
+    HABIT_INVALID_FREQUENCY(HttpStatus.BAD_REQUEST, "The schedule doesn't match the frequency type");
 
     private final HttpStatus status;
     private final String defaultMessage;

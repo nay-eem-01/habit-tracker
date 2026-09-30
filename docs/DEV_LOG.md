@@ -39,6 +39,22 @@ The step-by-step plan and overall progress are in `docs/ROADMAP.md`; decisions a
 
 ---
 
+## 2026-09-30 (roadmap 3.1)
+
+**Done**
+- New `habit` package. `FrequencyType` `DAILY` / `SPECIFIC_DAYS` / `X_TIMES_PER_WEEK`
+  (`PLAN.md` §8b). `FrequencyConfig` record (`days` as `DayOfWeek`s, `timesPerWeek` 1–6) stored as
+  `jsonb` through Hibernate 7's own JSON mapping — no hypersistence-utils needed.
+- `Habit extends AuditModel`: `user` (lazy, indexed, not updatable), `name`, `category`,
+  `frequencyType` + `frequencyConfig` (set only together via `schedule(type, config)`, which
+  rejects a mismatch with 400 `HABIT_INVALID_FREQUENCY` and drops fields that don't belong),
+  `targetCount` (default 1), `archived` (renamed from the plan's `isArchived`).
+- No `User.habits` collection — queries do that job, and it keeps `User` light.
+- `HabitRepository` (package-private): `findByIdAndUserId`, `findAllByUserIdAndArchived` — every
+  query carries the owner.
+- `FrequencyConfigTest` (9), `HabitRepositoryIntegrationTest` (2, incl. `pg_typeof` = `jsonb`).
+  55 tests pass.
+
 ## 2026-09-30 (product plan after M1)
 
 **Decided**
