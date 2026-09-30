@@ -2,6 +2,8 @@ package com.nayeem.habittracker.checkin;
 
 import com.nayeem.habittracker.common.exception.ApplicationException;
 import com.nayeem.habittracker.common.exception.ErrorCode;
+import com.nayeem.habittracker.common.pagination.PageRequests;
+import com.nayeem.habittracker.common.response.PageResponse;
 import com.nayeem.habittracker.habit.Habit;
 import com.nayeem.habittracker.habit.HabitService;
 import jakarta.persistence.EntityManager;
@@ -13,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Clock;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.util.Set;
 
 /** Check-ins (PLAN.md §12.1). "Today" is always the habit owner's today, in their timezone. */
 @Slf4j
@@ -21,6 +24,8 @@ import java.time.ZoneId;
 public class CheckInService {
 
     static final int MAX_DAYS_BACK = 7;
+    static final int DEFAULT_RANGE_DAYS = 30;
+    static final int MAX_RANGE_DAYS = 366;
 
     private final HabitService habitService;
     private final HabitLogRepository habitLogRepository;
@@ -46,6 +51,30 @@ public class CheckInService {
         entityManager.refresh(saved); // the row may already be in this persistence context, stale
         log.info("Check-in habit {} on {}: {}/{}", habit.getId(), date, count, habit.getTargetCount());
         return HabitLogResponse.from(saved);
+    }
+
+    /**
+     * A habit's logs between two days (inclusive), newest first. Defaults to the last 30 days up
+     * to today; a range is at most {@value #MAX_RANGE_DAYS} days. Archived habits stay readable.
+     */
+    @Transactional(readOnly = true)
+    public PageResponse<HabitLogResponse> logs(Long userId, Long habitId, LocalDate from, LocalDate to,
+                                               int page, int size) {
+        Habit habit = habitService.getOwnedHabit(userId, habitId);
+        LocalDate end = to != null ? to : today(habit);
+        LocalDate start = from != null ? from : end.minusDays(DEFAULT_RANGE_DAYS - 1);
+        if (start.isAfter(end) || start.plusDays(MAX_RANGE_DAYS).isBefore(end.plusDays(1))) {
+            throw new ApplicationException(ErrorCode.VALIDATION_FAILED,
+                    "from must be on or before to, at most " + MAX_RANGE_DAYS + " days apart");
+        }
+        var pageable = PageRequests.of(page, size, "logDate", "desc", Set.of("logDate"));
+        return PageResponse.from(
+                habitLogRepository.findAllByHabitIdAndLogDateBetween(habit.getId(), start, end, pageable),
+                HabitLogResponse::from);
+    }
+
+    private LocalDate today(Habit habit) {
+        return LocalDate.now(clock.withZone(ZoneId.of(habit.getUser().getTimezone())));
     }
 
     /** Not in the future, not before the habit existed, at most {@value #MAX_DAYS_BACK} days back. */

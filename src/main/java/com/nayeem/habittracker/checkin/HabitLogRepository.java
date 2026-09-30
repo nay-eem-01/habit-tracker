@@ -1,5 +1,7 @@
 package com.nayeem.habittracker.checkin;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -8,6 +10,8 @@ import java.time.Instant;
 import java.time.LocalDate;
 
 interface HabitLogRepository extends JpaRepository<HabitLog, Long> {
+
+    Page<HabitLog> findAllByHabitIdAndLogDateBetween(Long habitId, LocalDate from, LocalDate to, Pageable pageable);
 
     /**
      * Insert-or-update in one statement, so two check-ins racing for the same day can't both
