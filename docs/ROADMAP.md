@@ -12,15 +12,15 @@ branch and PRs into the phase base, in order; the base PRs into `staging` when t
 
 **Legend:** ✅ done · 🔄 in progress · ⬜ not started · ⏸ deferred
 
-**Progress:** Phase 4 of 5 · 20 of 26 steps done (plus 2 pre-deploy steps)
+**Progress:** Phase 5 of 5 · 21 of 26 steps done (plus 2 pre-deploy steps)
 
 ## Where we are (2026-09-30)
 
-- **Phases 0–2 merged to `staging`** (PRs #3–#14); **Phase 3 (habits) done** on step branches:
-  create, list, get, replace, archive — daily, chosen weekdays, or N times a week. 69 tests pass.
-- **2.3 Google sign-in is deferred** (decided 2026-09-30).
-- **Next: Phase 4 — check-ins, streaks, stats.** Then M2–M6 (goals, resources, levels, dashboard,
-  AI), designed in `PLAN.md` §11.
+- **Phases 0–2 merged to `staging`** (PRs #3–#14); **Phases 3–4 done** on step branches.
+- **The core habit loop works:** habits (daily, chosen weekdays, N times a week) → check-ins →
+  strict streaks → 7/30-day stats, in each user's timezone. 110 tests pass.
+- **Next: Phase 5 — reminders and notifications** (moved into M1 on 2026-09-30).
+- 2.3 Google sign-in is deferred. After M1: goals, resources, levels, dashboard, AI (`PLAN.md` §11).
 
 ---
 
@@ -68,7 +68,7 @@ Base branch: `feat/habits-base`.
 | 3.2 | Create / get / list (paginated) habits | ✅ |
 | 3.3 | Update, archive (soft delete), unarchive; user A cannot see or edit user B's habits (integration test) | ✅ |
 
-## Phase 4 — Check-ins, streaks, stats (plan §5 steps 7–8) 🔄
+## Phase 4 — Check-ins, streaks, stats (plan §5 steps 7–8) ✅
 
 Base branch: `feat/checkins-base`. "Today" is in the user's timezone (`PLAN.md` §8 Q4); streak rules in §8b; check-in rules in §12.1.
 
@@ -79,7 +79,7 @@ Base branch: `feat/checkins-base`. "Today" is in the user's timezone (`PLAN.md` 
 | 4.2 | `GET /api/habits/{id}/logs` (date range, paginated) | ✅ |
 | 4.3 | Streak calculator — current and longest, strict, computed on read; days for `DAILY`/`SPECIFIC_DAYS`, Mon–Sun weeks for `X_TIMES_PER_WEEK`; unit-tested per frequency type | ✅ |
 | 4.4 | `GET /api/habits/{id}/streak` | ✅ |
-| 4.5 | `GET /api/habits/{id}/stats` — completion rate over 7 / 30 days | ⬜ |
+| 4.5 | `GET /api/habits/{id}/stats` — completion rate over 7 / 30 days | ✅ |
 
 ## Phase 5 — Reminders and notifications (M1, added 2026-09-30)
 

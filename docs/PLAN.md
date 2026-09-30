@@ -451,14 +451,16 @@ the reference docs rather than assuming.
 
 ## 10. Where the project stands (2026-09-30)
 
-**On `staging`** (PRs #1–#14): skeleton, Swagger, logging; Phase 0 (error envelope, correlation
-ids, Testcontainers, auditing); Phase 1 (`User` with timezone, `RefreshToken`, JWT security over
-every path); auth 2.1–2.2 (register, login, me, refresh with rotation and reuse detection, logout).
-Everything `feat/user-service` drafted, fixed. 44 tests on real PostgreSQL.
+**On `staging`** (PRs #1–#14): skeleton, error format, correlation ids, Testcontainers, auditing,
+`User` with timezone, JWT security, register / login / me / refresh / logout.
 
-**Deferred:** 2.3 Google sign-in (§4.5) — picked up later.
+**Built, waiting for PRs:** Phase 3 (habits: create, list, get, replace, archive) and Phase 4
+(check-ins, logs, strict streaks, 7/30-day stats). The core loop works end to end. 110 tests on
+real PostgreSQL.
 
-**Next:** Phase 3 (habits). Details: `ROADMAP.md`.
+**Deferred:** 2.3 Google sign-in (§4.5).
+
+**Next:** Phase 5 — reminders and notifications (§12.2), then M2–M6 (§11). Details: `ROADMAP.md`.
 
 ---
 
