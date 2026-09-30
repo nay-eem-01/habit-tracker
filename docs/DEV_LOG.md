@@ -31,7 +31,6 @@ The step-by-step plan and overall progress are in `docs/ROADMAP.md`; decisions a
 |---|---|---|
 | Google OAuth client (id + secret, redirect URI) from Google Cloud Console | Nayeem, later | 2.3 (deferred) |
 | Set `JWT_SECRET` (≥ 32 bytes) in the run configuration — the app no longer starts without it | Nayeem | running locally |
-| `.mcp.json` (IntelliJ MCP server config for Claude Code) is untracked — commit it or git-ignore it? Its port is machine-specific | Nayeem | nothing |
 | Remote branch `docs/implementation-plan-v3` (2026-09-25, unmerged) is superseded by `PLAN.md` and today's decisions, and contradicts them in places (defers `X_TIMES_PER_WEEK`, manual testing only, 403 for others' habits). Delete it, or lift anything useful (e.g. its `DateResolver` idea) first | Nayeem | nothing |
 | Local branch `feat/user-service` — fully lifted into PRs #4–#11; safe to delete (`git branch -D`) | Nayeem | nothing |
 | PR #2's commits are authored as `Claude <noreply@anthropic.com>`; from now on commits carry Nayeem's identity. Rewriting merged history is not worth it | — | nothing |
