@@ -12,7 +12,7 @@ branch and PRs into the phase base, in order; the base PRs into `staging` when t
 
 **Legend:** ✅ done · 🔄 in progress · ⬜ not started · ⏸ deferred
 
-**Progress:** Phase 4 of 4 · 15 of 21 steps done (plus 2 pre-deploy steps)
+**Progress:** Phase 4 of 5 · 16 of 26 steps done (plus 2 pre-deploy steps)
 
 ## Where we are (2026-09-30)
 
@@ -68,17 +68,29 @@ Base branch: `feat/habits-base`.
 | 3.2 | Create / get / list (paginated) habits | ✅ |
 | 3.3 | Update, archive (soft delete), unarchive; user A cannot see or edit user B's habits (integration test) | ✅ |
 
-## Phase 4 — Check-ins, streaks, stats (plan §5 steps 7–8)
+## Phase 4 — Check-ins, streaks, stats (plan §5 steps 7–8) 🔄
 
-Base branch: `feat/checkins-base`. "Today" is in the user's timezone (`PLAN.md` §8 Q4); streak rules in §8b.
+Base branch: `feat/checkins-base`. "Today" is in the user's timezone (`PLAN.md` §8 Q4); streak rules in §8b; check-in rules in §12.1.
 
 | # | Step | Status |
 |---|---|---|
+| 4.0 | Record the check-in rules and the reminders plan (`PLAN.md` §12) | ✅ |
 | 4.1 | `HabitLog` entity, unique `(habit_id, log_date)`; `POST /api/habits/{id}/checkin` as an upsert | ⬜ |
 | 4.2 | `GET /api/habits/{id}/logs` (date range, paginated) | ⬜ |
 | 4.3 | Streak calculator — current and longest, strict, computed on read; days for `DAILY`/`SPECIFIC_DAYS`, Mon–Sun weeks for `X_TIMES_PER_WEEK`; unit-tested per frequency type | ⬜ |
 | 4.4 | `GET /api/habits/{id}/streak` | ⬜ |
 | 4.5 | `GET /api/habits/{id}/stats` — completion rate over 7 / 30 days | ⬜ |
+
+## Phase 5 — Reminders and notifications (M1, added 2026-09-30)
+
+Base branch: `feat/reminders-base`. Design in `PLAN.md` §12.2; Q11 (channels) before 5.4.
+
+| # | Step | Status |
+|---|---|---|
+| 5.1 | `reminderTime` on habits (set / clear, in the user's timezone) | ⬜ |
+| 5.2 | `notifications` table + `GET /api/notifications`, mark read, read all | ⬜ |
+| 5.3 | Reminder scheduler — every minute, per-user timezone, due today and not done, no duplicates | ⬜ |
+| 5.4 | Email channel behind `NotificationSender` (console in dev, SMTP when configured) | ⬜ |
 
 ## Before any shared deploy
 
@@ -142,5 +154,4 @@ Steps get split further if one grows past a small PR.
 
 | # | Feature |
 |---|---|
-| L5 | Reminders / notifications (would also carry level-ups) |
 | L6 | Frontend |
