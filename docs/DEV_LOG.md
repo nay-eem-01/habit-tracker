@@ -36,6 +36,21 @@ The step-by-step plan and overall progress are in `docs/ROADMAP.md`; decisions a
 
 ---
 
+## 2026-09-30 (roadmap 1.1)
+
+**Done**
+- New `user` package (package-by-feature). `User extends AuditModel`: `email` (unique, stored
+  trimmed + lower-case), `passwordHash` (renamed from the draft's `password`; null for Google-only),
+  `name`, `authProvider`, `providerId`, `timezone` (IANA, default `UTC`).
+- `UserRepository` is package-private — other features go through `UserService`.
+- `UserService`: `createLocalUser(email, passwordHash, name, timezone)` → 409 `USER_EMAIL_TAKEN`
+  (also on a concurrent duplicate, via `saveAndFlush` + unique constraint), 400
+  `USER_INVALID_TIMEZONE`; `findByEmail` (any case); `getById` → 404 `USER_NOT_FOUND`. Fixes the
+  draft's `Optional`/`orElseThrow` mix-up and the missing `name`.
+- `UserResponse` record: id, email, name, authProvider, timezone — never the hash.
+- `UserServiceIntegrationTest` (6) on PostgreSQL, incl. audit columns (`createdBy` = `SYSTEM` at
+  sign-up). 18 tests pass.
+
 ## 2026-09-30 (roadmap 0.6, 0.7 — Phase 0 done)
 
 **Done**
