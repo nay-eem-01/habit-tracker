@@ -10,6 +10,7 @@ import java.time.Clock;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.HashSet;
+import java.util.Set;
 
 /** Read-side numbers computed from a habit's logs — never stored (plan §1.3). */
 @Service
@@ -22,11 +23,31 @@ public class HabitProgressService {
 
     @Transactional(readOnly = true)
     public Streak streak(Long userId, Long habitId) {
+        Context c = load(userId, habitId);
+        return StreakCalculator.calculate(c.habit.getFrequencyType(), c.habit.getFrequencyConfig(), c.doneDays,
+                c.start, c.today);
+    }
+
+    /** Completion rate over the last 7 and 30 days. */
+    @Transactional(readOnly = true)
+    public HabitStats stats(Long userId, Long habitId) {
+        Context c = load(userId, habitId);
+        return new HabitStats(window(c, 7), window(c, 30));
+    }
+
+    private static WindowStats window(Context c, int days) {
+        return StatsCalculator.window(c.habit.getFrequencyType(), c.habit.getFrequencyConfig(), c.doneDays,
+                c.start, c.today, days);
+    }
+
+    /** The habit plus its first day, today and done days — all in the owner's timezone. */
+    private Context load(Long userId, Long habitId) {
         Habit habit = habitService.getOwnedHabit(userId, habitId);
         ZoneId zone = ZoneId.of(habit.getUser().getTimezone());
-        LocalDate today = LocalDate.now(clock.withZone(zone));
-        LocalDate start = habit.getCreatedAt().atZone(zone).toLocalDate();
-        var doneDays = new HashSet<>(habitLogRepository.findDoneDays(habit.getId()));
-        return StreakCalculator.calculate(habit.getFrequencyType(), habit.getFrequencyConfig(), doneDays, start, today);
+        return new Context(habit, habit.getCreatedAt().atZone(zone).toLocalDate(), LocalDate.now(clock.withZone(zone)),
+                new HashSet<>(habitLogRepository.findDoneDays(habit.getId())));
+    }
+
+    private record Context(Habit habit, LocalDate start, LocalDate today, Set<LocalDate> doneDays) {
     }
 }

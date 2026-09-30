@@ -66,4 +66,12 @@ class CheckInController {
     ResponseEntity<HttpResponse> streak(@AuthenticationPrincipal AuthUser user, @PathVariable Long habitId) {
         return HttpResponse.ok("Streak loaded", habitProgressService.streak(user.id(), habitId));
     }
+
+    @Operation(summary = "Completion rate over the last 7 and 30 days")
+    @ApiResponse(responseCode = "200", description = "Done vs expected days per window; today counts once it's done")
+    @ApiResponse(responseCode = "404", description = "No such habit, or not yours (HABIT_NOT_FOUND)")
+    @GetMapping("/stats")
+    ResponseEntity<HttpResponse> stats(@AuthenticationPrincipal AuthUser user, @PathVariable Long habitId) {
+        return HttpResponse.ok("Stats loaded", habitProgressService.stats(user.id(), habitId));
+    }
 }

@@ -607,8 +607,9 @@ Recommendations are in bold; confirm or change them before the milestone starts.
   **7 days back** — enough to catch up on a missed evening, not enough to rewrite a streak's
   history. (Decided as a default 2026-09-30; easy to change.)
 - An archived habit can't be checked in (409 `HABIT_ARCHIVED`); its history stays readable.
-- **Streak units:** days for `DAILY` / `SPECIFIC_DAYS` (unscheduled days are skipped, a check-in on
-  an unscheduled day counts for stats but not for the streak); Mon–Sun weeks for
+- **Streak units:** days for `DAILY` / `SPECIFIC_DAYS` (unscheduled days are skipped; a check-in on
+  an unscheduled day stays in the logs but counts for neither the streak nor the rate — corrected
+  in 4.5, it would push a rate past 100 %); Mon–Sun weeks for
   `X_TIMES_PER_WEEK`. Today — or this week — never breaks a streak while it's still in progress,
   and the week the habit was created never breaks one either (it may be a partial week).
 - **Stats** (7 / 30 days): `done` scheduled days ÷ `expected` scheduled days in the window, with the
