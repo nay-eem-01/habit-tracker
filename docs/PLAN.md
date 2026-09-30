@@ -449,9 +449,11 @@ the reference docs rather than assuming.
 ## 10. Where the project stands (2026-09-30)
 
 **On `staging`:** project skeleton with dependencies, Swagger, logback writing outside the repo,
-`open-in-view=false`, jjwt on the classpath (PRs #1, #2). `contextLoads` is disabled.
+`open-in-view=false`, jjwt on the classpath (PRs #1, #2).
 
-**Drafted, not merged:** `feat/user-service` — `User` entity, auditing, JWT service/filter,
-security config, auth service. Does not compile. Being fixed step by step (§8 Q2).
+**On step branches, waiting for PRs:** Phase 0 (error envelope, correlation ids, Testcontainers,
+auditing), Phase 1 (`User`, `RefreshToken`, JWT security over every path) and 2.1–2.2
+(register, login, me, refresh with rotation and reuse detection, logout) — everything
+`feat/user-service` drafted, fixed. 44 tests on real PostgreSQL.
 
-**Next:** §8 answered; `feat/user-service` is being lifted into steps 0.4–2.2. Details: `ROADMAP.md`.
+**Next:** 2.3 Google OAuth2, then Phase 3 (habits). Details: `ROADMAP.md`.
