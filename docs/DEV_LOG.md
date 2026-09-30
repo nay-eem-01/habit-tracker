@@ -36,6 +36,16 @@ The step-by-step plan and overall progress are in `docs/ROADMAP.md`; decisions a
 
 ---
 
+## 2026-09-30 (roadmap 1.2)
+
+**Done**
+- New `auth` package. `RefreshToken extends AuditModel`: `user` (lazy, indexed), `tokenHash` (hex
+  SHA-256, unique — never the raw value), `expiresAt`, `revoked`; `isUsableAt(now)`.
+- `RefreshTokenRepository` (package-private): `findByTokenHash`, `revokeAllForUser` (bulk update —
+  for token reuse and password change).
+- `RefreshTokenRepositoryIntegrationTest` (2). 20 tests pass.
+- Hashing, issuing and rotation are 2.2 (`RefreshTokenService`), where they're first used.
+
 ## 2026-09-30 (roadmap 1.1)
 
 **Done**
