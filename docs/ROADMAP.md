@@ -12,17 +12,15 @@ branch and PRs into the phase base, in order; the base PRs into `staging` when t
 
 **Legend:** ✅ done · 🔄 in progress · ⬜ not started · ⏸ deferred
 
-**Progress:** Phase 2 of 4 · 12 of 21 steps done (plus 2 pre-deploy steps)
+**Progress:** Phase 3 of 4 · 12 of 21 steps done (plus 2 pre-deploy steps)
 
 ## Where we are (2026-09-30)
 
-- Skeleton, Swagger, logging and project hygiene are on `staging` (PRs #1, #2).
-- `feat/user-service` holds a first draft of the user entity, JWT and auth service. It does not
-  compile and is too big for one PR — its pieces are lifted, fixed, into steps 0.4–2.2 and the
-  branch itself is never merged (`PLAN.md` §8 Q2).
-- All open questions answered 2026-09-30: package-by-feature, JWT `sub` = email, the user's
-  timezone decides "today", frequency = daily / specific weekdays / N times per week
-  (`PLAN.md` §8).
+- **Phases 0 and 1 and auth steps 2.1–2.2 are merged to `staging`** (PRs #3–#14): error format,
+  correlation ids, Testcontainers, auditing, `User` with timezone, JWT security, register / login /
+  me / refresh / logout. 44 tests pass; the app was run against PostgreSQL and checked over HTTP.
+- **2.3 Google sign-in is deferred** (decided 2026-09-30) — nothing in Phases 3–4 depends on it.
+- **Next: Phase 3 — habits.**
 
 ---
 
@@ -50,7 +48,7 @@ Base branch: `feat/security-base`.
 | 1.2 | `RefreshToken` entity + repository, hash stored, never the raw value (§2.4) | ✅ |
 | 1.3 | JWT infrastructure: `JwtService` (`sub` = email), `JwtAuthenticationFilter`, stateless `SecurityConfig` covering every path, secret from env (fail fast), 401 entry point, actuator `health` open, `GET /api/ping` behind `authenticated()` | ✅ |
 
-## Phase 2 — Authentication (plan §5 steps 4–5) 🔄
+## Phase 2 — Authentication (plan §5 steps 4–5) ✅ (2.3 deferred)
 
 Base branch: `feat/auth-base`.
 
@@ -58,7 +56,7 @@ Base branch: `feat/auth-base`.
 |---|---|---|
 | 2.1 | `POST /api/auth/register`, `POST /api/auth/login`, `GET /api/auth/me` | ✅ |
 | 2.2 | `POST /api/auth/refresh` (rotate, httpOnly cookie) and `POST /api/auth/logout` (revoke); §4.4 definition of done as an integration test | ✅ |
-| 2.3 | Google OAuth2 login — find, create or link by email; success handler issues app JWT + refresh cookie (§4.5) | ⬜ |
+| 2.3 | Google OAuth2 login — find, create or link by email; success handler issues app JWT + refresh cookie (§4.5) | ⏸ later — decided 2026-09-30 |
 
 ## Phase 3 — Habits (plan §5 step 6)
 
@@ -94,6 +92,7 @@ Base branch: `feat/checkins-base`. "Today" is in the user's timezone (`PLAN.md` 
 | Item | Returns when |
 |---|---|
 | Flyway | before the first shared or production deploy (D.1) |
+| 2.3 Google sign-in | when Nayeem picks it up; needs a Google OAuth client id + secret |
 
 ## Later milestones (not in M0–M1)
 

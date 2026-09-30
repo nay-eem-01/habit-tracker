@@ -8,34 +8,48 @@ The step-by-step plan and overall progress are in `docs/ROADMAP.md`; decisions a
 
 ## Where we are
 
-- **Phase 0 ✅, Phase 1 ✅, Phase 2 🔄 (2.1, 2.2 done; 2.3 Google left)** — 12 of 21 steps.
-- `feat/user-service` is fully lifted and fixed into steps 0.4–2.2; don't merge it — delete it once
-  the stack below is merged.
-- The stack, each branch taken from the one before (PR each into its phase base, in order):
-  - `feat/foundation-base` ← `feat/exception-handling` ← `test/testcontainers-base` ← `feat/common-base`
-  - `feat/security-base` ← `feat/user-entity` ← `feat/refresh-token-entity` ← `feat/jwt-security`
-  - `feat/auth-base` ← `feat/register-login` ← `feat/refresh-logout`
-- Branch flow: step → phase base → `staging`. Claude commits and pushes; commits carry Nayeem's
-  name only (no Claude attribution).
-- Tests need Docker running (Testcontainers). 44 tests pass.
+- **Phase 0 ✅, Phase 1 ✅, Phase 2 ✅ except 2.3 Google sign-in (⏸ later)** — 12 of 21 steps. All
+  merged to `staging` (PRs #3–#14); merged branches deleted.
+- `staging` builds clean, 44 tests pass (Docker needed), and the app starts against PostgreSQL:
+  health, register, duplicate email, wrong password and 401-without-token checked over HTTP.
+- Code is package-by-feature: `common`, `configs`, `security`, `user`, `auth` (`PLAN.md` §8a).
+- Branch flow: step branch from the previous step's branch → PR into the phase's base branch →
+  base PRs into `staging`. Claude commits and pushes; commits carry Nayeem's name only.
+- To run locally: PostgreSQL running, and `db_user_name`, `db_password`, `JWT_SECRET` (≥ 32 bytes)
+  set.
 
 ## Next up
 
-1. Open and merge the PRs in stack order (see "Where we are"); each phase base → `staging`.
-2. 2.3 Google OAuth2 — needs a Google Cloud OAuth client id/secret (see Open items).
-3. Phase 3 — habits.
+1. Phase 3 — habits, base `feat/habits-base`: 3.1 `Habit` entity (`DAILY` / `SPECIFIC_DAYS` /
+   `X_TIMES_PER_WEEK`, jsonb config) → 3.2 create / get / list → 3.3 update / archive + ownership test.
+2. Phase 4 — check-ins, streaks, stats.
+3. Later: 2.3 Google sign-in.
 
 ## Open items
 
 | Item | Needs | Blocks |
 |---|---|---|
-| Google OAuth client (id + secret, redirect URI) from Google Cloud Console | Nayeem | 2.3 |
+| Google OAuth client (id + secret, redirect URI) from Google Cloud Console | Nayeem, later | 2.3 (deferred) |
 | Set `JWT_SECRET` (≥ 32 bytes) in the run configuration — the app no longer starts without it | Nayeem | running locally |
-| `.mcp.json` (IntelliJ MCP server) is untracked — local-only or shared? | Nayeem | nothing |
+| `.mcp.json` (IntelliJ MCP server config for Claude Code) is untracked — commit it or git-ignore it? Its port is machine-specific | Nayeem | nothing |
+| Remote branch `docs/implementation-plan-v3` (2026-09-25, unmerged) is superseded by `PLAN.md` and today's decisions, and contradicts them in places (defers `X_TIMES_PER_WEEK`, manual testing only, 403 for others' habits). Delete it, or lift anything useful (e.g. its `DateResolver` idea) first | Nayeem | nothing |
+| Local branch `feat/user-service` — fully lifted into PRs #4–#11; safe to delete (`git branch -D`) | Nayeem | nothing |
 | PR #2's commits are authored as `Claude <noreply@anthropic.com>`; from now on commits carry Nayeem's identity. Rewriting merged history is not worth it | — | nothing |
 | Week starts on Monday for every user (`PLAN.md` §8b) — per-user week start if anyone asks | later | nothing |
 
 ---
+
+## 2026-09-30 (stack merged)
+
+**Done**
+- PRs #3–#14 merged to `staging` in stack order; merged branches deleted (remote and local).
+- `staging`: `./mvnw clean verify` green, 44 tests. Started the jar against a throw-away
+  PostgreSQL: health `UP`, `/api/auth/me` 401 without a token, register 201 with the hardened
+  refresh cookie, same email in capitals 409, wrong password 401. Refresh/logout were not re-run by
+  hand (covered by `RefreshTokenIntegrationTest`).
+
+**Decided**
+- 2.3 Google sign-in deferred (⏸). Phase 3 (habits) is next.
 
 ## 2026-09-30 (roadmap 2.2 — `feat/user-service` fully lifted)
 
