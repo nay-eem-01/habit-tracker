@@ -99,6 +99,8 @@ public class User {
 
 Relations: `@ManyToOne` → `User`; `@OneToMany(mappedBy = "habit")` → `List<HabitLog>`.
 
+**Changed 2026-09-30 (roadmap 3.1):** Hibernate 7 maps JSON natively (`@JdbcTypeCode(SqlTypes.JSON)`) — no hypersistence-utils; `frequencyConfig` is a typed `FrequencyConfig` record, and the boolean is `archived` (not `isArchived`). The paragraph below is the original v2 text.
+
 **On `frequencyConfig` (JSON column) without Flyway:** since you're not hand-writing SQL migrations right now, don't fight Hibernate for JSONB — use the `hypersistence-utils-hibernate-63` library's `@Type(JsonType.class)` on a `Map<String, Object>` or a small dedicated `FrequencyConfig` record, and let Hibernate infer the column as `jsonb`. This keeps schema generation and the Java model in sync automatically, which is the main advantage of skipping Flyway for now.
 
 ```java
