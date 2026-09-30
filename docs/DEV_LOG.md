@@ -8,7 +8,7 @@ The step-by-step plan and overall progress are in `docs/ROADMAP.md`; decisions a
 
 ## Where we are
 
-- **Phase 0 (foundation)**, 3 of 7 steps done. Skeleton, Swagger, logging and hygiene are on
+- **Phase 0 (foundation)**, 4 of 7 steps done. Skeleton, Swagger, logging and hygiene are on
   `staging` (PRs #1, #2). All open questions answered (`PLAN.md` §8).
 - `feat/user-service` (a draft of user/JWT/auth, ~31 files) does not compile; it is being lifted,
   fixed, into steps 0.4–2.2 and will not be merged itself.
@@ -31,6 +31,24 @@ The step-by-step plan and overall progress are in `docs/ROADMAP.md`; decisions a
 | Week starts on Monday for every user (`PLAN.md` §8b) — per-user week start if anyone asks | later | nothing |
 
 ---
+
+## 2026-09-30 (roadmap 0.4)
+
+**Done**
+- `common/response/HttpResponse` — one record envelope: `status`, `success`, `message`,
+  `errorCode`, `correlationId`, `fields`, `payload`. `status` is the enum name (`"NOT_FOUND"`);
+  Jackson 3 writes `HttpStatus` as `"404 NOT_FOUND"` otherwise.
+- `common/exception`: `ErrorCode` (status + default message; only generic codes so far — features
+  add theirs), `ApplicationException(ErrorCode[, message])`, `GlobalExceptionHandler`
+  (`@RestControllerAdvice`): validation → 400 with `fields`, unreadable/mistyped → 400, unknown
+  path → 404, 405, method-security 401/403, anything else → 500 with a generic message, logged
+  with the stack trace.
+- `common/logging/CorrelationIdFilter` — first filter; keeps a safe client `X-Correlation-Id`,
+  otherwise a UUID; MDC + response header + error body; `%X{correlationId}` in the log pattern.
+- `AppConstants` moved to `common` (package-by-feature, `PLAN.md` §8a).
+- The untracked `exceptionhandler/` drafts were replaced, not committed (`ResourceNotFoundException`
+  → `ApplicationException` with a feature code; `CustomResponseException` unused).
+- `GlobalExceptionHandlerTest` (7), standalone MockMvc, no Spring context. 7 tests pass.
 
 ## 2026-09-30 (open questions answered)
 
