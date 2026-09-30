@@ -29,7 +29,7 @@ class SecurityIntegrationTest extends IntegrationTest {
 
     @Test
     void noTokenIs401InTheErrorShape() throws Exception {
-        mockMvc.perform(get("/api/ping"))
+        mockMvc.perform(get("/api/auth/me"))
                 .andExpect(status().isUnauthorized())
                 .andExpect(header().exists(CorrelationIdFilter.HEADER))
                 .andExpect(jsonPath("$.errorCode").value("UNAUTHORIZED"))
@@ -41,21 +41,21 @@ class SecurityIntegrationTest extends IntegrationTest {
         User user = userService.createLocalUser("ping@example.com", "hash", "Ping", null);
         String token = jwtService.generateAccessToken(user.getId(), user.getEmail());
 
-        mockMvc.perform(get("/api/ping").header(HttpHeaders.AUTHORIZATION, "Bearer " + token))
+        mockMvc.perform(get("/api/auth/me").header(HttpHeaders.AUTHORIZATION, "Bearer " + token))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.payload.userId").value(user.getId()));
+                .andExpect(jsonPath("$.payload.id").value(user.getId()));
     }
 
     @Test
     void garbageTokenIs401() throws Exception {
-        mockMvc.perform(get("/api/ping").header(HttpHeaders.AUTHORIZATION, "Bearer nope"))
+        mockMvc.perform(get("/api/auth/me").header(HttpHeaders.AUTHORIZATION, "Bearer nope"))
                 .andExpect(status().isUnauthorized());
     }
 
     @Test
     void tokenForUnknownUserIs401() throws Exception {
         String token = jwtService.generateAccessToken(999L, "ghost@example.com");
-        mockMvc.perform(get("/api/ping").header(HttpHeaders.AUTHORIZATION, "Bearer " + token))
+        mockMvc.perform(get("/api/auth/me").header(HttpHeaders.AUTHORIZATION, "Bearer " + token))
                 .andExpect(status().isUnauthorized());
     }
 
