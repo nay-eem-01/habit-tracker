@@ -8,7 +8,7 @@ The step-by-step plan and overall progress are in `docs/ROADMAP.md`; decisions a
 
 ## Where we are
 
-- **Phases 0–3 done** (2.3 Google sign-in deferred) — 17 of 26 steps. 0–2 are on `staging`;
+- **Phases 0–3 done** (2.3 Google sign-in deferred) — 18 of 26 steps. 0–2 are on `staging`;
   Phase 3 is on step branches waiting for PRs (below).
 - **The core habit tracker so far:** register / login / refresh / logout, and habits — create,
   list, get, replace, archive — daily, on chosen weekdays, or N times a week. Check-ins and streaks
@@ -45,6 +45,14 @@ The step-by-step plan and overall progress are in `docs/ROADMAP.md`; decisions a
 | Week starts on Monday for every user (`PLAN.md` §8b) — per-user week start if anyone asks | later | nothing |
 
 ---
+
+## 2026-09-30 (roadmap 4.2)
+
+**Done**
+- `GET /api/habits/{id}/logs?from&to&page&size` — inclusive dates, newest first; default the last
+  30 days up to the user's today; `from` after `to` or a span over 366 days → 400. Archived habits'
+  logs stay readable; someone else's → 404.
+- `HabitLogsIntegrationTest` (3). 83 tests pass.
 
 ## 2026-09-30 (roadmap 4.1)
 
