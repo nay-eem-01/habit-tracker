@@ -4,7 +4,7 @@
 
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
-            <pattern>[%d{yyyy-MM-dd HH:mm:ss.SSS}][%-5p][%C][%t][%L]%m%n</pattern>
+            <pattern>[%d{yyyy-MM-dd HH:mm:ss.SSS}][%-5p][%X{correlationId}][%C][%t][%L]%m%n</pattern>
         </encoder>
     </appender>
 
@@ -15,7 +15,7 @@
             <maxFileSize>2GB</maxFileSize>
         </rollingPolicy>
         <encoder>
-            <pattern>[%d{yyyy-MM-dd HH:mm:ss.SSS}][%-5p][%C][%t][%L]%m%n
+            <pattern>[%d{yyyy-MM-dd HH:mm:ss.SSS}][%-5p][%X{correlationId}][%C][%t][%L]%m%n
             </pattern>
         </encoder>
     </appender>
