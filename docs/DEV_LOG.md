@@ -8,7 +8,7 @@ The step-by-step plan and overall progress are in `docs/ROADMAP.md`; decisions a
 
 ## Where we are
 
-- **Phase 0 (foundation)**, 4 of 7 steps done. Skeleton, Swagger, logging and hygiene are on
+- **Phase 0 (foundation)**, 5 of 7 steps done. Skeleton, Swagger, logging and hygiene are on
   `staging` (PRs #1, #2). All open questions answered (`PLAN.md` §8).
 - `feat/user-service` (a draft of user/JWT/auth, ~31 files) does not compile; it is being lifted,
   fixed, into steps 0.4–2.2 and will not be merged itself.
@@ -31,6 +31,21 @@ The step-by-step plan and overall progress are in `docs/ROADMAP.md`; decisions a
 | Week starts on Monday for every user (`PLAN.md` §8b) — per-user week start if anyone asks | later | nothing |
 
 ---
+
+## 2026-09-30 (roadmap 0.5)
+
+**Done**
+- `spring-boot-testcontainers`, `testcontainers-junit-jupiter`, `testcontainers-postgresql`
+  (Testcontainers 2.0.5, Boot-managed; `PostgreSQLContainer` is now in `org.testcontainers.postgresql`).
+- `support/TestcontainersConfiguration` — `postgres:17-alpine` with `@ServiceConnection`; tests
+  need no local database and no `db_user_name`/`db_password`.
+- `support/IntegrationTest` — base class (`@SpringBootTest` + the container) so all integration
+  tests share one cached context and one container.
+- `contextLoads` re-enabled. 8 tests pass (needs Docker running).
+
+**Gotcha**
+- A stale `target/` from `feat/user-service` put its old `SecurityConfig` on the test classpath.
+  `./mvnw clean test` after switching between far-apart branches.
 
 ## 2026-09-30 (roadmap 0.4)
 
