@@ -12,7 +12,7 @@ branch and PRs into the phase base, in order; the base PRs into `staging` when t
 
 **Legend:** ✅ done · 🔄 in progress · ⬜ not started · ⏸ deferred
 
-**Progress:** Phase 1 of 4 · 7 of 21 steps done (plus 2 pre-deploy steps)
+**Progress:** Phase 2 of 4 · 10 of 21 steps done (plus 2 pre-deploy steps)
 
 ## Where we are (2026-09-30)
 
@@ -40,15 +40,15 @@ Base branch: `feat/foundation-base` (0.1–0.3 predate the flow and went straigh
 | 0.6 | Common base: `AuditModel` (`@Getter/@Setter`, auditor type matches), JPA auditing, auditor is the signed-in email or `SYSTEM` | ✅ |
 | 0.7 | Leave the old starter's baggage behind (`ErrorCode` ~180 constants, `AppTables`, `CommonUtils`, `ModelMapper`, `CustomResponseException`) — done by not lifting it | ✅ |
 
-## Phase 1 — Entities and JWT (plan §5 steps 2–3)
+## Phase 1 — Entities and JWT (plan §5 steps 2–3) ✅
 
 Base branch: `feat/security-base`.
 
 | # | Step | Status |
 |---|---|---|
-| 1.1 | `User` + `AuthProvider` + `UserRepository` + `UserService` (`passwordHash`, `providerId`, `timezone`) per `PLAN.md` §2.1 | ⬜ |
-| 1.2 | `RefreshToken` entity + repository, hash stored, never the raw value (§2.4) | ⬜ |
-| 1.3 | JWT infrastructure: `JwtService` (`sub` = email), `JwtAuthenticationFilter`, stateless `SecurityConfig` covering every path, secret from env (fail fast), 401 entry point, actuator `health` open, `GET /api/ping` behind `authenticated()` | ⬜ |
+| 1.1 | `User` + `AuthProvider` + `UserRepository` + `UserService` (`passwordHash`, `providerId`, `timezone`) per `PLAN.md` §2.1 | ✅ |
+| 1.2 | `RefreshToken` entity + repository, hash stored, never the raw value (§2.4) | ✅ |
+| 1.3 | JWT infrastructure: `JwtService` (`sub` = email), `JwtAuthenticationFilter`, stateless `SecurityConfig` covering every path, secret from env (fail fast), 401 entry point, actuator `health` open, `GET /api/ping` behind `authenticated()` | ✅ |
 
 ## Phase 2 — Authentication (plan §5 steps 4–5)
 

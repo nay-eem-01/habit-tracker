@@ -30,11 +30,61 @@ The step-by-step plan and overall progress are in `docs/ROADMAP.md`; decisions a
 
 | Item | Needs | Blocks |
 |---|---|---|
+| Set `JWT_SECRET` (≥ 32 bytes) in the run configuration — the app no longer starts without it | Nayeem | running locally |
 | `.mcp.json` (IntelliJ MCP server) is untracked — local-only or shared? | Nayeem | nothing |
 | PR #2's commits are authored as `Claude <noreply@anthropic.com>`; from now on commits carry Nayeem's identity. Rewriting merged history is not worth it | — | nothing |
 | Week starts on Monday for every user (`PLAN.md` §8b) — per-user week start if anyone asks | later | nothing |
 
 ---
+
+## 2026-09-30 (roadmap 1.3 — Phase 1 done)
+
+**Done**
+- New `security` package. `SecurityProperties` (`app.security.jwt.secret` from `JWT_SECRET` with
+  no default, `access-token-ttl` 15m, `cors.allowed-origins` from `CORS_ALLOWED_ORIGINS`, default
+  `http://localhost:3000`).
+- `JwtService`: `sub` = email, `uid` = user id, iat/exp — nothing else. `@PostConstruct` refuses to
+  start with a missing, unresolved (`${JWT_SECRET}`) or < 32-byte secret. Replaces the draft's
+  hard-coded `SecurityConstants.SECRET` and 1-hour TTL.
+- `SecurityConfig`: **one chain for every path** (the draft's `/api/**`-only chain left
+  `/actuator/**` outside security); public = register, login, refresh, `/actuator/health`, Swagger,
+  `/error` — the other project's routes are gone. Stateless, CSRF/basic/form/logout off, CORS from
+  config, BCrypt `PasswordEncoder`.
+- `JwtAuthenticationFilter` (built in `SecurityConfig`, not a `@Component`, so it doesn't also run
+  as a servlet filter): bad/expired token or deleted user → stays anonymous → 401. `userId` in MDC.
+- `JsonSecurityErrorHandler`: 401/403 in the `HttpResponse` shape, status set before the body
+  (the draft wrote the body first and answered 403 for "not logged in").
+- `AuthUser` record as the principal (ids only, hash kept out of `toString`);
+  `AuthUserDetailsService` (also stops Boot's generated in-memory user).
+- `GET /api/ping` (plan §5 step 3) — removed again in 2.1 in favour of `/api/auth/me`.
+- `JwtServiceTest` (5), `SecurityIntegrationTest` (6). 31 tests pass.
+
+**To run locally now:** `JWT_SECRET` (≥ 32 bytes) must be set, like `db_user_name`/`db_password`.
+
+## 2026-09-30 (roadmap 1.2)
+
+**Done**
+- New `auth` package. `RefreshToken extends AuditModel`: `user` (lazy, indexed), `tokenHash` (hex
+  SHA-256, unique — never the raw value), `expiresAt`, `revoked`; `isUsableAt(now)`.
+- `RefreshTokenRepository` (package-private): `findByTokenHash`, `revokeAllForUser` (bulk update —
+  for token reuse and password change).
+- `RefreshTokenRepositoryIntegrationTest` (2). 20 tests pass.
+- Hashing, issuing and rotation are 2.2 (`RefreshTokenService`), where they're first used.
+
+## 2026-09-30 (roadmap 1.1)
+
+**Done**
+- New `user` package (package-by-feature). `User extends AuditModel`: `email` (unique, stored
+  trimmed + lower-case), `passwordHash` (renamed from the draft's `password`; null for Google-only),
+  `name`, `authProvider`, `providerId`, `timezone` (IANA, default `UTC`).
+- `UserRepository` is package-private — other features go through `UserService`.
+- `UserService`: `createLocalUser(email, passwordHash, name, timezone)` → 409 `USER_EMAIL_TAKEN`
+  (also on a concurrent duplicate, via `saveAndFlush` + unique constraint), 400
+  `USER_INVALID_TIMEZONE`; `findByEmail` (any case); `getById` → 404 `USER_NOT_FOUND`. Fixes the
+  draft's `Optional`/`orElseThrow` mix-up and the missing `name`.
+- `UserResponse` record: id, email, name, authProvider, timezone — never the hash.
+- `UserServiceIntegrationTest` (6) on PostgreSQL, incl. audit columns (`createdBy` = `SYSTEM` at
+  sign-up). 18 tests pass.
 
 ## 2026-09-30 (roadmap 0.6, 0.7 — Phase 0 done)
 

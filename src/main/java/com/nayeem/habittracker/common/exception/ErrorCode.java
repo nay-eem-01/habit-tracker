@@ -19,7 +19,11 @@ public enum ErrorCode {
     FORBIDDEN(HttpStatus.FORBIDDEN, "You are not allowed to do this"),
     NOT_FOUND(HttpStatus.NOT_FOUND, "Not found"),
     METHOD_NOT_ALLOWED(HttpStatus.METHOD_NOT_ALLOWED, "Method not allowed"),
-    INTERNAL_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "Something went wrong");
+    INTERNAL_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "Something went wrong"),
+
+    USER_EMAIL_TAKEN(HttpStatus.CONFLICT, "An account with this email already exists"),
+    USER_NOT_FOUND(HttpStatus.NOT_FOUND, "User not found"),
+    USER_INVALID_TIMEZONE(HttpStatus.BAD_REQUEST, "Unknown timezone");
 
     private final HttpStatus status;
     private final String defaultMessage;
