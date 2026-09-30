@@ -12,15 +12,15 @@ branch and PRs into the phase base, in order; the base PRs into `staging` when t
 
 **Legend:** ✅ done · 🔄 in progress · ⬜ not started · ⏸ deferred
 
-**Progress:** Phase 3 of 4 · 14 of 21 steps done (plus 2 pre-deploy steps)
+**Progress:** Phase 4 of 4 · 15 of 21 steps done (plus 2 pre-deploy steps)
 
 ## Where we are (2026-09-30)
 
-- **Phases 0 and 1 and auth steps 2.1–2.2 are merged to `staging`** (PRs #3–#14): error format,
-  correlation ids, Testcontainers, auditing, `User` with timezone, JWT security, register / login /
-  me / refresh / logout. 44 tests pass; the app was run against PostgreSQL and checked over HTTP.
-- **2.3 Google sign-in is deferred** (decided 2026-09-30) — nothing in Phases 3–4 depends on it.
-- **Next: Phase 3 — habits.**
+- **Phases 0–2 merged to `staging`** (PRs #3–#14); **Phase 3 (habits) done** on step branches:
+  create, list, get, replace, archive — daily, chosen weekdays, or N times a week. 69 tests pass.
+- **2.3 Google sign-in is deferred** (decided 2026-09-30).
+- **Next: Phase 4 — check-ins, streaks, stats.** Then M2–M6 (goals, resources, levels, dashboard,
+  AI), designed in `PLAN.md` §11.
 
 ---
 
@@ -58,7 +58,7 @@ Base branch: `feat/auth-base`.
 | 2.2 | `POST /api/auth/refresh` (rotate, httpOnly cookie) and `POST /api/auth/logout` (revoke); §4.4 definition of done as an integration test | ✅ |
 | 2.3 | Google OAuth2 login — find, create or link by email; success handler issues app JWT + refresh cookie (§4.5) | ⏸ later — decided 2026-09-30 |
 
-## Phase 3 — Habits (plan §5 step 6) 🔄
+## Phase 3 — Habits (plan §5 step 6) ✅
 
 Base branch: `feat/habits-base`.
 
@@ -66,7 +66,7 @@ Base branch: `feat/habits-base`.
 |---|---|---|
 | 3.1 | `Habit` entity + `FrequencyType` (`DAILY`, `SPECIFIC_DAYS`, `X_TIMES_PER_WEEK` — `PLAN.md` §8b), `frequencyConfig` as `jsonb` (Hibernate's native JSON mapping), repository scoped by `user_id` | ✅ |
 | 3.2 | Create / get / list (paginated) habits | ✅ |
-| 3.3 | Update, archive (soft delete), unarchive; user A cannot see or edit user B's habits (integration test) | ⬜ |
+| 3.3 | Update, archive (soft delete), unarchive; user A cannot see or edit user B's habits (integration test) | ✅ |
 
 ## Phase 4 — Check-ins, streaks, stats (plan §5 steps 7–8)
 

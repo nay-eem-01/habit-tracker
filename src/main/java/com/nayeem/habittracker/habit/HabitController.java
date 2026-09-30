@@ -18,6 +18,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -54,6 +55,32 @@ class HabitController {
     @GetMapping("/{id}")
     ResponseEntity<HttpResponse> get(@AuthenticationPrincipal AuthUser user, @PathVariable Long id) {
         return HttpResponse.ok("Habit loaded", habitService.get(user.id(), id));
+    }
+
+    @Operation(summary = "Replace a habit's details and schedule")
+    @ApiResponse(responseCode = "200", description = "The updated habit")
+    @ApiResponse(responseCode = "400", description = "Invalid fields or schedule")
+    @ApiResponse(responseCode = "404", description = "No such habit, or not yours (HABIT_NOT_FOUND)")
+    @PutMapping("/{id}")
+    ResponseEntity<HttpResponse> update(@AuthenticationPrincipal AuthUser user, @PathVariable Long id,
+                                        @Valid @RequestBody HabitRequest request) {
+        return HttpResponse.ok("Habit updated", habitService.update(user.id(), id, request));
+    }
+
+    @Operation(summary = "Archive a habit (the soft delete); its history is kept")
+    @ApiResponse(responseCode = "200", description = "The archived habit; archiving twice is fine")
+    @ApiResponse(responseCode = "404", description = "No such habit, or not yours (HABIT_NOT_FOUND)")
+    @PostMapping("/{id}/archive")
+    ResponseEntity<HttpResponse> archive(@AuthenticationPrincipal AuthUser user, @PathVariable Long id) {
+        return HttpResponse.ok("Habit archived", habitService.setArchived(user.id(), id, true));
+    }
+
+    @Operation(summary = "Bring an archived habit back")
+    @ApiResponse(responseCode = "200", description = "The habit")
+    @ApiResponse(responseCode = "404", description = "No such habit, or not yours (HABIT_NOT_FOUND)")
+    @PostMapping("/{id}/unarchive")
+    ResponseEntity<HttpResponse> unarchive(@AuthenticationPrincipal AuthUser user, @PathVariable Long id) {
+        return HttpResponse.ok("Habit restored", habitService.setArchived(user.id(), id, false));
     }
 
     @Operation(summary = "My habits, newest first by default")

@@ -43,6 +43,29 @@ public class HabitService {
                 HabitResponse::from);
     }
 
+    /** Full replace: every field of the request, as on create. */
+    @Transactional
+    public HabitResponse update(Long userId, Long habitId, HabitRequest request) {
+        Habit habit = find(userId, habitId);
+        apply(habit, request);
+        return HabitResponse.from(habitRepository.saveAndFlush(habit));
+    }
+
+    /**
+     * Archive is the only delete (plan §2.2): the habit leaves the default list, its logs and
+     * history stay. Archiving an archived habit is a no-op, not an error.
+     */
+    @Transactional
+    public HabitResponse setArchived(Long userId, Long habitId, boolean archived) {
+        Habit habit = find(userId, habitId);
+        if (habit.isArchived() != archived) {
+            habit.setArchived(archived);
+            habit = habitRepository.saveAndFlush(habit);
+            log.info("Habit {} {} by user {}", habitId, archived ? "archived" : "unarchived", userId);
+        }
+        return HabitResponse.from(habit);
+    }
+
     Habit find(Long userId, Long habitId) {
         return habitRepository.findByIdAndUserId(habitId, userId)
                 .orElseThrow(() -> new ApplicationException(ErrorCode.HABIT_NOT_FOUND));
