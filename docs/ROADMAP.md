@@ -12,7 +12,7 @@ branch and PRs into the phase base, in order; the base PRs into `staging` when t
 
 **Legend:** ✅ done · 🔄 in progress · ⬜ not started · ⏸ deferred
 
-**Progress:** Phase 3 of 4 · 13 of 21 steps done (plus 2 pre-deploy steps)
+**Progress:** Phase 3 of 4 · 14 of 21 steps done (plus 2 pre-deploy steps)
 
 ## Where we are (2026-09-30)
 
@@ -65,7 +65,7 @@ Base branch: `feat/habits-base`.
 | # | Step | Status |
 |---|---|---|
 | 3.1 | `Habit` entity + `FrequencyType` (`DAILY`, `SPECIFIC_DAYS`, `X_TIMES_PER_WEEK` — `PLAN.md` §8b), `frequencyConfig` as `jsonb` (Hibernate's native JSON mapping), repository scoped by `user_id` | ✅ |
-| 3.2 | Create / get / list (paginated) habits | ⬜ |
+| 3.2 | Create / get / list (paginated) habits | ✅ |
 | 3.3 | Update, archive (soft delete), unarchive; user A cannot see or edit user B's habits (integration test) | ⬜ |
 
 ## Phase 4 — Check-ins, streaks, stats (plan §5 steps 7–8)
