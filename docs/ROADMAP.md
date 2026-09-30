@@ -12,7 +12,7 @@ branch and PRs into the phase base, in order; the base PRs into `staging` when t
 
 **Legend:** ✅ done · 🔄 in progress · ⬜ not started · ⏸ deferred
 
-**Progress:** Phase 0 of 4 · 5 of 21 steps done (plus 2 pre-deploy steps)
+**Progress:** Phase 1 of 4 · 7 of 21 steps done (plus 2 pre-deploy steps)
 
 ## Where we are (2026-09-30)
 
@@ -26,7 +26,7 @@ branch and PRs into the phase base, in order; the base PRs into `staging` when t
 
 ---
 
-## Phase 0 — Foundation 🔄
+## Phase 0 — Foundation ✅
 
 Base branch: `feat/foundation-base` (0.1–0.3 predate the flow and went straight to `staging`).
 
@@ -37,8 +37,8 @@ Base branch: `feat/foundation-base` (0.1–0.3 predate the flow and went straigh
 | 0.3 | Project hygiene: logs out of the repo, logback actually loads, `open-in-view=false`, jjwt added, `AppConstants` plain holder — PR #2 | ✅ |
 | 0.4 | Exception handling: `HttpResponse` envelope, one `@RestControllerAdvice`, `ApplicationException` + `ErrorCode`, correlation id, no exception text in 500 bodies | ✅ |
 | 0.5 | Testcontainers PostgreSQL test base; re-enable `contextLoads` | ✅ |
-| 0.6 | Common base: `AuditModel` (`@Getter/@Setter`, auditor type matches), JPA auditing, auditor is the signed-in email or `SYSTEM` | ⬜ |
-| 0.7 | Leave the old starter's baggage behind (`ErrorCode` ~180 constants, `AppTables`, `CommonUtils`, `ModelMapper`, `CustomResponseException`) — done by not lifting it | ⬜ |
+| 0.6 | Common base: `AuditModel` (`@Getter/@Setter`, auditor type matches), JPA auditing, auditor is the signed-in email or `SYSTEM` | ✅ |
+| 0.7 | Leave the old starter's baggage behind (`ErrorCode` ~180 constants, `AppTables`, `CommonUtils`, `ModelMapper`, `CustomResponseException`) — done by not lifting it | ✅ |
 
 ## Phase 1 — Entities and JWT (plan §5 steps 2–3)
 

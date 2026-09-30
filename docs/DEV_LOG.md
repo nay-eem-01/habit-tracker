@@ -8,19 +8,23 @@ The step-by-step plan and overall progress are in `docs/ROADMAP.md`; decisions a
 
 ## Where we are
 
-- **Phase 0 (foundation)**, 5 of 7 steps done. Skeleton, Swagger, logging and hygiene are on
-  `staging` (PRs #1, #2). All open questions answered (`PLAN.md` §8).
+- **Phase 0 (foundation) done** — 7 of 7 steps; 0.4–0.6 are stacked branches
+  (`feat/exception-handling` → `test/testcontainers-base` → `feat/common-base`) for
+  `feat/foundation-base`. Skeleton, Swagger, logging and hygiene are on `staging` (PRs #1, #2).
+  All open questions answered (`PLAN.md` §8).
 - `feat/user-service` (a draft of user/JWT/auth, ~31 files) does not compile; it is being lifted,
   fixed, into steps 0.4–2.2 and will not be merged itself.
-- Branch flow: step branch from the previous step's branch → PR into the phase's base branch
-  (Phase 0: `feat/foundation-base`) → base PRs into `staging` when the phase is done.
-  Claude commits and pushes; commits carry Nayeem's name only (no Claude attribution).
+- Branch flow: step branch from the previous step's branch → PR into the phase's base branch →
+  base PRs into `staging` when the phase is done. Claude commits and pushes; commits carry
+  Nayeem's name only (no Claude attribution).
+- Tests need Docker running (Testcontainers). 12 tests pass.
 
 ## Next up
 
-1. Lift `feat/user-service` into steps, one PR each, chained: 0.4 → 0.5 → 0.6 (→ `feat/foundation-base`),
-   1.1 → 1.2 → 1.3 (→ `feat/security-base`), 2.1 → 2.2 (→ `feat/auth-base`).
-2. Then 2.3 Google OAuth2, then Phase 3 (habits).
+1. PRs, in order: `feat/exception-handling`, `test/testcontainers-base`, `feat/common-base` →
+   `feat/foundation-base`; then `feat/foundation-base` → `staging`.
+2. Phase 1 (`feat/security-base`): 1.1 user entity → 1.2 refresh-token entity → 1.3 JWT security.
+3. Phase 2 (`feat/auth-base`): 2.1 register / login / me → 2.2 refresh / logout; then 2.3 Google.
 
 ## Open items
 
@@ -31,6 +35,24 @@ The step-by-step plan and overall progress are in `docs/ROADMAP.md`; decisions a
 | Week starts on Monday for every user (`PLAN.md` §8b) — per-user week start if anyone asks | later | nothing |
 
 ---
+
+## 2026-09-30 (roadmap 0.6, 0.7 — Phase 0 done)
+
+**Done**
+- `common/AuditModel` — id + `createdBy`/`lastModifiedBy` (String, the email) + `createdAt`/
+  `lastModifiedAt` (`Instant`). `@Getter` only: auditing writes them, nothing else. Not `@Data`, not
+  generic — fixes the draft's `AuditModel<Long>` vs `AuditorAware<String>` mismatch. The draft's
+  `dd-MM-yyyy` `@JsonFormat`s are gone (entities are never serialized).
+- `configs/JpaAuditingConfig` — `@EnableJpaAuditing` (moved off the application class) and the
+  auditor: signed-in email, or `SYSTEM` for no / anonymous / unauthenticated authentication (the
+  draft recorded sign-ups as `anonymousUser`).
+- 0.7: `ErrorCode` (~180 constants), `AppTables`, `CommonUtils`, `ModelMapper`,
+  `CustomResponseException`, `PaginationArgs` are not lifted. `PaginationArgs` comes back with the
+  first list endpoint (3.2), shaped by the api-conventions skill.
+- `JpaAuditingConfigTest` (4). 12 tests pass.
+
+**Next**
+- `feat/foundation-base` → `staging` PR once 0.4–0.6 are merged into it.
 
 ## 2026-09-30 (roadmap 0.5)
 
