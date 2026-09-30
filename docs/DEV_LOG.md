@@ -8,23 +8,30 @@ The step-by-step plan and overall progress are in `docs/ROADMAP.md`; decisions a
 
 ## Where we are
 
-- **Phase 0 ✅, Phase 1 ✅, Phase 2 ✅ except 2.3 Google sign-in (⏸ later)** — 12 of 21 steps. All
-  merged to `staging` (PRs #3–#14); merged branches deleted.
-- `staging` builds clean, 44 tests pass (Docker needed), and the app starts against PostgreSQL:
-  health, register, duplicate email, wrong password and 401-without-token checked over HTTP.
-- Code is package-by-feature: `common`, `configs`, `security`, `user`, `auth` (`PLAN.md` §8a).
+- **Phases 0–3 done** (2.3 Google sign-in deferred) — 15 of 21 steps. 0–2 are on `staging`;
+  Phase 3 is on step branches waiting for PRs (below).
+- **The core habit tracker so far:** register / login / refresh / logout, and habits — create,
+  list, get, replace, archive — daily, on chosen weekdays, or N times a week. Check-ins and streaks
+  (Phase 4) are next.
+- **After M1:** goals, resources, levels, dashboard and AI insights are designed in `PLAN.md` §11
+  (M2–M6); nothing there starts before Phase 4 is merged.
+- Open PRs, in order: `docs/dev-log-after-merge` → `staging`; `docs/product-roadmap` → `staging`;
+  `feat/habit-entity`, `feat/habit-create-read`, `feat/habit-update-archive` → `feat/habits-base`;
+  then `feat/habits-base` → `staging`.
 - Branch flow: step branch from the previous step's branch → PR into the phase's base branch →
-  base PRs into `staging`. Claude commits, pushes and opens the PRs; Nayeem merges. Commits carry Nayeem's name only.
+  base PRs into `staging`. Claude commits, pushes and opens the PRs; Nayeem merges. Commits carry
+  Nayeem's name only.
+- Tests need Docker running (Testcontainers). 69 tests pass.
 - To run locally: PostgreSQL running, and `db_user_name`, `db_password`, `JWT_SECRET` (≥ 32 bytes)
   set.
 
 ## Next up
 
-1. Phase 3 — habits, base `feat/habits-base`: 3.1 `Habit` entity (`DAILY` / `SPECIFIC_DAYS` /
-   `X_TIMES_PER_WEEK`, jsonb config) → 3.2 create / get / list → 3.3 update / archive + ownership test.
-2. Phase 4 — check-ins, streaks, stats.
-3. Then M2 Goals → M3 Resources → M4 Levels → M5 Dashboard → M6 AI (`PLAN.md` §11).
-4. Later: 2.3 Google sign-in.
+1. Phase 4 — base `feat/checkins-base`: 4.1 `HabitLog` + check-in upsert → 4.2 logs → 4.3 streak
+   calculator → 4.4 streak endpoint → 4.5 stats. "Today" in the user's timezone.
+2. Then M2 Goals → M3 Resources → M4 Levels → M5 Dashboard → M6 AI (`PLAN.md` §11); confirm the
+   milestone's open question (§11.6) first.
+3. Later: 2.3 Google sign-in.
 
 ## Open items
 
@@ -38,6 +45,16 @@ The step-by-step plan and overall progress are in `docs/ROADMAP.md`; decisions a
 | Week starts on Monday for every user (`PLAN.md` §8b) — per-user week start if anyone asks | later | nothing |
 
 ---
+
+## 2026-09-30 (roadmap 3.3 — Phase 3 done)
+
+**Done**
+- `PUT /api/habits/{id}` — full replace with the same `HabitRequest` and the same schedule rules
+  (omitted `category`/`targetCount` go back to empty / 1).
+- `POST /api/habits/{id}/archive` and `/unarchive` — the only delete; idempotent; archived habits
+  leave the default list and show under `?archived=true`. Logged with habit and user id.
+- `HabitUpdateArchiveIntegrationTest` (4), incl. **every habit endpoint with another user's token →
+  404, and the owner's habit unchanged**. 69 tests pass.
 
 ## 2026-09-30 (roadmap 3.2)
 
