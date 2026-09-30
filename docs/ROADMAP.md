@@ -12,7 +12,7 @@ branch and PRs into the phase base, in order; the base PRs into `staging` when t
 
 **Legend:** ✅ done · 🔄 in progress · ⬜ not started · ⏸ deferred
 
-**Progress:** Phase 1 of 4 · 8 of 21 steps done (plus 2 pre-deploy steps)
+**Progress:** Phase 1 of 4 · 9 of 21 steps done (plus 2 pre-deploy steps)
 
 ## Where we are (2026-09-30)
 
@@ -47,7 +47,7 @@ Base branch: `feat/security-base`.
 | # | Step | Status |
 |---|---|---|
 | 1.1 | `User` + `AuthProvider` + `UserRepository` + `UserService` (`passwordHash`, `providerId`, `timezone`) per `PLAN.md` §2.1 | ✅ |
-| 1.2 | `RefreshToken` entity + repository, hash stored, never the raw value (§2.4) | ⬜ |
+| 1.2 | `RefreshToken` entity + repository, hash stored, never the raw value (§2.4) | ✅ |
 | 1.3 | JWT infrastructure: `JwtService` (`sub` = email), `JwtAuthenticationFilter`, stateless `SecurityConfig` covering every path, secret from env (fail fast), 401 entry point, actuator `health` open, `GET /api/ping` behind `authenticated()` | ⬜ |
 
 ## Phase 2 — Authentication (plan §5 steps 4–5)
