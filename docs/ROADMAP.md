@@ -12,7 +12,7 @@ branch and PRs into the phase base, in order; the base PRs into `staging` when t
 
 **Legend:** ✅ done · 🔄 in progress · ⬜ not started · ⏸ deferred
 
-**Progress:** Phase 2 of 4 · 11 of 21 steps done (plus 2 pre-deploy steps)
+**Progress:** Phase 2 of 4 · 12 of 21 steps done (plus 2 pre-deploy steps)
 
 ## Where we are (2026-09-30)
 
@@ -57,7 +57,7 @@ Base branch: `feat/auth-base`.
 | # | Step | Status |
 |---|---|---|
 | 2.1 | `POST /api/auth/register`, `POST /api/auth/login`, `GET /api/auth/me` | ✅ |
-| 2.2 | `POST /api/auth/refresh` (rotate, httpOnly cookie) and `POST /api/auth/logout` (revoke); §4.4 definition of done as an integration test | ⬜ |
+| 2.2 | `POST /api/auth/refresh` (rotate, httpOnly cookie) and `POST /api/auth/logout` (revoke); §4.4 definition of done as an integration test | ✅ |
 | 2.3 | Google OAuth2 login — find, create or link by email; success handler issues app JWT + refresh cookie (§4.5) | ⬜ |
 
 ## Phase 3 — Habits (plan §5 step 6)

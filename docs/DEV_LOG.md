@@ -8,34 +8,58 @@ The step-by-step plan and overall progress are in `docs/ROADMAP.md`; decisions a
 
 ## Where we are
 
-- **Phase 0 (foundation) done** — 7 of 7 steps; 0.4–0.6 are stacked branches
-  (`feat/exception-handling` → `test/testcontainers-base` → `feat/common-base`) for
-  `feat/foundation-base`. Skeleton, Swagger, logging and hygiene are on `staging` (PRs #1, #2).
-  All open questions answered (`PLAN.md` §8).
-- `feat/user-service` (a draft of user/JWT/auth, ~31 files) does not compile; it is being lifted,
-  fixed, into steps 0.4–2.2 and will not be merged itself.
-- Branch flow: step branch from the previous step's branch → PR into the phase's base branch →
-  base PRs into `staging` when the phase is done. Claude commits and pushes; commits carry
-  Nayeem's name only (no Claude attribution).
-- Tests need Docker running (Testcontainers). 12 tests pass.
+- **Phase 0 ✅, Phase 1 ✅, Phase 2 🔄 (2.1, 2.2 done; 2.3 Google left)** — 12 of 21 steps.
+- `feat/user-service` is fully lifted and fixed into steps 0.4–2.2; don't merge it — delete it once
+  the stack below is merged.
+- The stack, each branch taken from the one before (PR each into its phase base, in order):
+  - `feat/foundation-base` ← `feat/exception-handling` ← `test/testcontainers-base` ← `feat/common-base`
+  - `feat/security-base` ← `feat/user-entity` ← `feat/refresh-token-entity` ← `feat/jwt-security`
+  - `feat/auth-base` ← `feat/register-login` ← `feat/refresh-logout`
+- Branch flow: step → phase base → `staging`. Claude commits and pushes; commits carry Nayeem's
+  name only (no Claude attribution).
+- Tests need Docker running (Testcontainers). 44 tests pass.
 
 ## Next up
 
-1. PRs, in order: `feat/exception-handling`, `test/testcontainers-base`, `feat/common-base` →
-   `feat/foundation-base`; then `feat/foundation-base` → `staging`.
-2. Phase 1 (`feat/security-base`): 1.1 user entity → 1.2 refresh-token entity → 1.3 JWT security.
-3. Phase 2 (`feat/auth-base`): 2.1 register / login / me → 2.2 refresh / logout; then 2.3 Google.
+1. Open and merge the PRs in stack order (see "Where we are"); each phase base → `staging`.
+2. 2.3 Google OAuth2 — needs a Google Cloud OAuth client id/secret (see Open items).
+3. Phase 3 — habits.
 
 ## Open items
 
 | Item | Needs | Blocks |
 |---|---|---|
+| Google OAuth client (id + secret, redirect URI) from Google Cloud Console | Nayeem | 2.3 |
 | Set `JWT_SECRET` (≥ 32 bytes) in the run configuration — the app no longer starts without it | Nayeem | running locally |
 | `.mcp.json` (IntelliJ MCP server) is untracked — local-only or shared? | Nayeem | nothing |
 | PR #2's commits are authored as `Claude <noreply@anthropic.com>`; from now on commits carry Nayeem's identity. Rewriting merged history is not worth it | — | nothing |
 | Week starts on Monday for every user (`PLAN.md` §8b) — per-user week start if anyone asks | later | nothing |
 
 ---
+
+## 2026-09-30 (roadmap 2.2 — `feat/user-service` fully lifted)
+
+**Done**
+- `RefreshTokenService`: 32 random bytes (base64url), stored as SHA-256 hex, 7 days
+  (`app.security.refresh-token.ttl`). `consume` locks the row (`PESSIMISTIC_WRITE`), revokes it and
+  returns the user id; a **revoked token presented again = copied** → every live token of that user
+  is revoked (WARN log) and 401 — `noRollbackFor` so that revoke isn't rolled back by the 401.
+- `POST /api/auth/refresh` (public): rotates; 401 `AUTH_INVALID_REFRESH_TOKEN` for missing, unknown,
+  expired, revoked or reused. `POST /api/auth/logout` (public — the access token may have expired):
+  revokes, clears the cookie, 204 even with nothing to revoke.
+- Register and login now also set the cookie. The refresh token is **only** in the cookie:
+  `refresh_token`, httpOnly, Secure (`app.security.refresh-token.cookie-secure`), SameSite=Strict,
+  `Path=/api/auth`. CSRF stays off: the cookie can't be sent cross-site and only reaches
+  `/api/auth/*`.
+- Register/login/refresh are one transaction each (user + token row together).
+- `RefreshTokenIntegrationTest` (7) incl. plan §4.4's loop (register → refresh → me → logout →
+  refresh fails). 44 tests pass.
+- With this, everything `feat/user-service` drafted is on step branches, fixed. That branch can be
+  deleted once the stack is merged.
+
+**Not done**
+- No concurrency test for two refreshes racing on one token (the row lock covers it).
+- Revoke-all on password change waits for a password-change endpoint (not in M1).
 
 ## 2026-09-30 (roadmap 2.1)
 
