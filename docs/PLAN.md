@@ -451,14 +451,16 @@ the reference docs rather than assuming.
 
 ## 10. Where the project stands (2026-09-30)
 
-**On `staging`** (PRs #1–#14): skeleton, Swagger, logging; Phase 0 (error envelope, correlation
-ids, Testcontainers, auditing); Phase 1 (`User` with timezone, `RefreshToken`, JWT security over
-every path); auth 2.1–2.2 (register, login, me, refresh with rotation and reuse detection, logout).
-Everything `feat/user-service` drafted, fixed. 44 tests on real PostgreSQL.
+**On `staging`** (PRs #1–#14): skeleton, error format, correlation ids, Testcontainers, auditing,
+`User` with timezone, JWT security, register / login / me / refresh / logout.
 
-**Deferred:** 2.3 Google sign-in (§4.5) — picked up later.
+**Built, waiting for PRs:** Phase 3 (habits: create, list, get, replace, archive) and Phase 4
+(check-ins, logs, strict streaks, 7/30-day stats). The core loop works end to end. 110 tests on
+real PostgreSQL.
 
-**Next:** Phase 3 (habits). Details: `ROADMAP.md`.
+**Deferred:** 2.3 Google sign-in (§4.5).
+
+**Next:** Phase 5 — reminders and notifications (§12.2), then M2–M6 (§11). Details: `ROADMAP.md`.
 
 ---
 
@@ -607,8 +609,9 @@ Recommendations are in bold; confirm or change them before the milestone starts.
   **7 days back** — enough to catch up on a missed evening, not enough to rewrite a streak's
   history. (Decided as a default 2026-09-30; easy to change.)
 - An archived habit can't be checked in (409 `HABIT_ARCHIVED`); its history stays readable.
-- **Streak units:** days for `DAILY` / `SPECIFIC_DAYS` (unscheduled days are skipped, a check-in on
-  an unscheduled day counts for stats but not for the streak); Mon–Sun weeks for
+- **Streak units:** days for `DAILY` / `SPECIFIC_DAYS` (unscheduled days are skipped; a check-in on
+  an unscheduled day stays in the logs but counts for neither the streak nor the rate — corrected
+  in 4.5, it would push a rate past 100 %); Mon–Sun weeks for
   `X_TIMES_PER_WEEK`. Today — or this week — never breaks a streak while it's still in progress,
   and the week the habit was created never breaks one either (it may be a partial week).
 - **Stats** (7 / 30 days): `done` scheduled days ÷ `expected` scheduled days in the window, with the
