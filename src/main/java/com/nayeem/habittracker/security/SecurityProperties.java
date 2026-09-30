@@ -17,6 +17,7 @@ import java.util.List;
 public class SecurityProperties {
 
     private final Jwt jwt = new Jwt();
+    private final RefreshToken refreshToken = new RefreshToken();
     private final Cors cors = new Cors();
 
     @Getter
@@ -25,6 +26,14 @@ public class SecurityProperties {
         /** HMAC-SHA key, at least 32 bytes. From {@code JWT_SECRET}; no default on purpose. */
         private String secret;
         private Duration accessTokenTtl = Duration.ofMinutes(15);
+    }
+
+    @Getter
+    @Setter
+    public static class RefreshToken {
+        private Duration ttl = Duration.ofDays(7);
+        /** Secure cookie flag. Browsers accept Secure cookies on http://localhost, so keep it on. */
+        private boolean cookieSecure = true;
     }
 
     @Getter

@@ -21,6 +21,9 @@ public enum ErrorCode {
     METHOD_NOT_ALLOWED(HttpStatus.METHOD_NOT_ALLOWED, "Method not allowed"),
     INTERNAL_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "Something went wrong"),
 
+    AUTH_INVALID_CREDENTIALS(HttpStatus.UNAUTHORIZED, "Invalid email or password"),
+    AUTH_INVALID_REFRESH_TOKEN(HttpStatus.UNAUTHORIZED, "Session expired, please sign in again"),
+
     USER_EMAIL_TAKEN(HttpStatus.CONFLICT, "An account with this email already exists"),
     USER_NOT_FOUND(HttpStatus.NOT_FOUND, "User not found"),
     USER_INVALID_TIMEZONE(HttpStatus.BAD_REQUEST, "Unknown timezone");
