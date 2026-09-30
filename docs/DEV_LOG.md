@@ -8,7 +8,7 @@ The step-by-step plan and overall progress are in `docs/ROADMAP.md`; decisions a
 
 ## Where we are
 
-- **Phases 0–3 done** (2.3 Google sign-in deferred) — 18 of 26 steps. 0–2 are on `staging`;
+- **Phases 0–3 done** (2.3 Google sign-in deferred) — 19 of 26 steps. 0–2 are on `staging`;
   Phase 3 is on step branches waiting for PRs (below).
 - **The core habit tracker so far:** register / login / refresh / logout, and habits — create,
   list, get, replace, archive — daily, on chosen weekdays, or N times a week. Check-ins and streaks
@@ -45,6 +45,18 @@ The step-by-step plan and overall progress are in `docs/ROADMAP.md`; decisions a
 | Week starts on Monday for every user (`PLAN.md` §8b) — per-user week start if anyone asks | later | nothing |
 
 ---
+
+## 2026-09-30 (roadmap 4.3)
+
+**Done**
+- `StreakCalculator.calculate(type, config, doneDays, start, today)` → `Streak(current, longest,
+  unit)`. Pure Java, "today" passed in.
+  - `DAILY` / `SPECIFIC_DAYS` (`DAYS`): walks from the habit's first day to today over scheduled
+    days; an undone scheduled day resets the run; today undone doesn't; unscheduled days (and
+    check-ins on them) are skipped.
+  - `X_TIMES_PER_WEEK` (`WEEKS`): Monday–Sunday weeks with ≥ N done days; the current week and the
+    habit's first week never break the run; extra days in a week don't count twice.
+- `StreakCalculatorTest` (16, nested per frequency type, incl. month/year boundary). 99 tests pass.
 
 ## 2026-09-30 (roadmap 4.2)
 
