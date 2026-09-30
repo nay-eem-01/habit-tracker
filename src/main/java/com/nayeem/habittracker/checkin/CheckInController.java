@@ -31,6 +31,7 @@ import java.time.LocalDate;
 class CheckInController {
 
     private final CheckInService checkInService;
+    private final HabitProgressService habitProgressService;
 
     @Operation(summary = "Check in: set a day's count for a habit (today by default); repeating it is safe")
     @ApiResponse(responseCode = "200", description = "The day's log")
@@ -56,5 +57,13 @@ class CheckInController {
             @RequestParam(defaultValue = PageRequests.DEFAULT_PAGE) int page,
             @Parameter(description = "1-100") @RequestParam(defaultValue = PageRequests.DEFAULT_SIZE) int size) {
         return HttpResponse.ok("Logs loaded", checkInService.logs(user.id(), habitId, from, to, page, size));
+    }
+
+    @Operation(summary = "The habit's current and longest streak (days, or weeks for N-times-a-week habits)")
+    @ApiResponse(responseCode = "200", description = "The streak; today or this week never breaks it while in progress")
+    @ApiResponse(responseCode = "404", description = "No such habit, or not yours (HABIT_NOT_FOUND)")
+    @GetMapping("/streak")
+    ResponseEntity<HttpResponse> streak(@AuthenticationPrincipal AuthUser user, @PathVariable Long habitId) {
+        return HttpResponse.ok("Streak loaded", habitProgressService.streak(user.id(), habitId));
     }
 }
