@@ -8,7 +8,7 @@ The step-by-step plan and overall progress are in `docs/ROADMAP.md`; decisions a
 
 ## Where we are
 
-- **Phases 0–3 done** (2.3 Google sign-in deferred) — 15 of 21 steps. 0–2 are on `staging`;
+- **Phases 0–3 done** (2.3 Google sign-in deferred) — 16 of 26 steps. 0–2 are on `staging`;
   Phase 3 is on step branches waiting for PRs (below).
 - **The core habit tracker so far:** register / login / refresh / logout, and habits — create,
   list, get, replace, archive — daily, on chosen weekdays, or N times a week. Check-ins and streaks
@@ -45,6 +45,18 @@ The step-by-step plan and overall progress are in `docs/ROADMAP.md`; decisions a
 | Week starts on Monday for every user (`PLAN.md` §8b) — per-user week start if anyone asks | later | nothing |
 
 ---
+
+## 2026-09-30 (roadmap 4.0 — check-in rules, reminders into M1)
+
+**Decided** (`PLAN.md` §12)
+- Check-in sets the day's absolute count (retry-safe), one-statement upsert; dates: not future,
+  not before the habit existed, at most 7 days back; archived habits can't be checked in.
+- Streak/stats details: unscheduled check-ins count for stats, not streaks; the day/week in progress
+  and the habit's first (partial) week never break a streak.
+- **Reminders and notifications move into M1** as Phase 5 (Nayeem, 2026-09-30): per-habit reminder
+  time in the user's timezone, a minute scheduler, in-app notifications, then email. Push waits for
+  a frontend. Q11 (channels / email provider) before 5.4.
+- Roadmap is now 26 steps.
 
 ## 2026-09-30 (roadmap 3.3 — Phase 3 done)
 

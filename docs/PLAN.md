@@ -311,7 +311,7 @@ status — is `docs/ROADMAP.md`. This section stays as the original intent.
 - Levels / XP / tiers — M4 (§11)
 - Analytics beyond basic 7/30-day completion rate — M5 (§11)
 - AI-generated insights — M6 (§11)
-- Reminders/notifications
+- Reminders/notifications — moved into M1 as Phase 5 on 2026-09-30 (§12)
 - Frontend code (separate milestone)
 - Flyway (re-introduce before shared/production deploy — see §3)
 
@@ -543,7 +543,7 @@ no XP column that can drift, and a level can be recomputed any time.
 - **Tiers** group levels: Bronze 1–4 · Silver 5–9 · Gold 10–19 · Platinum 20–34 · Diamond 35+.
 - **No XP is ever lost** (Q8): breaking a streak stops the bonuses; it doesn't take anything back.
 - **API:** `GET /api/me/level` → `xp`, `level`, `tier`, `xpForNextLevel`, `progressToNextLevel`.
-  Level-up notifications wait for notifications (not planned yet).
+  Level-ups become a notification type once Phase 5 exists (§12.2).
 - One calculator class, pure Java, unit-tested like the streak calculator. At one user's scale
   (≈ 10 habits × 365 days) computing from logs on read is cheap; cache only if measurement says so.
 
@@ -591,4 +591,50 @@ Recommendations are in bold; confirm or change them before the milestone starts.
 | 8 | Levels: **XP never lost (recommended)**, or does breaking streaks cost XP? | M4 |
 | 9 | Resources: **notes + links first (recommended)**; file uploads (S3) later? | M3 |
 | 10 | AI: **opt-in, aggregates + habit names only (recommended)**; allow notes with a second opt-in? | M6 |
+
+---
+
+## 12. Check-in rules and reminders (added 2026-09-30)
+
+### 12.1 Check-ins (Phase 4)
+
+- **`POST /api/habits/{id}/checkin`** sets the day's **absolute** `completedCount` (not +1), so a
+  retried request can't double-count. Body: `date` (default: today in the user's timezone),
+  `completedCount` (default: the habit's `targetCount`, i.e. "mark done"; `0` undoes), `note`.
+- It's an upsert on `(habit_id, log_date)` done in one SQL statement (`INSERT … ON CONFLICT DO
+  UPDATE`), so two taps at once still leave exactly one row.
+- **Allowed dates:** not in the future (user's today); not before the habit was created; at most
+  **7 days back** — enough to catch up on a missed evening, not enough to rewrite a streak's
+  history. (Decided as a default 2026-09-30; easy to change.)
+- An archived habit can't be checked in (409 `HABIT_ARCHIVED`); its history stays readable.
+- **Streak units:** days for `DAILY` / `SPECIFIC_DAYS` (unscheduled days are skipped, a check-in on
+  an unscheduled day counts for stats but not for the streak); Mon–Sun weeks for
+  `X_TIMES_PER_WEEK`. Today — or this week — never breaks a streak while it's still in progress,
+  and the week the habit was created never breaks one either (it may be a partial week).
+- **Stats** (7 / 30 days): `done` scheduled days ÷ `expected` scheduled days in the window, with the
+  window clipped to the habit's first day and today counted only once it's done. For
+  `X_TIMES_PER_WEEK`, `expected` = `timesPerWeek × days / 7`, and the rate is capped at 100 %.
+
+### 12.2 Reminders and notifications (Phase 5, M1 — moved in 2026-09-30)
+
+Reminders keep the habit alive; they belong in the core tracker, not after it.
+
+- **Per habit:** `reminderTime` (local time, e.g. `07:30`, nullable = no reminder), in the user's
+  timezone. One time per habit in M1.
+- **Scheduler:** every minute, finds habits whose reminder time is this minute *in each user's own
+  timezone* (done in SQL: `(now() at time zone users.timezone)`), that are due today, not archived
+  and not yet done — and creates a reminder. A unique `(habit_id, date, type)` stops duplicates
+  after a restart or with two app instances. Minutes missed while the app is down are not re-sent.
+- **In-app notifications:** a `notifications` table (user, type, title, body, habit, `readAt`),
+  `GET /api/notifications` (paginated, unread first), `POST /api/notifications/{id}/read`,
+  `POST /api/notifications/read-all`. The frontend polls it — works with no extra accounts.
+- **Delivery channels** behind a `NotificationSender` interface: in-app always; **email** next
+  (Spring Mail; console sender in dev, SMTP when configured — same shape as delivery-app);
+  **web/mobile push** once there is a frontend (Q11).
+- Later types on the same table: "streak at risk" (evening, streak ≥ 3, not done), level-ups (M4),
+  goal achieved (M2), weekly AI insight ready (M6).
+
+| # | Question | Needed by |
+|---|---|---|
+| 11 | Reminder channels: **in-app + email (recommended)** now, push when a frontend exists? Which email provider — **SMTP (e.g. a Gmail app password) to start (recommended)**? | 5.4 |
 
