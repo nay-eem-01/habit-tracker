@@ -14,7 +14,7 @@ import org.springframework.context.annotation.Configuration;
 
 import java.util.List;
 
-import static com.nayeem.habittracker.constants.AppConstants.JWT_TOKEN;
+import static com.nayeem.habittracker.common.AppConstants.JWT_TOKEN;
 
 @Configuration
 @RequiredArgsConstructor

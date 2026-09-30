@@ -1,4 +1,4 @@
-package com.nayeem.habittracker.constants;
+package com.nayeem.habittracker.common;
 
 /**
  * Application-wide constants. Not a Spring bean — holds compile-time values only.
