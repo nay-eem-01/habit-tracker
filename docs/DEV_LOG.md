@@ -9,33 +9,38 @@ The step-by-step plan and overall progress are in `docs/ROADMAP.md`; decisions a
 ## Where we are
 
 - **Phase 0 (foundation)**, 3 of 7 steps done. Skeleton, Swagger, logging and hygiene are on
-  `staging` (PRs #1, #2).
-- `feat/user-service` (a draft of user/JWT/auth, ~31 files) does not compile and is not merged.
+  `staging` (PRs #1, #2). All open questions answered (`PLAN.md` §8).
+- `feat/user-service` (a draft of user/JWT/auth, ~31 files) does not compile; it is being lifted,
+  fixed, into steps 0.4–2.2 and will not be merged itself.
 - Branch flow: step branch from the previous step's branch → PR into the phase's base branch
   (Phase 0: `feat/foundation-base`) → base PRs into `staging` when the phase is done.
   Claude commits and pushes; commits carry Nayeem's name only (no Claude attribution).
 
 ## Next up
 
-1. Decide `PLAN.md` §8 Q1 (package-by-feature vs the current layers) and Q2 (`feat/user-service`).
-2. 0.4 — exception handling (the untracked `exceptionhandler/` files, finished and committed).
-3. 0.5 — Testcontainers, re-enable `contextLoads`.
-4. 0.6 — common base, lifted from `feat/user-service` and fixed on the way.
+1. Lift `feat/user-service` into steps, one PR each, chained: 0.4 → 0.5 → 0.6 (→ `feat/foundation-base`),
+   1.1 → 1.2 → 1.3 (→ `feat/security-base`), 2.1 → 2.2 (→ `feat/auth-base`).
+2. Then 2.3 Google OAuth2, then Phase 3 (habits).
 
 ## Open items
 
 | Item | Needs | Blocks |
 |---|---|---|
-| Package layout: by-feature (plan §1.2) or keep layers (`PLAN.md` §8 Q1) | Nayeem | 1.1 |
-| `feat/user-service`: split into steps instead of merging (`PLAN.md` §8 Q2) | Nayeem | 0.6, 1.x |
-| Untracked `exceptionhandler/` files import `common.responses.HttpResponse`, which exists only on `feat/user-service` — they don't compile on `staging` alone; and the `Exception` handler returns `ex.getMessage()` in a 500 body | Claude, in 0.4 | 0.4 |
-| JWT `sub`: user id (plan §4.1) or email (draft code) (`PLAN.md` §8 Q3) | Nayeem | 1.3 |
-| Whose calendar is "today" for check-ins (`PLAN.md` §8 Q4) | Nayeem | 4.1 |
-| Streaks for `X_TIMES_PER_WEEK` / `CUSTOM` (`PLAN.md` §8 Q5) | Nayeem | 4.3 |
 | `.mcp.json` (IntelliJ MCP server) is untracked — local-only or shared? | Nayeem | nothing |
 | PR #2's commits are authored as `Claude <noreply@anthropic.com>`; from now on commits carry Nayeem's identity. Rewriting merged history is not worth it | — | nothing |
+| Week starts on Monday for every user (`PLAN.md` §8b) — per-user week start if anyone asks | later | nothing |
 
 ---
+
+## 2026-09-30 (open questions answered)
+
+**Decided** (`PLAN.md` §8)
+- Q1 package-by-feature (§8a) — code moves into it as each step lifts it over.
+- Q2 fix `feat/user-service` by lifting it into steps 0.4–2.2; the branch is never merged.
+- Q3 JWT `sub` = email, `uid` claim = user id.
+- Q4 the user's calendar: `User.timezone` (IANA, default `UTC`).
+- Q5 frequency = `DAILY` / `SPECIFIC_DAYS` / `X_TIMES_PER_WEEK`; streaks in days, or in Mon–Sun
+  weeks for N-times-per-week, like Streaks and Habitify (§8b). `WEEKLY` and `CUSTOM` are gone.
 
 ## 2026-09-30 (project conventions)
 

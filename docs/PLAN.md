@@ -51,6 +51,8 @@ Three entities for this milestone. Relations: `User 1—N Habit`, `Habit 1—N H
 | `passwordHash` | `String` | nullable — null for OAuth-only users who never set a password |
 | `authProvider` | `enum { LOCAL, GOOGLE }` | not null |
 | `providerId` | `String` | nullable — Google's `sub` claim; null for LOCAL users |
+| `name` | `String` | display name, 2–100 chars |
+| `timezone` | `String` | IANA id, not null, default `UTC` — added 2026-09-30, §8 Q4 |
 | `createdAt` | `Instant` | not null, default now |
 
 Relations: `@OneToMany(mappedBy = "user")` → `List<Habit>`.
@@ -89,7 +91,7 @@ public class User {
 | `user` | `User` (`@ManyToOne`) | FK `user_id`, not null |
 | `name` | `String` | not null, e.g. max 120 chars |
 | `category` | `String` | nullable |
-| `frequencyType` | `enum { DAILY, WEEKLY, X_TIMES_PER_WEEK, CUSTOM }` | not null |
+| `frequencyType` | `enum { DAILY, SPECIFIC_DAYS, X_TIMES_PER_WEEK }` | not null — changed 2026-09-30, see §8b |
 | `frequencyConfig` | JSON | e.g. `{"days":["MON","WED","FRI"]}` or `{"timesPerWeek":3}` — shape depends on `frequencyType` |
 | `targetCount` | `int` | default 1 (e.g. "drink water 8x/day") |
 | `isArchived` | `boolean` | default false — soft delete flag |
@@ -214,7 +216,7 @@ Tradeoff to be explicit about: `ddl-auto: update` is fine solo, local, early-sta
 
 ### 4.1 Shape
 
-- **Access token**: JWT, short-lived (15 min), claims: `sub` (user id), `email`, issued/expiry. Sent in `Authorization: Bearer <token>` header, validated per-request, never persisted server-side.
+- **Access token**: JWT, short-lived (15 min), claims: `sub` (email), `uid` (user id), issued/expiry — changed 2026-09-30, §8 Q3. Sent in `Authorization: Bearer <token>` header, validated per-request, never persisted server-side.
 - **Refresh token**: opaque random string (not a JWT), longer-lived (7 days), stored **hashed** in the `refresh_tokens` table (§2.4), returned to the client as an **httpOnly, Secure, SameSite=Strict cookie** — not accessible to JS, so an XSS bug can't read it. Rotated on every use (issue a new one, revoke the old row) to limit replay window.
 - Session creation policy: `STATELESS`. No `HttpSession` involved anywhere.
 
@@ -350,8 +352,7 @@ is the source of truth to rebuild them from.
 
 ## 7a. Code and git conventions (added 2026-09-30, same as delivery-app)
 
-- **Package-by-feature, one Maven module.** No multi-module build (§1.2). *(The existing code is
-  layer-by-layer — see §8 Q1.)*
+- **Package-by-feature, one Maven module.** No multi-module build (§1.2). Layout in §8a.
 - **Lombok for boilerplate.** `@Getter`/`@Setter` at class level on entities and request DTOs —
   not `@Data` on JPA entities (equals/hashCode over lazy relations is a trap). Response DTOs are
   Java `record`s. Keep a hand-written masking `toString()` on DTOs with sensitive fields.
@@ -382,13 +383,51 @@ gaps, today-not-yet-logged, `targetCount > 1`). Integration-test against real Po
 
 ## 8. Open questions — need a decision before the step that needs them
 
+All five answered 2026-09-30. New questions are added here as they come up.
+
 | # | Question | Needed by |
 |---|---|---|
-| 1 | **Package layout.** §1.2 says package-by-feature; the code (`staging` and `feat/user-service`) is layer-by-layer (`configs/`, `constants/`, `entities/`, `repositories/`, `service/`, `securities/`). Re-file now (cheap at ~30 files) or amend §1.2? | before 1.1 |
-| 2 | **What happens to `feat/user-service`.** It holds ~31 changed files, does not compile, and is not merged. Proposal: don't merge it — lift its pieces into the Phase 0/1 step branches, fixing them as they move (see `DEV_LOG.md` open items). | before 0.5 |
-| 3 | **JWT subject.** §4.1 says `sub` = user id; the drafted `JwtService` uses email with a `uid` claim. Pick one before 1.3. | before 1.3 |
-| 4 | **User's timezone for "today".** A check-in day and a streak day are calendar days — whose calendar? Store a `timezone` on `User`, or trust a client-sent `LocalDate`? Affects §2.1 and streak math. | before 4.1 |
-| 5 | **`X_TIMES_PER_WEEK` and `CUSTOM` streaks.** §5.7 defines a streak over *scheduled days*; for "3× per week" there are no scheduled days. Is the streak counted in weeks there? | before 4.3 |
+| 1 | ~~**Package layout**~~ — **answered 2026-09-30:** package-by-feature (§8a). Easier to manage as it grows: everything for one feature sits in one folder, and deleting or changing a feature touches one place. Code moves into the new layout as each step lifts it over — no big "move everything" PR. | ✅ |
+| 2 | ~~**`feat/user-service`**~~ — **answered 2026-09-30:** fix it — its code is lifted, fixed, into steps 0.4–2.2 (one small PR each); the branch itself is never merged. | ✅ |
+| 3 | ~~**JWT subject**~~ — **answered 2026-09-30:** `sub` = email (as the draft code does), plus a `uid` claim with the user id. Changes §4.1. | ✅ |
+| 4 | ~~**Whose "today"**~~ — **answered 2026-09-30:** the user's calendar. `User.timezone` (IANA id, e.g. `Asia/Dhaka`, default `UTC`, set at register); "today" for check-ins and streaks is `LocalDate.now(ZoneId.of(user.timezone))`. Changes §2.1. | ✅ |
+| 5 | ~~**Frequency and streaks**~~ — **answered 2026-09-30:** the user picks days of the week (§8b). | ✅ |
+
+### 8a. Package layout (decided 2026-09-30)
+
+```
+com.nayeem.habittracker
+├── common/        shared, no business logic: AuditModel, HttpResponse, exceptions, ErrorCode,
+│                  GlobalExceptionHandler, CorrelationIdFilter, AppConstants
+├── configs/       AppProperties, SwaggerConfig, JPA auditing
+├── security/      SecurityConfig, JwtService, JwtAuthenticationFilter, user details, entry point
+├── user/          User, AuthProvider, UserRepository, UserService, UserResponse
+├── auth/          AuthController, AuthService, RefreshToken(+Repository, Service), auth DTOs
+├── habit/         Habit, FrequencyType, repository, service, controller, DTOs   (Phase 3)
+└── checkin/       HabitLog, streak calculator, stats                            (Phase 4)
+```
+
+A feature's classes stay package-private where they can. Another feature uses a feature through
+its service (e.g. `auth` → `UserService`), never its repository.
+
+### 8b. Frequency and streaks (decided 2026-09-30)
+
+How others do it: **Streaks** and **Habitify** count "3× per week" per calendar week (the week
+counts if the target was met Mon–Sun); **Loop** uses a rolling 7-day window. Specific weekdays
+are counted day by day everywhere, skipping days that aren't scheduled.
+
+We take the calendar-week model — simpler to explain and to test:
+
+| `frequencyType` | `frequencyConfig` | A streak counts | Breaks when |
+|---|---|---|---|
+| `DAILY` | — | days | a day ends without `completedCount >= targetCount` |
+| `SPECIFIC_DAYS` | `{"days":["MON","WED","FRI"]}` | scheduled days; other days are skipped | a scheduled day ends not done |
+| `X_TIMES_PER_WEEK` | `{"timesPerWeek":3}` | weeks (Mon–Sun) | a week ends with fewer than N done days |
+
+- This replaces §2.2's `WEEKLY` (= `SPECIFIC_DAYS` with one day) and `CUSTOM` (= `SPECIFIC_DAYS`).
+- The day or week in progress never breaks a streak — it only adds once it's done.
+- Weeks start on Monday for everyone for now; a per-user week start can come later.
+- Still strict (§1.4): no grace days.
 
 ---
 
@@ -413,7 +452,6 @@ the reference docs rather than assuming.
 `open-in-view=false`, jjwt on the classpath (PRs #1, #2). `contextLoads` is disabled.
 
 **Drafted, not merged:** `feat/user-service` — `User` entity, auditing, JWT service/filter,
-security config, auth service. Does not compile. See §8 Q2.
+security config, auth service. Does not compile. Being fixed step by step (§8 Q2).
 
-**Next:** decide §8 Q1–Q2, then Phase 0 remainder (exception handling, common base, Testcontainers)
-and Phase 1 (entities + JWT). Details: `ROADMAP.md`.
+**Next:** §8 answered; `feat/user-service` is being lifted into steps 0.4–2.2. Details: `ROADMAP.md`.
