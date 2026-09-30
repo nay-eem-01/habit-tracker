@@ -37,3 +37,9 @@ build/
 # these are a safety net for stray local runs.
 *.log
 logfiles/
+
+### Claude Code ###
+.claude/
+
+### Local secrets ###
+.env
