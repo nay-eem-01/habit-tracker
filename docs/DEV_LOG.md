@@ -39,6 +39,19 @@ The step-by-step plan and overall progress are in `docs/ROADMAP.md`; decisions a
 
 ---
 
+## 2026-09-30 (roadmap 3.2)
+
+**Done**
+- `common/response/PageResponse` — our own page record (`content`, `totalElements`, `totalPages`,
+  `number`, `size`) instead of serializing Spring's `Page`.
+- `common/pagination/PageRequests` — `size` clamped 1–100, `page` ≥ 0, `sortBy` must be on the
+  endpoint's allowlist (400 otherwise), `id` as tie-breaker so pages are stable.
+- `POST /api/habits` (201 + `Location`), `GET /api/habits/{id}`, `GET /api/habits`
+  (`?archived=false` default, `page`, `size`, `sortBy` = `createdAt`|`name`, `sortDir`).
+  One `HabitRequest` for create and (3.3) replace. Someone else's habit → 404 `HABIT_NOT_FOUND`.
+- Test base gained `bearerFor(email)` (creates a user, returns the header value).
+- `PageRequestsTest` (3), `HabitApiIntegrationTest` (7). 65 tests pass.
+
 ## 2026-09-30 (roadmap 3.1)
 
 **Done**
