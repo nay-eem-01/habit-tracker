@@ -14,7 +14,7 @@ The step-by-step plan and overall progress are in `docs/ROADMAP.md`; decisions a
   health, register, duplicate email, wrong password and 401-without-token checked over HTTP.
 - Code is package-by-feature: `common`, `configs`, `security`, `user`, `auth` (`PLAN.md` §8a).
 - Branch flow: step branch from the previous step's branch → PR into the phase's base branch →
-  base PRs into `staging`. Claude commits and pushes; commits carry Nayeem's name only.
+  base PRs into `staging`. Claude commits, pushes and opens the PRs; Nayeem merges. Commits carry Nayeem's name only.
 - To run locally: PostgreSQL running, and `db_user_name`, `db_password`, `JWT_SECRET` (≥ 32 bytes)
   set.
 
@@ -23,7 +23,8 @@ The step-by-step plan and overall progress are in `docs/ROADMAP.md`; decisions a
 1. Phase 3 — habits, base `feat/habits-base`: 3.1 `Habit` entity (`DAILY` / `SPECIFIC_DAYS` /
    `X_TIMES_PER_WEEK`, jsonb config) → 3.2 create / get / list → 3.3 update / archive + ownership test.
 2. Phase 4 — check-ins, streaks, stats.
-3. Later: 2.3 Google sign-in.
+3. Then M2 Goals → M3 Resources → M4 Levels → M5 Dashboard → M6 AI (`PLAN.md` §11).
+4. Later: 2.3 Google sign-in.
 
 ## Open items
 
@@ -37,6 +38,18 @@ The step-by-step plan and overall progress are in `docs/ROADMAP.md`; decisions a
 | Week starts on Monday for every user (`PLAN.md` §8b) — per-user week start if anyone asks | later | nothing |
 
 ---
+
+## 2026-09-30 (product plan after M1)
+
+**Decided**
+- Core habit tracker (M1, Phases 3–4) first. Then M2 Goals → M3 Resources → M4 Levels →
+  M5 Dashboard → M6 AI insights, designed in `PLAN.md` §11 and split into steps in `ROADMAP.md`.
+- Goal progress, XP and levels are computed on read from habit logs, like streaks — nothing stored
+  that can drift.
+- Open questions Q6–Q10 (`PLAN.md` §11.6) each have a recommendation; they're confirmed before
+  the milestone that needs them, not now.
+- From now on Claude opens the PRs too (Nayeem merges) — needs `gh` installed and logged in.
+- `.mcp.json` git-ignored (machine-specific IntelliJ MCP port).
 
 ## 2026-09-30 (stack merged)
 

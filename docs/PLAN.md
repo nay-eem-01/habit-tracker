@@ -5,7 +5,7 @@
 **Plan version:** v2 (2026-09-12), conventions and tracking added 2026-09-30 (§6a–§10)
 **Stack:** Java 21, Spring Boot 4.1, Spring MVC (blocking — NOT WebFlux), Spring Data JPA, PostgreSQL, Spring Security (JWT-based, Google OAuth2 + email/password), springdoc-openapi (Swagger UI), Lombok
 **Architecture:** Single monolith, package-by-feature (not layer-by-layer, **not multi-module**)
-**Scope of this document:** Project skeleton → Entities → Security/JWT → Habit CRUD → Check-in/Streaks. Goals, Resources, Analytics, and AI insights are deliberately OUT of scope here (later milestones).
+**Scope of this document:** M1 — Project skeleton → Entities → Security/JWT → Habit CRUD → Check-in/Streaks. Goals, Resources, Levels, the analytics dashboard and AI insights are designed in §11 and built **after** M1 (M2–M6).
 
 How the three docs fit together:
 
@@ -33,7 +33,7 @@ How the three docs fit together:
 5. **One `users` table for both auth methods.** No separate OAuth/local tables.
 6. **JWT-based auth, stateless sessions.** Access token (short-lived) + refresh token (longer-lived, DB-backed for revocation). `sessionCreationPolicy: STATELESS`. See §4.
 7. **No schema migration tool for now.** Hibernate `ddl-auto: update` in dev. Flag before this ships anywhere beyond local dev — see §3.
-8. **Do not build Goals, Resources, or AI features in this pass.** Leave `// TODO: link to Goal entity, M3` comments instead of building toward them.
+8. **Do not build Goals, Resources, or AI features in this pass.** Leave `// TODO: link to Goal entity, M2` comments instead of building toward them. Their design is §11.
 9. **Every endpoint documented via springdoc annotations** as you go.
 
 ---
@@ -137,7 +137,7 @@ public class Habit {
     @OneToMany(mappedBy = "habit", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<HabitLog> logs = new ArrayList<>();
 
-    // TODO: link to Goal entity, M3
+    // TODO: link to Goal entity, M2 (PLAN.md §11)
 }
 ```
 
@@ -305,9 +305,10 @@ status — is `docs/ROADMAP.md`. This section stays as the original intent.
 
 ## 6. Explicitly deferred (do not implement yet)
 
-- Goal entity, Resource entity, Goal↔Habit linking
-- Analytics beyond basic 7/30-day completion rate
-- AI-generated insights
+- Goal entity, Resource entity, Goal↔Habit linking — M2, M3 (§11)
+- Levels / XP / tiers — M4 (§11)
+- Analytics beyond basic 7/30-day completion rate — M5 (§11)
+- AI-generated insights — M6 (§11)
 - Reminders/notifications
 - Frontend code (separate milestone)
 - Flyway (re-introduce before shared/production deploy — see §3)
@@ -456,3 +457,136 @@ Everything `feat/user-service` drafted, fixed. 44 tests on real PostgreSQL.
 **Deferred:** 2.3 Google sign-in (§4.5) — picked up later.
 
 **Next:** Phase 3 (habits). Details: `ROADMAP.md`.
+
+---
+
+## 11. After M1 — goals, resources, levels, dashboard, AI (added 2026-09-30)
+
+The **core habit tracker (M1: Phases 3–4) comes first**; nothing below starts before Phase 4 is
+merged. Each milestone is its own set of small-PR steps in `ROADMAP.md`. Suggested order — each one
+builds on the one before:
+
+| Milestone | What the user gets | Depends on |
+|---|---|---|
+| **M2 Goals** | "I want to achieve X"; X has habits; a progress bar that grows as I check in | M1 |
+| **M3 Resources** | notes and links kept next to a goal | M2 |
+| **M4 Levels** | XP for every done day, bonuses for streaks and achieved goals, levels and tiers | M1 (M2 for the goal bonus) |
+| **M5 Dashboard** | one screen to see my patterns: heatmap, best/worst weekdays, trends, streaks | M1, M4 |
+| **M6 AI insights** | plain-language observations and one suggestion, from the dashboard numbers | M5 |
+
+Same rules as M1 throughout: everything scoped by the acting user (404 for others'), DTOs not
+entities, paginated lists, computed-on-read where the plan already says so (§1.3).
+
+### 11.1 M2 — Goals
+
+A goal is what you want to reach; habits are the daily actions that get you there.
+
+| `Goal` field | Type | Notes |
+|---|---|---|
+| `user` | `User` | owner |
+| `title` | `String` | ≤ 120, e.g. "Run a half marathon" |
+| `description` | `String` | ≤ 2000, nullable |
+| `targetDate` | `LocalDate` | nullable — "by when" |
+| `status` | `ACTIVE` / `ACHIEVED` / `ABANDONED` | `ACHIEVED` is set by the user (Q7) |
+| `achievedAt` | `Instant` | nullable |
+
+**Link:** `Habit.goal` — nullable `@ManyToOne` (one goal per habit, Q6) — plus
+`Habit.goalTargetDays` (nullable int): how many done days make this habit "built" for the goal,
+e.g. 60.
+
+**Progress (computed on read, never stored — same rule as streaks):**
+- per habit: `min(doneDays since linked / goalTargetDays, 1)`, a done day being
+  `completedCount >= targetCount`;
+- per goal: the average over its habits, 0–100 %; with no habits, 0 %.
+- It only ever goes up, so a missed day slows you down instead of taking progress away; streaks
+  (strict) are where missed days hurt.
+
+**API:** `/api/goals` CRUD (list paginated, `?status=`), `PUT /api/habits/{id}/goal`
+(link, with `goalTargetDays`) / `DELETE` (unlink), `GET /api/goals/{id}/progress` (total + per habit).
+Archiving a habit keeps its link; abandoning a goal unlinks nothing.
+
+### 11.2 M3 — Resources
+
+Things you keep for a goal: notes, articles, videos, books.
+
+| `Resource` field | Type | Notes |
+|---|---|---|
+| `user` | `User` | owner |
+| `goal` | `Goal` | nullable — a resource can stand alone |
+| `type` | `NOTE` / `LINK` | files later (Q9) |
+| `title` | `String` | ≤ 200 |
+| `body` | `String` (`text`) | Markdown note, ≤ 20 000 chars, nullable for a link |
+| `url` | `String` | `http(s)` only, ≤ 2048, required for `LINK` |
+| `pinned` | `boolean` | shown first |
+
+**API:** `/api/resources` CRUD, paginated, `?goalId=`, `?type=`, `?q=` (title contains);
+`GET /api/goals/{id}/resources`. Rendering Markdown is the frontend's job; the API stores text.
+Never fetch a user-supplied URL server-side (that's an SSRF hole) — link previews, if ever, go
+through an allowlist.
+
+### 11.3 M4 — Levels
+
+Consistency gets rewarded. **XP is derived from what already exists** (habit logs, streaks, goals) —
+no XP column that can drift, and a level can be recomputed any time.
+
+| Event | XP |
+|---|---|
+| a done day on a habit | +10 |
+| … while that habit's streak is ≥ 7 | +5 extra (consistency bonus) |
+| streak reaches 7 / 30 / 100 / 365 | +50 / +200 / +500 / +1500, once per streak run |
+| goal marked `ACHIEVED` (M2) | +500 |
+
+- **Level** `n` needs `50 · n · (n + 1)` total XP: level 2 at 100, 3 at 300, 4 at 600, 10 at 4 950.
+  Early levels come fast, later ones need weeks of consistency.
+- **Tiers** group levels: Bronze 1–4 · Silver 5–9 · Gold 10–19 · Platinum 20–34 · Diamond 35+.
+- **No XP is ever lost** (Q8): breaking a streak stops the bonuses; it doesn't take anything back.
+- **API:** `GET /api/me/level` → `xp`, `level`, `tier`, `xpForNextLevel`, `progressToNextLevel`.
+  Level-up notifications wait for notifications (not planned yet).
+- One calculator class, pure Java, unit-tested like the streak calculator. At one user's scale
+  (≈ 10 habits × 365 days) computing from logs on read is cheap; cache only if measurement says so.
+
+### 11.4 M5 — Dashboard and pattern analysis
+
+`GET /api/dashboard` — one call for the home screen, all computed from logs in the user's timezone:
+
+- **Today:** each active habit, scheduled or not, done or not.
+- **Completion rate:** 7 / 30 / 90 days, overall and per habit, with the change against the
+  previous period.
+- **Heatmap:** per-day completion ratio for the last 365 days (GitHub-style).
+- **Weekday pattern:** completion rate by weekday — "Mondays are your weakest day".
+- **Time of day:** when check-ins happen (from `HabitLog.createdAt`), in the user's timezone.
+- **Streaks:** current and longest per habit; habits at risk (scheduled today, not done, streak ≥ 3).
+- **Best / most-slipping habits:** highest rate; biggest drop against last period.
+- **Goals and level:** progress bars (M2) and level/tier (M4).
+
+Heavy parts may become separate endpoints (`/api/dashboard/heatmap`) if the payload grows.
+
+### 11.5 M6 — AI insights
+
+The dashboard shows the numbers; AI turns them into plain language and one suggestion
+("You complete Reading 90 % on weekends but 40 % on weekdays — try moving it to the morning").
+
+- The server builds a **compact JSON of aggregates from M5** (rates, weekday pattern, streaks, goal
+  progress) and sends that to the Claude API. **Never** notes, resource text or the email — unless
+  the user opts in (Q10). Habit names are sent (they're what makes the insight useful), so the
+  user switches the feature on explicitly: `User.aiInsightsEnabled`, default off.
+- Output: 3–5 observations + 1 suggestion, stored in an `insights` table (user, period, text,
+  model, createdAt). `GET /api/insights/latest`; `POST /api/insights` regenerates, at most once a
+  day per user (it costs money).
+- API key from the environment (`ANTHROPIC_API_KEY`), never committed; the call sits behind an
+  `InsightGenerator` interface with a fake for tests, so no test calls the real API. The model is
+  chosen when M6 starts.
+- Failure (timeout, quota) → the dashboard still works; insights are an extra, never a blocker.
+
+### 11.6 Open questions for M2–M6
+
+Recommendations are in bold; confirm or change them before the milestone starts.
+
+| # | Question | Needed by |
+|---|---|---|
+| 6 | Can one habit serve **one goal (recommended — simpler, no double counting)** or several? | M2 |
+| 7 | Goal progress: **target done-days per habit (recommended, §11.1)**, or "done / scheduled days until the target date"? And is a goal at 100 % achieved automatically, or **does the user confirm (recommended)**? | M2 |
+| 8 | Levels: **XP never lost (recommended)**, or does breaking streaks cost XP? | M4 |
+| 9 | Resources: **notes + links first (recommended)**; file uploads (S3) later? | M3 |
+| 10 | AI: **opt-in, aggregates + habit names only (recommended)**; allow notes with a second opt-in? | M6 |
+

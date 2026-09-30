@@ -94,15 +94,53 @@ Base branch: `feat/checkins-base`. "Today" is in the user's timezone (`PLAN.md` 
 | Flyway | before the first shared or production deploy (D.1) |
 | 2.3 Google sign-in | when Nayeem picks it up; needs a Google OAuth client id + secret |
 
-## Later milestones (not in M0–M1)
+## After M1 — goals, resources, levels, dashboard, AI
 
-From `PLAN.md` §6. Nothing here is started before Phase 4 is done.
+Designed in `PLAN.md` §11. **Nothing here starts before Phase 4 is merged** — the core habit tracker
+comes first. Open questions Q6–Q10 (`PLAN.md` §11.6) are answered before each milestone starts.
+Steps get split further if one grows past a small PR.
+
+### M2 — Goals
+
+| # | Step | Status |
+|---|---|---|
+| G.1 | `Goal` entity + `/api/goals` CRUD (paginated, `?status=`) | ⬜ |
+| G.2 | Link / unlink a habit to a goal with `goalTargetDays` | ⬜ |
+| G.3 | Goal progress — calculator (unit-tested) + `GET /api/goals/{id}/progress` | ⬜ |
+| G.4 | Mark achieved / abandoned | ⬜ |
+
+### M3 — Resources
+
+| # | Step | Status |
+|---|---|---|
+| R.1 | `Resource` entity (`NOTE` / `LINK`) + `/api/resources` CRUD, `?goalId=`, `?type=`, `?q=` | ⬜ |
+| R.2 | `GET /api/goals/{id}/resources`, pinned first | ⬜ |
+
+### M4 — Levels
+
+| # | Step | Status |
+|---|---|---|
+| X.1 | XP + level + tier calculator, unit-tested (`PLAN.md` §11.3) | ⬜ |
+| X.2 | `GET /api/me/level` | ⬜ |
+
+### M5 — Dashboard
+
+| # | Step | Status |
+|---|---|---|
+| A.1 | Today + completion rates (7/30/90, change vs previous period) | ⬜ |
+| A.2 | Heatmap, weekday and time-of-day patterns | ⬜ |
+| A.3 | Streaks at risk, best / slipping habits, goals and level on the dashboard | ⬜ |
+
+### M6 — AI insights
+
+| # | Step | Status |
+|---|---|---|
+| I.1 | `aiInsightsEnabled` opt-in, aggregates builder, `InsightGenerator` interface with a fake | ⬜ |
+| I.2 | Claude API implementation, `insights` table, `GET /latest`, `POST` (once a day) | ⬜ |
+
+## Not planned yet
 
 | # | Feature |
 |---|---|
-| L1 | Goals, and linking habits to goals (M3 — `// TODO` left in `Habit`) |
-| L2 | Resources |
-| L3 | Analytics beyond 7/30-day completion rate |
-| L4 | AI-generated insights |
-| L5 | Reminders / notifications |
+| L5 | Reminders / notifications (would also carry level-ups) |
 | L6 | Frontend |
