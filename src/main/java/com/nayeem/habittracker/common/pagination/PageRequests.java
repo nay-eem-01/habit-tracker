@@ -30,4 +30,9 @@ public final class PageRequests {
         int clampedSize = Math.clamp(size, 1, MAX_SIZE);
         return PageRequest.of(Math.max(page, 0), clampedSize, Sort.by(direction, sortBy).and(Sort.by("id")));
     }
+
+    /** For queries that bring their own ORDER BY: only {@code page} and {@code size}, clamped. */
+    public static PageRequest unsorted(int page, int size) {
+        return PageRequest.of(Math.max(page, 0), Math.clamp(size, 1, MAX_SIZE));
+    }
 }
