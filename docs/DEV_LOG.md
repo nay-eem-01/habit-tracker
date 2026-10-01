@@ -45,6 +45,24 @@ The step-by-step plan and overall progress are in `docs/ROADMAP.md`; decisions a
 
 ---
 
+## 2026-10-02 (frontend F.4 — Today)
+
+**Done** (in `habit-tracker_web`, branch `feat/today-view` on top of `feat/habits-page`)
+- `/` is now Today: the date in the user's timezone, "N of M done" with a row of squares, **To do**
+  and **Done** lists. Daily and chosen-weekday habits show on their days (weekday habits that
+  aren't scheduled are hidden); N-times-a-week habits are open all week with "1 of 3 this week".
+- One tap checks in (an absolute `completedCount`); a habit with a daily target gets **+1** and
+  Undo (take one away). Taps show at once and are put back with a message if the server refuses.
+  The streak (days, or weeks for N-a-week) sits beside each habit and refreshes after a check-in.
+- Header got Today / Habits links; phone width checked (name hidden under 640 px).
+- 62 frontend tests, and a real-browser run against this backend (register → add habits → check in
+  → +1/undo → reload → phone width): works, no app errors.
+
+**Worth a backend step later**
+- Today costs two requests per habit (this week's logs + the streak) because there is no
+  "today for all habits" endpoint. Fine for tens of habits. A `GET /api/today` (or the M5 dashboard
+  call) would make it one request — add when the dashboard milestone starts, or sooner if it feels slow.
+
 ## 2026-10-02 (frontend F.3 — habits)
 
 **Done** (in `habit-tracker-web`, branch `feat/habits-page` on top of `feat/auth-pages`)
