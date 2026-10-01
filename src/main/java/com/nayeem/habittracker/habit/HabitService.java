@@ -10,6 +10,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
+import java.util.List;
+
 /**
  * Habits of the signed-in user. Every method takes the acting user's id (from the security
  * context, never the request) and only ever sees that user's habits — anyone else's is 404.
@@ -67,6 +70,14 @@ public class HabitService {
     }
 
     /**
+     * Habits to remind about at this minute (their owner's local time), not yet done today. Call
+     * inside a transaction: the lazy {@code user} is needed to tell the owner's day.
+     */
+    public List<Habit> findRemindableAt(Instant now) {
+        return habitRepository.findRemindableAt(now);
+    }
+
+    /**
      * The user's habit, for other features that work on it (check-ins); 404 when it isn't theirs.
      * Call inside a transaction if you need its lazy {@code user}.
      */
@@ -85,5 +96,6 @@ public class HabitService {
                 ? null : request.getCategory().trim());
         habit.schedule(request.getFrequencyType(), request.getFrequencyConfig());
         habit.setTargetCount(request.getTargetCount() == null ? 1 : request.getTargetCount());
+        habit.setReminderTime(request.getReminderTime());
     }
 }

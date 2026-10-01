@@ -639,5 +639,5 @@ Reminders keep the habit alive; they belong in the core tracker, not after it.
 
 | # | Question | Needed by |
 |---|---|---|
-| 11 | Reminder channels: **in-app + email (recommended)** now, push when a frontend exists? Which email provider — **SMTP (e.g. a Gmail app password) to start (recommended)**? | 5.4 |
+| 11 | Reminder channels: **in-app + email (recommended)** now, push when a frontend exists? Which email provider — **SMTP (e.g. a Gmail app password) to start (recommended)**? | 5.4 — **answered 2026-10-01 with the recommendation** (email off until configured; no per-user opt-out yet) |
 

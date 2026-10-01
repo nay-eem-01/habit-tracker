@@ -35,6 +35,12 @@ public class HabitProgressService {
         return new HabitStats(window(c, 7), window(c, 30));
     }
 
+    /** Days in {@code from..to} (inclusive) on which the habit reached its target. */
+    @Transactional(readOnly = true)
+    public long doneDays(Long habitId, LocalDate from, LocalDate to) {
+        return habitLogRepository.countDoneDays(habitId, from, to);
+    }
+
     private static WindowStats window(Context c, int days) {
         return StatsCalculator.window(c.habit.getFrequencyType(), c.habit.getFrequencyConfig(), c.doneDays,
                 c.start, c.today, days);

@@ -1,5 +1,6 @@
 package com.nayeem.habittracker.habit;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -9,6 +10,8 @@ import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+
+import java.time.LocalTime;
 
 /** Body for creating a habit and for replacing one (PUT) — both need every field. */
 @Getter
@@ -35,4 +38,9 @@ public class HabitRequest {
     @Max(100)
     @Schema(description = "Completions a day needs to count as done. Defaults to 1.", example = "1")
     private Integer targetCount;
+
+    @JsonFormat(pattern = "HH:mm")
+    @Schema(type = "string", example = "07:30",
+            description = "Reminder time of day (HH:mm) in your timezone. Omit for no reminder.")
+    private LocalTime reminderTime;
 }

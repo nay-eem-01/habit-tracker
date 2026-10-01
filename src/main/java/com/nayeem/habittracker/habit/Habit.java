@@ -17,6 +17,8 @@ import lombok.Setter;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
+import java.time.LocalTime;
+
 /**
  * Something a user wants to do regularly (plan §2.2). Soft-deleted by archiving; the logs and
  * streak history stay. {@code User} has no {@code habits} collection: nothing needs to walk from a
@@ -52,6 +54,9 @@ public class Habit extends AuditModel {
     /** Completions a day needs to count as done, e.g. 8 for "drink water 8×". */
     @Column(nullable = false)
     private int targetCount = 1;
+
+    /** Local time of day, in the owner's timezone, to remind about the habit; null = no reminder. */
+    private LocalTime reminderTime;
 
     @Column(nullable = false)
     private boolean archived;

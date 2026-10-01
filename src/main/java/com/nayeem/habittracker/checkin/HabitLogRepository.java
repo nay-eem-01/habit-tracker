@@ -16,6 +16,10 @@ interface HabitLogRepository extends JpaRepository<HabitLog, Long> {
     @Query("select l.logDate from HabitLog l where l.habit.id = :habitId and l.completedCount >= l.habit.targetCount")
     List<LocalDate> findDoneDays(@Param("habitId") Long habitId);
 
+    @Query("select count(l) from HabitLog l where l.habit.id = :habitId and l.logDate between :from and :to"
+            + " and l.completedCount >= l.habit.targetCount")
+    long countDoneDays(@Param("habitId") Long habitId, @Param("from") LocalDate from, @Param("to") LocalDate to);
+
     Page<HabitLog> findAllByHabitIdAndLogDateBetween(Long habitId, LocalDate from, LocalDate to, Pageable pageable);
 
     /**
