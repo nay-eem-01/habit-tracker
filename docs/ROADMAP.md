@@ -12,7 +12,7 @@ branch and PRs into the phase base, in order; the base PRs into `staging` when t
 
 **Legend:** ✅ done · 🔄 in progress · ⬜ not started · ⏸ deferred
 
-**Progress:** Phase 5 of 5 · 25 of 26 steps done (plus 2 pre-deploy steps)
+**Progress:** Phase 5 of 5 · 25 of 26 steps done (plus 2 pre-deploy steps) · Frontend: Phase F, own repo
 
 ## Where we are (2026-10-01)
 
@@ -20,7 +20,7 @@ branch and PRs into the phase base, in order; the base PRs into `staging` when t
 - **The core habit loop works:** habits (daily, chosen weekdays, N times a week) → check-ins →
   strict streaks → 7/30-day stats, in each user's timezone. 110 tests pass.
 - **M1 is feature-complete:** reminders (per-habit time in the user's timezone, minute scheduler, in-app notifications, optional email). 132 tests pass.
-- **Next: the frontend** (own repo, React + TypeScript + Vite — agreed 2026-10-01), then before any shared deploy D.1/D.2.
+- **Phases 0–5 are all on `staging`.** **Next: the frontend** — Phase F below, in its own repo (`habit-tracker-web`, React + TypeScript + Vite — agreed 2026-10-01); before any shared deploy D.1/D.2.
 - 2.3 Google sign-in is deferred. After M1: goals, resources, levels, dashboard, AI (`PLAN.md` §11).
 
 ---
@@ -92,6 +92,22 @@ Base branch: `feat/reminders-base`. Design in `PLAN.md` §12.2; Q11 (channels) a
 | 5.2 | `notifications` table + `GET /api/notifications`, mark read, read all | ✅ |
 | 5.3 | Reminder scheduler — every minute, per-user timezone, due today and not done, no duplicates | ✅ |
 | 5.4 | Email channel behind `NotificationSender` (console in dev, SMTP when configured) | ✅ |
+
+## Phase F — Frontend (own repo: `habit-tracker-web`, started 2026-10-01)
+
+React + TypeScript + Vite SPA, TanStack Query for server state, Tailwind. Talks to this API through
+the Vite dev proxy (`/api`), so the SameSite=Strict refresh cookie works; API types are generated
+from the OpenAPI spec (`/v3/api-docs`). Tracked here so the whole product is in one plan; the code,
+branches and PRs live in the frontend repo, same flow (phase base → step branches → `staging`).
+
+| # | Step | Status |
+|---|---|---|
+| F.1 | Scaffold: Vite + TS + Tailwind + router + TanStack Query, dev proxy, API client with silent token refresh | 🔄 |
+| F.2 | Sign in / register pages, protected routes, sign out | ⬜ |
+| F.3 | Habit list, create / edit (schedule, target, reminder time), archive | ⬜ |
+| F.4 | Today view — one-tap check-in, streak next to each habit | ⬜ |
+| F.5 | Habit detail — streak, 7/30-day stats, log history | ⬜ |
+| F.6 | Notification bell (unread count polling), list, mark read; reminder-time field | ⬜ |
 
 ## Before any shared deploy
 

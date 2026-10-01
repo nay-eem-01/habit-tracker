@@ -27,7 +27,7 @@ The step-by-step plan and overall progress are in `docs/ROADMAP.md`; decisions a
 
 ## Next up
 
-1. The frontend — own repo (React + TypeScript + Vite); add it to the roadmap as Phase F first.
+1. The frontend — Phase F in `ROADMAP.md`, own repo `habit-tracker-web` (sibling folder). F.1 scaffold first.
 2. Before any shared deploy: Flyway (D.1), production profile (D.2).
 3. Then M2 Goals → M3 Resources → M4 Levels → M5 Dashboard → M6 AI (`PLAN.md` §11).
 4. Later: 2.3 Google sign-in.
@@ -44,6 +44,13 @@ The step-by-step plan and overall progress are in `docs/ROADMAP.md`; decisions a
 | Week starts on Monday for every user (`PLAN.md` §8b) — per-user week start if anyone asks | later | nothing |
 
 ---
+
+## 2026-10-01 (Phase 5 merged, frontend started)
+
+**Done**
+- Phase 5 merged to `staging` (PRs #28–#32). Phases 0–5 are all on `staging`.
+- Phase F (frontend) added to the roadmap; `habit-tracker-web` is its own repo, F.1 scaffold in
+  progress there.
 
 ## 2026-10-01 (roadmap 5.4 — Phase 5 done, M1 feature-complete)
 
