@@ -8,25 +8,26 @@ The step-by-step plan and overall progress are in `docs/ROADMAP.md`; decisions a
 
 ## Where we are
 
-- **Phases 0–4 done** (2.3 Google sign-in deferred); **Phase 5 started (5.1–5.3 done)** — 24 of 26 steps. **The core loop works:**
-  account → habits → daily check-ins → strict streaks → 7/30-day stats, all in the user's timezone.
-  0–2 are on `staging`; Phases 3–4 are on step branches waiting for PRs.
-- Open PRs, in order (links in the chat): `docs/dev-log-after-merge` → `staging`;
-  `docs/product-roadmap` → `staging`; 3.1–3.3 → `feat/habits-base`, then → `staging`;
-  4.0–4.5 → `feat/checkins-base`, then → `staging`.
-- **Next in M1: Phase 5 — reminders and notifications** (`PLAN.md` §12.2). After M1: goals,
-  resources, levels, dashboard and AI insights (`PLAN.md` §11).
+- **Phases 0–5 done** (2.3 Google sign-in deferred) — 25 of 26 steps. **M1 is feature-complete.** The core loop
+  works: account → habits → daily check-ins → strict streaks → 7/30-day stats → reminders (in-app,
+  optional email), all in the user's timezone. Phases 0–4 are on `staging`; Phase 5 is on step
+  branches waiting for PRs.
+- Open PRs, in order (links in the chat): 5.1 `feat/reminder-time` → `feat/reminders-base`; 5.2
+  `feat/notifications`, 5.3 `feat/reminder-scheduler`, 5.4 `feat/email-channel` likewise; then
+  `feat/reminders-base` → `staging`.
+- **Next: the frontend** — its own repo, React + TypeScript + Vite + TanStack Query + Tailwind, types
+  generated from the OpenAPI spec (agreed 2026-10-01). Then goals, resources, levels, dashboard and
+  AI insights (`PLAN.md` §11).
 - Branch flow: step branch from the previous step's branch → PR into the phase's base branch →
   base PRs into `staging`. Claude commits and pushes and gives PR links (no `gh` on the machine);
   Nayeem opens and merges. Commits carry Nayeem's name only.
-- Tests need Docker running (Testcontainers). 126 tests pass.
+- Tests need Docker running (Testcontainers). 132 tests pass.
 - To run locally: PostgreSQL running, and `db_user_name`, `db_password`, `JWT_SECRET` (≥ 32 bytes)
   set.
 
 ## Next up
 
-1. Phase 5 — base `feat/reminders-base`: ~~5.1 reminder time on habits~~ → ~~5.2 notifications table and
-   API~~ → ~~5.3 minute scheduler~~ → 5.3 minute scheduler → 5.4 email channel (Q11 first: in-app + email? SMTP?).
+1. The frontend — own repo (React + TypeScript + Vite); add it to the roadmap as Phase F first.
 2. Before any shared deploy: Flyway (D.1), production profile (D.2).
 3. Then M2 Goals → M3 Resources → M4 Levels → M5 Dashboard → M6 AI (`PLAN.md` §11).
 4. Later: 2.3 Google sign-in.
@@ -43,6 +44,32 @@ The step-by-step plan and overall progress are in `docs/ROADMAP.md`; decisions a
 | Week starts on Monday for every user (`PLAN.md` §8b) — per-user week start if anyone asks | later | nothing |
 
 ---
+
+## 2026-10-01 (roadmap 5.4 — Phase 5 done, M1 feature-complete)
+
+**Decided**
+- Q11 answered with its recommended default (Nayeem asked to finish the phase without answering it):
+  in-app always, email on top over SMTP, **off until configured**; push waits for the frontend.
+  Change it if you want something else.
+
+**Done**
+- `NotificationSender` interface (`OutgoingNotification`: user id, address, title, body).
+  `ConsoleNotificationSender` (default — logs the user id only) and `EmailNotificationSender`
+  (`JavaMailSender`, plain text) chosen by `app.notifications.email.enabled`. Enabled without
+  `spring.mail.host` the app refuses to start (tested).
+- `ReminderService` publishes the event only for a *new* reminder; `NotificationDispatcher` sends
+  it `AFTER_COMMIT` — a slow mail server never holds the transaction, a rolled-back run sends
+  nothing, a duplicate minute sends nothing. A failing channel is logged (user id + exception class,
+  never the address) and dropped; the in-app notification is already there.
+- `spring-boot-starter-mail`; settings documented in `application.properties`
+  (`APP_NOTIFICATIONS_EMAIL_ENABLED`, `…_FROM`, `SPRING_MAIL_HOST/PORT/USERNAME/PASSWORD`).
+- `NotificationDeliveryTest` (5), `ReminderDeliveryIntegrationTest` (1, real commit, mocked
+  sender). 132 tests pass.
+
+**Not done / to know**
+- No per-user email opt-out yet — it is a global switch. Add one before turning email on for
+  strangers.
+- Sending runs on the scheduler thread, one mail at a time; fine for one user's scale.
 
 ## 2026-10-01 (roadmap 5.3)
 
