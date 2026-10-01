@@ -13,7 +13,8 @@ import org.springframework.context.annotation.Import;
  * MockMvc. Extend it rather than repeating the annotations, so every integration test shares one
  * cached context (and one container).
  */
-@SpringBootTest(properties = "app.security.jwt.secret=" + IntegrationTest.TEST_JWT_SECRET)
+@SpringBootTest(properties = {"app.security.jwt.secret=" + IntegrationTest.TEST_JWT_SECRET,
+        "app.reminders.enabled=false"})
 @AutoConfigureMockMvc
 @Import(TestcontainersConfiguration.class)
 public abstract class IntegrationTest {

@@ -3,6 +3,11 @@ package com.nayeem.habittracker.habit;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+
+import java.time.Instant;
+import java.util.List;
 
 import java.util.Optional;
 
@@ -15,4 +20,23 @@ interface HabitRepository extends JpaRepository<Habit, Long> {
     Optional<Habit> findByIdAndUserId(Long id, Long userId);
 
     Page<Habit> findAllByUserIdAndArchived(Long userId, boolean archived, Pageable pageable);
+
+    /**
+     * Active habits whose reminder time is this minute <em>in their owner's timezone</em> and that
+     * aren't done yet on the owner's today (plan §12.2). The zone conversion is Postgres's, so one
+     * query serves every user. Whether the habit is due today is the caller's rule.
+     */
+    @Query(nativeQuery = true, value = """
+            select h.* from habits h
+            join users u on u.id = h.user_id
+            where h.archived = false
+              and h.reminder_time is not null
+              and h.reminder_time = date_trunc('minute', cast(:now as timestamptz) at time zone u.timezone)::time
+              and not exists (
+                  select 1 from habit_logs l
+                  where l.habit_id = h.id
+                    and l.log_date = (cast(:now as timestamptz) at time zone u.timezone)::date
+                    and l.completed_count >= h.target_count)
+            """)
+    List<Habit> findRemindableAt(@Param("now") Instant now);
 }
