@@ -8,7 +8,7 @@ The step-by-step plan and overall progress are in `docs/ROADMAP.md`; decisions a
 
 ## Where we are
 
-- **Phases 0–4 done** (2.3 Google sign-in deferred) — 21 of 26 steps. **The core loop works:**
+- **Phases 0–4 done** (2.3 Google sign-in deferred); **Phase 5 started (5.1 done)** — 22 of 26 steps. **The core loop works:**
   account → habits → daily check-ins → strict streaks → 7/30-day stats, all in the user's timezone.
   0–2 are on `staging`; Phases 3–4 are on step branches waiting for PRs.
 - Open PRs, in order (links in the chat): `docs/dev-log-after-merge` → `staging`;
@@ -19,13 +19,13 @@ The step-by-step plan and overall progress are in `docs/ROADMAP.md`; decisions a
 - Branch flow: step branch from the previous step's branch → PR into the phase's base branch →
   base PRs into `staging`. Claude commits and pushes and gives PR links (no `gh` on the machine);
   Nayeem opens and merges. Commits carry Nayeem's name only.
-- Tests need Docker running (Testcontainers). 110 tests pass.
+- Tests need Docker running (Testcontainers). 112 tests pass.
 - To run locally: PostgreSQL running, and `db_user_name`, `db_password`, `JWT_SECRET` (≥ 32 bytes)
   set.
 
 ## Next up
 
-1. Phase 5 — base `feat/reminders-base`: 5.1 reminder time on habits → 5.2 notifications table and
+1. Phase 5 — base `feat/reminders-base`: ~~5.1 reminder time on habits~~ → 5.2 notifications table and
    API → 5.3 minute scheduler → 5.4 email channel (Q11 first: in-app + email? SMTP?).
 2. Before any shared deploy: Flyway (D.1), production profile (D.2).
 3. Then M2 Goals → M3 Resources → M4 Levels → M5 Dashboard → M6 AI (`PLAN.md` §11).
@@ -43,6 +43,18 @@ The step-by-step plan and overall progress are in `docs/ROADMAP.md`; decisions a
 | Week starts on Monday for every user (`PLAN.md` §8b) — per-user week start if anyone asks | later | nothing |
 
 ---
+
+## 2026-10-01 (roadmap 5.1)
+
+**Done**
+- `Habit.reminderTime` (`LocalTime`, nullable = no reminder), the owner's local time of day; part of
+  `HabitRequest` / `HabitResponse`, so create and the full-replace PUT set or clear it (omitted =
+  cleared, like `category`).
+- Wire format is strictly `HH:mm` (`"07:30"`); `25:00`, `7:3`, `07:30:15`, `noon` → 400.
+- `HabitReminderTimeIntegrationTest` (2). 112 tests pass.
+- Branches: `feat/reminders-base` (from `staging`) → `feat/reminder-time`.
+
+**Next:** 5.2 notifications table and API.
 
 ## 2026-09-30 (roadmap 4.5 — Phase 4 done, the core loop works)
 
