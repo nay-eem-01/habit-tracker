@@ -12,14 +12,15 @@ branch and PRs into the phase base, in order; the base PRs into `staging` when t
 
 **Legend:** ✅ done · 🔄 in progress · ⬜ not started · ⏸ deferred
 
-**Progress:** Phase 5 of 5 · 24 of 26 steps done (plus 2 pre-deploy steps)
+**Progress:** Phase 5 of 5 · 25 of 26 steps done (plus 2 pre-deploy steps)
 
-## Where we are (2026-09-30)
+## Where we are (2026-10-01)
 
-- **Phases 0–2 merged to `staging`** (PRs #3–#14); **Phases 3–4 done** on step branches.
+- **Phases 0–2 merged to `staging`** (PRs #3–#14); Phases 3–4 merged (#23–#27); **Phase 5 done** on step branches.
 - **The core habit loop works:** habits (daily, chosen weekdays, N times a week) → check-ins →
   strict streaks → 7/30-day stats, in each user's timezone. 110 tests pass.
-- **Next: Phase 5 — reminders and notifications** (moved into M1 on 2026-09-30).
+- **M1 is feature-complete:** reminders (per-habit time in the user's timezone, minute scheduler, in-app notifications, optional email). 132 tests pass.
+- **Next: the frontend** (own repo, React + TypeScript + Vite — agreed 2026-10-01), then before any shared deploy D.1/D.2.
 - 2.3 Google sign-in is deferred. After M1: goals, resources, levels, dashboard, AI (`PLAN.md` §11).
 
 ---
@@ -81,16 +82,16 @@ Base branch: `feat/checkins-base`. "Today" is in the user's timezone (`PLAN.md` 
 | 4.4 | `GET /api/habits/{id}/streak` | ✅ |
 | 4.5 | `GET /api/habits/{id}/stats` — completion rate over 7 / 30 days | ✅ |
 
-## Phase 5 — Reminders and notifications (M1, added 2026-09-30)
+## Phase 5 — Reminders and notifications (M1, added 2026-09-30) ✅
 
-Base branch: `feat/reminders-base`. Design in `PLAN.md` §12.2; Q11 (channels) before 5.4.
+Base branch: `feat/reminders-base`. Design in `PLAN.md` §12.2; Q11 (channels) answered with the recommended default (in-app + SMTP email, off until configured).
 
 | # | Step | Status |
 |---|---|---|
 | 5.1 | `reminderTime` on habits (set / clear, in the user's timezone) | ✅ |
 | 5.2 | `notifications` table + `GET /api/notifications`, mark read, read all | ✅ |
 | 5.3 | Reminder scheduler — every minute, per-user timezone, due today and not done, no duplicates | ✅ |
-| 5.4 | Email channel behind `NotificationSender` (console in dev, SMTP when configured) | ⬜ |
+| 5.4 | Email channel behind `NotificationSender` (console in dev, SMTP when configured) | ✅ |
 
 ## Before any shared deploy
 
@@ -154,4 +155,4 @@ Steps get split further if one grows past a small PR.
 
 | # | Feature |
 |---|---|
-| L6 | Frontend |
+| L6 | Frontend — separate repo; next up after Phase 5 |

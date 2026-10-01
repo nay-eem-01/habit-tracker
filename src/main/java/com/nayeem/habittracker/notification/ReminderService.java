@@ -6,6 +6,7 @@ import com.nayeem.habittracker.habit.Habit;
 import com.nayeem.habittracker.habit.HabitService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,6 +27,7 @@ public class ReminderService {
     private final HabitService habitService;
     private final HabitProgressService habitProgressService;
     private final NotificationRepository notificationRepository;
+    private final ApplicationEventPublisher events;
 
     /** @return how many reminders were created for the minute containing {@code now} */
     @Transactional
@@ -36,11 +38,14 @@ public class ReminderService {
             if (!isDue(habit, today)) {
                 continue;
             }
+            String title = "Reminder: " + habit.getName();
+            String body = "Time to do it. Check in to keep your streak going.";
             int inserted = notificationRepository.insertIfAbsent(habit.getUser().getId(), habit.getId(),
-                    NotificationType.HABIT_REMINDER.name(), "Reminder: " + habit.getName(),
-                    "Time to do it. Check in to keep your streak going.", today, now);
+                    NotificationType.HABIT_REMINDER.name(), title, body, today, now);
             if (inserted == 1) {
                 created++;
+                events.publishEvent(new OutgoingNotification(habit.getUser().getId(), habit.getUser().getEmail(),
+                        title, body)); // sent after commit, only for a new reminder
                 log.info("Reminder created for habit {} (user {}) on {}", habit.getId(), habit.getUser().getId(), today);
             }
         }
