@@ -45,6 +45,28 @@ The step-by-step plan and overall progress are in `docs/ROADMAP.md`; decisions a
 
 ---
 
+## 2026-10-02 (frontend F.3 — habits)
+
+**Done** (in `habit-tracker-web`, branch `feat/habits-page` on top of `feat/auth-pages`)
+- `/habits`: Active / Archived tabs, each habit with its schedule, target and reminder in words,
+  Edit, Archive (with an Undo line) / Restore, pagination. `/habits/new` and `/habits/:id/edit`
+  share one form: name, category, how often (every day / chosen weekdays / N times a week), times a
+  day, optional reminder time (shows the user's timezone). Edit is the full-replace PUT, so turning
+  the reminder off clears it. `/` redirects to `/habits` until the Today view (F.4).
+- API types generated from this backend's OpenAPI spec (`npm run gen:api`) for request bodies.
+- 42 frontend tests; also run end to end in a real browser (Playwright + Chrome) against this
+  backend on a throwaway Postgres: register → create three kinds of habit → edit → archive/undo →
+  reload keeps the session → sign out. No app errors.
+
+**Found while testing for real**
+- The browser sends `Origin: http://localhost:<dev port>` through the Vite proxy; the backend only
+  allows `CORS_ALLOWED_ORIGINS` (default `http://localhost:3000`) and answered **403 "Invalid CORS
+  request"** to every POST on any other port. Fixed on the frontend side: the dev proxy drops the
+  `Origin` header (same as production, where app and API share one origin). Nothing to change here.
+- The OpenAPI spec types every response `payload` as `unknown` (`HttpResponse.payload` is
+  `Object`), so generated types cover requests only and response types are hand-written. Worth
+  fixing later (e.g. springdoc response schemas per endpoint) — not urgent.
+
 ## 2026-10-01 (frontend F.2 — sign in, register, protected routes)
 
 **Done** (in `habit-tracker-web`, branch `feat/auth-pages` on top of `feat/scaffold`)
