@@ -12,7 +12,7 @@ branch and PRs into the phase base, in order; the base PRs into `staging` when t
 
 **Legend:** ✅ done · 🔄 in progress · ⬜ not started · ⏸ deferred
 
-**Progress:** Phase 5 of 5 · 21 of 26 steps done (plus 2 pre-deploy steps)
+**Progress:** Phase 5 of 5 · 22 of 26 steps done (plus 2 pre-deploy steps)
 
 ## Where we are (2026-09-30)
 
@@ -87,7 +87,7 @@ Base branch: `feat/reminders-base`. Design in `PLAN.md` §12.2; Q11 (channels) b
 
 | # | Step | Status |
 |---|---|---|
-| 5.1 | `reminderTime` on habits (set / clear, in the user's timezone) | ⬜ |
+| 5.1 | `reminderTime` on habits (set / clear, in the user's timezone) | ✅ |
 | 5.2 | `notifications` table + `GET /api/notifications`, mark read, read all | ⬜ |
 | 5.3 | Reminder scheduler — every minute, per-user timezone, due today and not done, no duplicates | ⬜ |
 | 5.4 | Email channel behind `NotificationSender` (console in dev, SMTP when configured) | ⬜ |
