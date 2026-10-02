@@ -131,7 +131,7 @@ Steps get split further if one grows past a small PR.
 
 ### M2 — Goals ✅
 
-Base branch: `feat/goals-base`. G.1 merged; G.2–G.4 are stacked step branches (`feat/habit-goal-link` → `feat/goal-progress` → `feat/goal-status`).
+Base branch: `feat/goals-base`. G.1 merged; G.2–G.4 are stacked step branches (`feat/habit-goal-link` → `feat/goal-progress` → `feat/goal-status`) — all merged.
 
 | # | Step | Status |
 |---|---|---|
@@ -140,12 +140,15 @@ Base branch: `feat/goals-base`. G.1 merged; G.2–G.4 are stacked step branches 
 | G.3 | Goal progress — calculator (unit-tested) + `GET /api/goals/{id}/progress` | ✅ |
 | G.4 | Mark achieved / abandoned | ✅ |
 
-### M3 — Resources
+### M3 — Resources ✅ (notes and links)
+
+Base branch: `feat/resources-base`. Q9 answered 2026-10-03: notes and links first; **file uploads come right after M3** (own steps, to be designed — storage, size and type limits).
 
 | # | Step | Status |
 |---|---|---|
-| R.1 | `Resource` entity (`NOTE` / `LINK`) + `/api/resources` CRUD, `?goalId=`, `?type=`, `?q=` | ⬜ |
-| R.2 | `GET /api/goals/{id}/resources`, pinned first | ⬜ |
+| R.1 | `Resource` entity (`NOTE` / `LINK`) + `/api/resources` CRUD, `?goalId=`, `?type=`, `?q=`, pin / unpin | ✅ |
+| R.2 | `GET /api/goals/{id}/resources`, pinned first | ✅ |
+| R.3 | File uploads — design first (where files live, size and type limits, virus/abuse rules), then split into steps | ⬜ |
 
 ### M4 — Levels
 
