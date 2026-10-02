@@ -19,6 +19,8 @@ interface HabitRepository extends JpaRepository<Habit, Long> {
 
     Optional<Habit> findByIdAndUserId(Long id, Long userId);
 
+    List<Habit> findAllByGoalIdAndUserIdOrderById(Long goalId, Long userId);
+
     Page<Habit> findAllByUserIdAndArchived(Long userId, boolean archived, Pageable pageable);
 
     /**
