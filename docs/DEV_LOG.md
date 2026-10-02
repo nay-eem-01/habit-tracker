@@ -45,6 +45,24 @@ The step-by-step plan and overall progress are in `docs/ROADMAP.md`; decisions a
 
 ---
 
+## 2026-10-01 (frontend F.2 — sign in, register, protected routes)
+
+**Done** (in `habit-tracker-web`, branch `feat/auth-pages` on top of `feat/scaffold`)
+- `AuthProvider` + guards: on start it signs back in from the httpOnly refresh cookie; `RequireAuth`
+  sends anonymous visitors to `/signin` and brings them back after; `GuestOnly` keeps signed-in
+  users off sign-in/register; a lost session (refresh fails) clears the query cache and signs out.
+- Sign-in and register pages: plain-language errors keyed on `errorCode`, per-field server messages
+  next to the field, the browser's timezone sent at sign-up (check-ins and reminders follow it).
+- Look: split screen — a deep-blue panel with the streak chain grid (one ember "today" cell, one
+  fill animation, off for reduced motion) beside a left-aligned form. Bricolage Grotesque +
+  Instrument Sans, self-hosted via fontsource.
+- 21 tests (client 12, app flows 9: guards, sign-in, register errors, sign-out). Build and lint clean.
+
+**To know**
+- Port 8080 on Nayeem's machine currently answers as another project (`AgriculturalBlogApplication`),
+  so the dev proxy would hit the wrong backend — stop it before `npm run dev` against this API.
+- API types are still hand-written (auth only); `npm run gen:api` needs this backend running.
+
 ## 2026-10-01 (Phase 5 merged, frontend started)
 
 **Done**
