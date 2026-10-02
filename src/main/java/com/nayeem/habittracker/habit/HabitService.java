@@ -3,6 +3,9 @@ package com.nayeem.habittracker.habit;
 import com.nayeem.habittracker.common.exception.ApplicationException;
 import com.nayeem.habittracker.common.exception.ErrorCode;
 import com.nayeem.habittracker.common.response.PageResponse;
+import com.nayeem.habittracker.goal.Goal;
+import com.nayeem.habittracker.goal.GoalService;
+import com.nayeem.habittracker.goal.GoalStatus;
 import com.nayeem.habittracker.user.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -10,7 +13,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Clock;
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.List;
 
 /**
@@ -24,6 +30,8 @@ public class HabitService {
 
     private final HabitRepository habitRepository;
     private final UserService userService;
+    private final GoalService goalService;
+    private final Clock clock;
 
     @Transactional
     public HabitResponse create(Long userId, HabitRequest request) {
@@ -65,6 +73,39 @@ public class HabitService {
             habit.setArchived(archived);
             habit = habitRepository.saveAndFlush(habit);
             log.info("Habit {} {} by user {}", habitId, archived ? "archived" : "unarchived", userId);
+        }
+        return HabitResponse.from(habit);
+    }
+
+    /**
+     * Links the habit to one of the user's active goals (or changes the target of an existing
+     * link). Archived habits can't be linked; unarchive first.
+     */
+    @Transactional
+    public HabitResponse linkGoal(Long userId, Long habitId, GoalLinkRequest request) {
+        Habit habit = find(userId, habitId);
+        if (habit.isArchived()) {
+            throw new ApplicationException(ErrorCode.HABIT_ARCHIVED);
+        }
+        Goal goal = goalService.getOwnedGoal(userId, request.getGoalId());
+        if (goal.getStatus() != GoalStatus.ACTIVE) {
+            throw new ApplicationException(ErrorCode.GOAL_NOT_ACTIVE);
+        }
+        LocalDate today = LocalDate.now(clock.withZone(ZoneId.of(habit.getUser().getTimezone())));
+        habit.linkToGoal(goal, request.getGoalTargetDays(), today);
+        habit = habitRepository.saveAndFlush(habit);
+        log.info("Habit {} linked to goal {} by user {}", habitId, goal.getId(), userId);
+        return HabitResponse.from(habit);
+    }
+
+    /** Takes the habit off its goal; with no link it is a no-op, not an error. */
+    @Transactional
+    public HabitResponse unlinkGoal(Long userId, Long habitId) {
+        Habit habit = find(userId, habitId);
+        if (habit.getGoal() != null) {
+            habit.unlinkFromGoal();
+            habit = habitRepository.saveAndFlush(habit);
+            log.info("Habit {} unlinked from its goal by user {}", habitId, userId);
         }
         return HabitResponse.from(habit);
     }
