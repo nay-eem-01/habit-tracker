@@ -47,6 +47,24 @@ The step-by-step plan and overall progress are in `docs/ROADMAP.md`; decisions a
 
 ---
 
+## 2026-10-02 (sign-up bug found while testing the frontend; frontend planning moves)
+
+**Found**
+- Every sign-up answered "email already exists". Cause: the local `users` table still had
+  `user_email` / `user_name` / `user_password` from the old `feat/user-service` draft (`ddl-auto=update`
+  adds columns, never drops them). `user_email` is NOT NULL, so each insert failed, and
+  `UserService.createLocalUser` turned *any* `DataIntegrityViolationException` into `USER_EMAIL_TAKEN`.
+  Nayeem dropped the three stale columns by hand. Flyway (D.1) removes this class of problem.
+
+**Done**
+- `createLocalUser` now reports `USER_EMAIL_TAKEN` only for a unique violation (SQLSTATE 23505);
+  any other integrity error is rethrown as the real fault. Three unit tests (no database).
+
+**Decided**
+- **Frontend planning lives in the frontend repo** (`habit-tracker-web/docs/`), not here: its plan,
+  roadmap and design decisions are there. This log only records that frontend work happened and what
+  it needed from the backend. Phase F in `ROADMAP.md` stays as the summary of F.1–F.6.
+
 ## 2026-10-02 (frontend F.5 and F.6 — habit detail, notification bell)
 
 **Done** (in `habit-tracker_web`: `feat/habit-detail` from `staging`, then `feat/notifications` on top of it)
