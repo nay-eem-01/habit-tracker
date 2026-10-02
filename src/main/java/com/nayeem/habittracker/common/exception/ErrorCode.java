@@ -32,6 +32,10 @@ public enum ErrorCode {
     HABIT_INVALID_FREQUENCY(HttpStatus.BAD_REQUEST, "The schedule doesn't match the frequency type"),
     HABIT_ARCHIVED(HttpStatus.CONFLICT, "This habit is archived; unarchive it first"),
 
+    GOAL_NOT_FOUND(HttpStatus.NOT_FOUND, "Goal not found"),
+    GOAL_ALREADY_CLOSED(HttpStatus.CONFLICT, "This goal is already achieved or abandoned"),
+    GOAL_NOT_ACTIVE(HttpStatus.CONFLICT, "Only an active goal can have habits linked to it"),
+
     LOG_DATE_OUT_OF_RANGE(HttpStatus.BAD_REQUEST, "You can't check in for that date"),
 
     NOTIFICATION_NOT_FOUND(HttpStatus.NOT_FOUND, "Notification not found");

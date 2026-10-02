@@ -8,16 +8,14 @@ The step-by-step plan and overall progress are in `docs/ROADMAP.md`; decisions a
 
 ## Where we are
 
-- **Phases 0–5 done** (2.3 Google sign-in deferred) — 25 of 26 steps. **M1 is feature-complete.** The core loop
-  works: account → habits → daily check-ins → strict streaks → 7/30-day stats → reminders (in-app,
-  optional email), all in the user's timezone. Phases 0–4 are on `staging`; Phase 5 is on step
-  branches waiting for PRs.
-- Open PRs, in order (links in the chat): 5.1 `feat/reminder-time` → `feat/reminders-base`; 5.2
-  `feat/notifications`, 5.3 `feat/reminder-scheduler`, 5.4 `feat/email-channel` likewise; then
-  `feat/reminders-base` → `staging`.
-- **Next: the frontend** — its own repo, React + TypeScript + Vite + TanStack Query + Tailwind, types
-  generated from the OpenAPI spec (agreed 2026-10-01). Then goals, resources, levels, dashboard and
-  AI insights (`PLAN.md` §11).
+- **Phases 0–5 done** (2.3 Google sign-in deferred) — 25 of 26 steps, all on `staging`. **M1 is
+  feature-complete.** The core loop works: account → habits → daily check-ins → strict streaks →
+  7/30-day stats → reminders (in-app, optional email), all in the user's timezone.
+- **M2 Goals is done** (G.1–G.4; Q6/Q7 answered 2026-10-02), on base branch `feat/goals-base`:
+  G.1 merged; G.2 `feat/habit-goal-link` → G.3 `feat/goal-progress` → G.4 `feat/goal-status` wait
+  for PRs, then `feat/goals-base` → `staging`. **Next: M3 Resources** (`PLAN.md` §11.2; Q9 first).
+- The frontend is built by another agent in its own repo (`habit-tracker-web`); backend work follows
+  this roadmap.
 - Branch flow: step branch from the previous step's branch → PR into the phase's base branch →
   base PRs into `staging`. Claude commits and pushes and gives PR links (no `gh` on the machine);
   Nayeem opens and merges. Commits carry Nayeem's name only.
@@ -29,10 +27,9 @@ The step-by-step plan and overall progress are in `docs/ROADMAP.md`; decisions a
 
 ## Next up
 
-1. Test the frontend against the running backend (Phase F is built: F.1–F.6 in `ROADMAP.md`, own repo `habit-tracker-web`, sibling folder), then fix what that finds.
+1. M3 Resources → M4 Levels → M5 Dashboard → M6 AI (`PLAN.md` §11).
 2. Before any shared deploy: Flyway (D.1), production profile (D.2).
-3. Then M2 Goals → M3 Resources → M4 Levels → M5 Dashboard → M6 AI (`PLAN.md` §11).
-4. Later: 2.3 Google sign-in.
+3. Later: 2.3 Google sign-in.
 
 ## Open items
 
