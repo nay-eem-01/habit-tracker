@@ -142,10 +142,13 @@ Base branch: `feat/goals-base`. G.1 merged; G.2–G.4 are stacked step branches 
 
 ### M3 — Resources
 
+Base branch: `feat/resources-base`. Q9 answered 2026-10-03: notes and links first; **file uploads come right after M3** (own steps, to be designed — storage, size and type limits).
+
 | # | Step | Status |
 |---|---|---|
-| R.1 | `Resource` entity (`NOTE` / `LINK`) + `/api/resources` CRUD, `?goalId=`, `?type=`, `?q=` | ⬜ |
+| R.1 | `Resource` entity (`NOTE` / `LINK`) + `/api/resources` CRUD, `?goalId=`, `?type=`, `?q=`, pin / unpin | ✅ |
 | R.2 | `GET /api/goals/{id}/resources`, pinned first | ⬜ |
+| R.3 | File uploads — design first (where files live, size and type limits, virus/abuse rules), then split into steps | ⬜ |
 
 ### M4 — Levels
 
