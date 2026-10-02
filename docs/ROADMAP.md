@@ -12,7 +12,7 @@ branch and PRs into the phase base, in order; the base PRs into `staging` when t
 
 **Legend:** ✅ done · 🔄 in progress · ⬜ not started · ⏸ deferred
 
-**Progress:** Phase 5 of 5 · 25 of 26 steps done (plus 2 pre-deploy steps) · Frontend: Phase F, own repo
+**Progress:** Phase 5 of 5 · 25 of 26 steps done (plus 2 pre-deploy steps) · M2 Goals: 1 of 4 · Frontend: Phase F, own repo (another agent)
 
 ## Where we are (2026-10-01)
 
@@ -133,7 +133,7 @@ Steps get split further if one grows past a small PR.
 
 | # | Step | Status |
 |---|---|---|
-| G.1 | `Goal` entity + `/api/goals` CRUD (paginated, `?status=`) | ⬜ |
+| G.1 | `Goal` entity + `/api/goals` create / get / list / update (paginated, `?status=`); no hard delete — abandoning is G.4 | ✅ |
 | G.2 | Link / unlink a habit to a goal with `goalTargetDays` | ⬜ |
 | G.3 | Goal progress — calculator (unit-tested) + `GET /api/goals/{id}/progress` | ⬜ |
 | G.4 | Mark achieved / abandoned | ⬜ |

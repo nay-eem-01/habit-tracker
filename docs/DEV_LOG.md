@@ -8,16 +8,13 @@ The step-by-step plan and overall progress are in `docs/ROADMAP.md`; decisions a
 
 ## Where we are
 
-- **Phases 0–5 done** (2.3 Google sign-in deferred) — 25 of 26 steps. **M1 is feature-complete.** The core loop
-  works: account → habits → daily check-ins → strict streaks → 7/30-day stats → reminders (in-app,
-  optional email), all in the user's timezone. Phases 0–4 are on `staging`; Phase 5 is on step
-  branches waiting for PRs.
-- Open PRs, in order (links in the chat): 5.1 `feat/reminder-time` → `feat/reminders-base`; 5.2
-  `feat/notifications`, 5.3 `feat/reminder-scheduler`, 5.4 `feat/email-channel` likewise; then
-  `feat/reminders-base` → `staging`.
-- **Next: the frontend** — its own repo, React + TypeScript + Vite + TanStack Query + Tailwind, types
-  generated from the OpenAPI spec (agreed 2026-10-01). Then goals, resources, levels, dashboard and
-  AI insights (`PLAN.md` §11).
+- **Phases 0–5 done** (2.3 Google sign-in deferred) — 25 of 26 steps, all on `staging`. **M1 is
+  feature-complete.** The core loop works: account → habits → daily check-ins → strict streaks →
+  7/30-day stats → reminders (in-app, optional email), all in the user's timezone.
+- **Now: M2 Goals** (`PLAN.md` §11.1) on base branch `feat/goals-base`. G.1 (goal CRUD) is done on
+  `feat/goal-crud`; **G.2 (link a habit to a goal) is next.** Q6/Q7 answered 2026-10-02.
+- The frontend is built by another agent in its own repo (`habit-tracker-web`); backend work follows
+  this roadmap.
 - Branch flow: step branch from the previous step's branch → PR into the phase's base branch →
   base PRs into `staging`. Claude commits and pushes and gives PR links (no `gh` on the machine);
   Nayeem opens and merges. Commits carry Nayeem's name only.
