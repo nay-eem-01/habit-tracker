@@ -10,6 +10,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Clock;
+import java.time.Instant;
+
 /**
  * Goals of the signed-in user. Every method takes the acting user's id (from the security
  * context, never the request) and only ever sees that user's goals — anyone else's is 404.
@@ -21,6 +24,7 @@ public class GoalService {
 
     private final GoalRepository goalRepository;
     private final UserService userService;
+    private final Clock clock;
 
     @Transactional
     public GoalResponse create(Long userId, GoalRequest request) {
@@ -52,6 +56,22 @@ public class GoalService {
         Goal goal = find(userId, goalId);
         apply(goal, request);
         return GoalResponse.from(goalRepository.saveAndFlush(goal));
+    }
+
+    /**
+     * The user decides a goal is {@code ACHIEVED} or {@code ABANDONED} — it is never set by progress
+     * reaching 100 % (Q7). Linked habits stay linked. Repeating the same call is fine.
+     */
+    @Transactional
+    public GoalResponse close(Long userId, Long goalId, GoalStatus outcome) {
+        Goal goal = find(userId, goalId);
+        GoalStatus before = goal.getStatus();
+        goal.close(outcome, Instant.now(clock));
+        if (before != goal.getStatus()) {
+            goal = goalRepository.saveAndFlush(goal);
+            log.info("Goal {} {} by user {}", goalId, outcome, userId);
+        }
+        return GoalResponse.from(goal);
     }
 
     /** The user's goal, for other features that work on it (linking habits); 404 when it isn't theirs. */

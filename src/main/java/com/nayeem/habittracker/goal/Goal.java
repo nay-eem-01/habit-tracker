@@ -1,6 +1,8 @@
 package com.nayeem.habittracker.goal;
 
 import com.nayeem.habittracker.common.AuditModel;
+import com.nayeem.habittracker.common.exception.ApplicationException;
+import com.nayeem.habittracker.common.exception.ErrorCode;
 import com.nayeem.habittracker.user.User;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -46,4 +48,22 @@ public class Goal extends AuditModel {
 
     /** When the user marked it achieved; null otherwise. */
     private Instant achievedAt;
+
+    /**
+     * Moves an active goal to {@code ACHIEVED} or {@code ABANDONED}. Doing the same again is a no-op
+     * (keeps the first {@code achievedAt}); switching between the two is refused (409).
+     */
+    public void close(GoalStatus outcome, Instant now) {
+        if (outcome == GoalStatus.ACTIVE) {
+            throw new IllegalArgumentException("A goal is closed as ACHIEVED or ABANDONED");
+        }
+        if (status == outcome) {
+            return;
+        }
+        if (status != GoalStatus.ACTIVE) {
+            throw new ApplicationException(ErrorCode.GOAL_ALREADY_CLOSED);
+        }
+        status = outcome;
+        achievedAt = outcome == GoalStatus.ACHIEVED ? now : null;
+    }
 }

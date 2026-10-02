@@ -68,6 +68,24 @@ class GoalController {
         return HttpResponse.ok("Goal updated", goalService.update(user.id(), id, request));
     }
 
+    @Operation(summary = "Mark a goal achieved (my call, not automatic at 100 %)")
+    @ApiResponse(responseCode = "200", description = "The goal, ACHIEVED with achievedAt; repeating it is fine")
+    @ApiResponse(responseCode = "404", description = "No such goal, or not yours (GOAL_NOT_FOUND)")
+    @ApiResponse(responseCode = "409", description = "Already abandoned (GOAL_ALREADY_CLOSED)")
+    @PostMapping("/{id}/achieve")
+    ResponseEntity<HttpResponse> achieve(@AuthenticationPrincipal AuthUser user, @PathVariable Long id) {
+        return HttpResponse.ok("Goal achieved", goalService.close(user.id(), id, GoalStatus.ACHIEVED));
+    }
+
+    @Operation(summary = "Give a goal up; its habits stay linked")
+    @ApiResponse(responseCode = "200", description = "The goal, ABANDONED; repeating it is fine")
+    @ApiResponse(responseCode = "404", description = "No such goal, or not yours (GOAL_NOT_FOUND)")
+    @ApiResponse(responseCode = "409", description = "Already achieved (GOAL_ALREADY_CLOSED)")
+    @PostMapping("/{id}/abandon")
+    ResponseEntity<HttpResponse> abandon(@AuthenticationPrincipal AuthUser user, @PathVariable Long id) {
+        return HttpResponse.ok("Goal abandoned", goalService.close(user.id(), id, GoalStatus.ABANDONED));
+    }
+
     @Operation(summary = "How far a goal has come, in total and per linked habit")
     @ApiResponse(responseCode = "200", description = "Progress 0-100 %, computed from the habits' done days")
     @ApiResponse(responseCode = "404", description = "No such goal, or not yours (GOAL_NOT_FOUND)")

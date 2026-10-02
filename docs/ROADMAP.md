@@ -12,7 +12,7 @@ branch and PRs into the phase base, in order; the base PRs into `staging` when t
 
 **Legend:** ✅ done · 🔄 in progress · ⬜ not started · ⏸ deferred
 
-**Progress:** Phase 5 of 5 · 25 of 26 steps done (plus 2 pre-deploy steps) · M2 Goals: 3 of 4 · Frontend: Phase F, own repo (another agent)
+**Progress:** Phase 5 of 5 · 25 of 26 steps done (plus 2 pre-deploy steps) · M2 Goals ✅ 4 of 4 · Frontend: Phase F, own repo (another agent)
 
 ## Where we are (2026-10-01)
 
@@ -129,14 +129,16 @@ Designed in `PLAN.md` §11. **Nothing here starts before Phase 4 is merged** —
 comes first. Open questions Q6–Q10 (`PLAN.md` §11.6) are answered before each milestone starts.
 Steps get split further if one grows past a small PR.
 
-### M2 — Goals
+### M2 — Goals ✅
+
+Base branch: `feat/goals-base`. G.1 merged; G.2–G.4 are stacked step branches (`feat/habit-goal-link` → `feat/goal-progress` → `feat/goal-status`).
 
 | # | Step | Status |
 |---|---|---|
 | G.1 | `Goal` entity + `/api/goals` create / get / list / update (paginated, `?status=`); no hard delete — abandoning is G.4 | ✅ |
 | G.2 | Link / unlink a habit to a goal with `goalTargetDays` | ✅ |
 | G.3 | Goal progress — calculator (unit-tested) + `GET /api/goals/{id}/progress` | ✅ |
-| G.4 | Mark achieved / abandoned | ⬜ |
+| G.4 | Mark achieved / abandoned | ✅ |
 
 ### M3 — Resources
 
