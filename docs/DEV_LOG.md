@@ -11,9 +11,9 @@ The step-by-step plan and overall progress are in `docs/ROADMAP.md`; decisions a
 - **Phases 0–5 done** (2.3 Google sign-in deferred) — 25 of 26 steps, all on `staging`. **M1 is
   feature-complete.** The core loop works: account → habits → daily check-ins → strict streaks →
   7/30-day stats → reminders (in-app, optional email), all in the user's timezone.
-- **M2 Goals is done** (G.1–G.4; Q6/Q7 answered 2026-10-02), on base branch `feat/goals-base`:
-  G.1 merged; G.2 `feat/habit-goal-link` → G.3 `feat/goal-progress` → G.4 `feat/goal-status` wait
-  for PRs, then `feat/goals-base` → `staging`. **Next: M3 Resources** (`PLAN.md` §11.2; Q9 first).
+- **M2 Goals is done and merged** (G.1–G.4). **Now: M3 Resources** (`PLAN.md` §11.2) on base branch
+  `feat/resources-base`; R.1 (notes + links CRUD) is on `feat/resource-crud`, **R.2 (goal's resources)
+  is next**, then file uploads (R.3, Nayeem's call 2026-10-03).
 - The frontend is built by another agent in its own repo (`habit-tracker-web`); backend work follows
   this roadmap.
 - Branch flow: step branch from the previous step's branch → PR into the phase's base branch →
@@ -27,7 +27,7 @@ The step-by-step plan and overall progress are in `docs/ROADMAP.md`; decisions a
 
 ## Next up
 
-1. M3 Resources → M4 Levels → M5 Dashboard → M6 AI (`PLAN.md` §11).
+1. M3 Resources → file uploads → M4 Levels → M5 Dashboard → M6 AI (`PLAN.md` §11).
 2. Before any shared deploy: Flyway (D.1), production profile (D.2).
 3. Later: 2.3 Google sign-in.
 

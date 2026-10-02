@@ -36,6 +36,9 @@ public enum ErrorCode {
     GOAL_ALREADY_CLOSED(HttpStatus.CONFLICT, "This goal is already achieved or abandoned"),
     GOAL_NOT_ACTIVE(HttpStatus.CONFLICT, "Only an active goal can have habits linked to it"),
 
+    RESOURCE_NOT_FOUND(HttpStatus.NOT_FOUND, "Resource not found"),
+    RESOURCE_INVALID(HttpStatus.BAD_REQUEST, "The fields don't fit the resource type"),
+
     LOG_DATE_OUT_OF_RANGE(HttpStatus.BAD_REQUEST, "You can't check in for that date"),
 
     NOTIFICATION_NOT_FOUND(HttpStatus.NOT_FOUND, "Notification not found");
