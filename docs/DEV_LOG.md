@@ -47,6 +47,14 @@ The step-by-step plan and overall progress are in `docs/ROADMAP.md`; decisions a
 
 ---
 
+## 2026-10-02 (frontend G.0 — test pass)
+
+**Done** (details in `habit-tracker-web/docs/DEV_LOG.md`)
+- Drove the real frontend against this backend and local Postgres, desktop and phone: sign-up,
+  sign-in, habits, check-ins, streak/stats/logs, notifications, refresh cookie, sign-out all work.
+  The API contract the frontend relies on held up; **no backend changes needed**. Two phone layout
+  bugs were found and fixed on the frontend side only.
+
 ## 2026-10-02 (sign-up bug found while testing the frontend; frontend planning moves)
 
 **Found**
