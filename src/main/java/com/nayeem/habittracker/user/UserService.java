@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import java.sql.SQLException;
 import java.time.DateTimeException;
 import java.time.ZoneId;
 import java.util.Locale;
@@ -48,6 +49,12 @@ public class UserService {
             // flush now so a concurrent sign-up with the same email fails here, as a 409
             user = userRepository.saveAndFlush(user);
         } catch (DataIntegrityViolationException e) {
+            // Only a unique violation means the email is taken (it is the only unique column the
+            // sign-up fills in). Anything else — a NOT NULL column, a stale schema — is a real
+            // fault and must surface as one, not as "already registered".
+            if (!isUniqueViolation(e)) {
+                throw e;
+            }
             throw new ApplicationException(ErrorCode.USER_EMAIL_TAKEN);
         }
         log.info("User {} registered ({})", user.getId(), AuthProvider.LOCAL);
@@ -63,6 +70,18 @@ public class UserService {
     public User getById(Long id) {
         return userRepository.findById(id)
                 .orElseThrow(() -> new ApplicationException(ErrorCode.USER_NOT_FOUND));
+    }
+
+    /** PostgreSQL SQLSTATE 23505: unique_violation. */
+    private static final String UNIQUE_VIOLATION = "23505";
+
+    static boolean isUniqueViolation(Throwable error) {
+        for (Throwable cause = error; cause != null; cause = cause.getCause()) {
+            if (cause instanceof SQLException sql && UNIQUE_VIOLATION.equals(sql.getSQLState())) {
+                return true;
+            }
+        }
+        return false;
     }
 
     static String normalizeEmail(String email) {
