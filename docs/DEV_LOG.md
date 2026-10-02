@@ -22,8 +22,10 @@ The step-by-step plan and overall progress are in `docs/ROADMAP.md`; decisions a
   base PRs into `staging`. Claude commits and pushes and gives PR links (no `gh` on the machine);
   Nayeem opens and merges. Commits carry Nayeem's name only.
 - Tests need Docker running (Testcontainers). 132 tests pass.
-- To run locally: PostgreSQL running, and `db_user_name`, `db_password`, `JWT_SECRET` (≥ 32 bytes)
-  set.
+- To run locally: PostgreSQL running, and a git-ignored `.env` in the project root with `DB_URL`
+  (optional), `DB_USERNAME`, `DB_PASSWORD`, `JWT_SECRET` (≥ 32 bytes) — the app reads it itself
+  (`spring.config.import`); real environment variables override it, and the old `db_user_name` /
+  `db_password` names still work.
 
 ## Next up
 
