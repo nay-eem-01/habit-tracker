@@ -110,6 +110,12 @@ public class HabitService {
         return HabitResponse.from(habit);
     }
 
+    /** The user's habits linked to the goal, archived ones included, oldest first. */
+    @Transactional(readOnly = true)
+    public List<Habit> findLinkedToGoal(Long userId, Long goalId) {
+        return habitRepository.findAllByGoalIdAndUserIdOrderById(goalId, userId);
+    }
+
     /**
      * Habits to remind about at this minute (their owner's local time), not yet done today. Call
      * inside a transaction: the lazy {@code user} is needed to tell the owner's day.

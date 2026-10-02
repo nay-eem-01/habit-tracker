@@ -36,6 +36,7 @@ class GoalController {
     private static final Set<String> SORTABLE = Set.of("createdAt", "title", "targetDate");
 
     private final GoalService goalService;
+    private final GoalProgressService goalProgressService;
 
     @Operation(summary = "Create a goal")
     @ApiResponse(responseCode = "201", description = "Created; Location points at the goal")
@@ -65,6 +66,14 @@ class GoalController {
     ResponseEntity<HttpResponse> update(@AuthenticationPrincipal AuthUser user, @PathVariable Long id,
                                         @Valid @RequestBody GoalRequest request) {
         return HttpResponse.ok("Goal updated", goalService.update(user.id(), id, request));
+    }
+
+    @Operation(summary = "How far a goal has come, in total and per linked habit")
+    @ApiResponse(responseCode = "200", description = "Progress 0-100 %, computed from the habits' done days")
+    @ApiResponse(responseCode = "404", description = "No such goal, or not yours (GOAL_NOT_FOUND)")
+    @GetMapping("/{id}/progress")
+    ResponseEntity<HttpResponse> progress(@AuthenticationPrincipal AuthUser user, @PathVariable Long id) {
+        return HttpResponse.ok("Goal progress loaded", goalProgressService.progress(user.id(), id));
     }
 
     @Operation(summary = "My goals, newest first by default")
