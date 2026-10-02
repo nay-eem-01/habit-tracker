@@ -27,7 +27,7 @@ The step-by-step plan and overall progress are in `docs/ROADMAP.md`; decisions a
 
 ## Next up
 
-1. The frontend — Phase F in `ROADMAP.md`, own repo `habit-tracker-web` (sibling folder). F.1 scaffold first.
+1. Test the frontend against the running backend (Phase F is built: F.1–F.6 in `ROADMAP.md`, own repo `habit-tracker-web`, sibling folder), then fix what that finds.
 2. Before any shared deploy: Flyway (D.1), production profile (D.2).
 3. Then M2 Goals → M3 Resources → M4 Levels → M5 Dashboard → M6 AI (`PLAN.md` §11).
 4. Later: 2.3 Google sign-in.
@@ -44,6 +44,23 @@ The step-by-step plan and overall progress are in `docs/ROADMAP.md`; decisions a
 | Week starts on Monday for every user (`PLAN.md` §8b) — per-user week start if anyone asks | later | nothing |
 
 ---
+
+## 2026-10-02 (frontend F.5 and F.6 — habit detail, notification bell)
+
+**Done** (in `habit-tracker_web`: `feat/habit-detail` from `staging`, then `feat/notifications` on top of it)
+- F.5: `/habits/:id` — name, category, schedule, reminder, Edit link; current and longest streak (days,
+  or weeks for N-a-week); 7- and 30-day completion ("6 of 7 done", or "Nothing was due yet" when the
+  API's `rate` is null); log history for the last 90 days, newest first, paged, counts for habits with
+  a daily target. Habit names on the list and Today now link to it.
+- F.6: a bell in the header polls `/api/notifications/unread-count` every 30 s (only while the tab is
+  visible) and shows the count; opening it lists the latest 10, unread marked; clicking one marks it
+  read and opens its habit; **Mark all read**; closes on Escape or an outside click. The reminder-time
+  field was already in the habit form (F.3), so nothing more was needed there.
+- 79 frontend tests, typecheck, lint and `vite build` pass. **Not yet run against the live backend** —
+  that is the testing pass Nayeem wants next.
+
+**Decided**
+- No separate notifications page yet: the panel shows the latest 10. Add paging if it is ever too few.
 
 ## 2026-10-02 (frontend F.4 — Today)
 
