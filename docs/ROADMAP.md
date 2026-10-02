@@ -104,7 +104,7 @@ branches and PRs live in the frontend repo, same flow (phase base → step branc
 |---|---|---|
 | F.1 | Scaffold: Vite + TS + Tailwind + router + TanStack Query, dev proxy, API client with silent token refresh | ✅ |
 | F.2 | Sign in / register pages, protected routes, sign out | ✅ |
-| F.3 | Habit list, create / edit (schedule, target, reminder time), archive | ⬜ |
+| F.3 | Habit list, create / edit (schedule, target, reminder time), archive | ✅ |
 | F.4 | Today view — one-tap check-in, streak next to each habit | ⬜ |
 | F.5 | Habit detail — streak, 7/30-day stats, log history | ⬜ |
 | F.6 | Notification bell (unread count polling), list, mark read; reminder-time field | ⬜ |
