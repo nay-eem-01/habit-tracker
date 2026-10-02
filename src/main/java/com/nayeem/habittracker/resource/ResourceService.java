@@ -77,6 +77,13 @@ public class ResourceService {
                 ResourceResponse::from);
     }
 
+    /** One goal's resources, pinned first; 404 when the goal isn't the user's. */
+    @Transactional(readOnly = true)
+    public PageResponse<ResourceResponse> listForGoal(Long userId, Long goalId, int page, int size) {
+        goalService.getOwnedGoal(userId, goalId);
+        return list(userId, goalId, null, null, page, size);
+    }
+
     /** Full replace: every field of the request, as on create. */
     @Transactional
     public ResourceResponse update(Long userId, Long resourceId, ResourceRequest request) {

@@ -102,4 +102,15 @@ class ResourceController {
             @Parameter(description = "1-100") @RequestParam(defaultValue = PageRequests.DEFAULT_SIZE) int size) {
         return HttpResponse.ok("Resources loaded", resourceService.list(user.id(), goalId, type, q, page, size));
     }
+
+    @Operation(summary = "A goal's resources, pinned first then newest")
+    @ApiResponse(responseCode = "200", description = "A page of resources")
+    @ApiResponse(responseCode = "404", description = "No such goal, or not yours (GOAL_NOT_FOUND)")
+    @GetMapping("/goals/{goalId}/resources")
+    ResponseEntity<HttpResponse> listForGoal(
+            @AuthenticationPrincipal AuthUser user, @PathVariable Long goalId,
+            @RequestParam(defaultValue = PageRequests.DEFAULT_PAGE) int page,
+            @Parameter(description = "1-100") @RequestParam(defaultValue = PageRequests.DEFAULT_SIZE) int size) {
+        return HttpResponse.ok("Goal resources loaded", resourceService.listForGoal(user.id(), goalId, page, size));
+    }
 }
