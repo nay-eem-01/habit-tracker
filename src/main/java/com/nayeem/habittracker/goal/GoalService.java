@@ -54,6 +54,11 @@ public class GoalService {
         return GoalResponse.from(goalRepository.saveAndFlush(goal));
     }
 
+    /** The user's goal, for other features that work on it (linking habits); 404 when it isn't theirs. */
+    public Goal getOwnedGoal(Long userId, Long goalId) {
+        return find(userId, goalId);
+    }
+
     Goal find(Long userId, Long goalId) {
         return goalRepository.findByIdAndUserId(goalId, userId)
                 .orElseThrow(() -> new ApplicationException(ErrorCode.GOAL_NOT_FOUND));

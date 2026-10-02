@@ -1,6 +1,7 @@
 package com.nayeem.habittracker.habit;
 
 import com.nayeem.habittracker.common.AuditModel;
+import com.nayeem.habittracker.goal.Goal;
 import com.nayeem.habittracker.user.User;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -17,6 +18,7 @@ import lombok.Setter;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
+import java.time.LocalDate;
 import java.time.LocalTime;
 
 /**
@@ -27,7 +29,9 @@ import java.time.LocalTime;
 @Getter
 @Setter
 @Entity
-@Table(name = "habits", indexes = @Index(name = "idx_habits_user_id", columnList = "user_id"))
+@Table(name = "habits", indexes = {
+        @Index(name = "idx_habits_user_id", columnList = "user_id"),
+        @Index(name = "idx_habits_goal_id", columnList = "goal_id")})
 public class Habit extends AuditModel {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
@@ -61,11 +65,41 @@ public class Habit extends AuditModel {
     @Column(nullable = false)
     private boolean archived;
 
-    // TODO: link to Goal entity, M2 (PLAN.md §11)
+    /** The goal this habit works towards (PLAN.md §11.1, one goal per habit); set only through {@link #linkToGoal}. */
+    @Setter(AccessLevel.NONE)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "goal_id")
+    private Goal goal;
+
+    /** Done days that make the habit "built" for its goal, e.g. 60. Null exactly when there is no goal. */
+    @Setter(AccessLevel.NONE)
+    private Integer goalTargetDays;
+
+    /** The owner's day the habit was linked; goal progress counts done days from then on. */
+    @Setter(AccessLevel.NONE)
+    private LocalDate goalLinkedOn;
 
     /** Sets how often the habit is due; rejects a config that doesn't fit the type (400). */
     public void schedule(FrequencyType type, FrequencyConfig config) {
         this.frequencyConfig = FrequencyConfig.normalize(type, config);
         this.frequencyType = type;
+    }
+
+    /**
+     * Links the habit to a goal. Re-linking to the same goal only changes the target; a different
+     * goal starts counting afresh from {@code today}.
+     */
+    public void linkToGoal(Goal newGoal, int targetDays, LocalDate today) {
+        if (goal == null || !goal.getId().equals(newGoal.getId())) {
+            this.goalLinkedOn = today;
+        }
+        this.goal = newGoal;
+        this.goalTargetDays = targetDays;
+    }
+
+    public void unlinkFromGoal() {
+        this.goal = null;
+        this.goalTargetDays = null;
+        this.goalLinkedOn = null;
     }
 }

@@ -11,8 +11,8 @@ The step-by-step plan and overall progress are in `docs/ROADMAP.md`; decisions a
 - **Phases 0–5 done** (2.3 Google sign-in deferred) — 25 of 26 steps, all on `staging`. **M1 is
   feature-complete.** The core loop works: account → habits → daily check-ins → strict streaks →
   7/30-day stats → reminders (in-app, optional email), all in the user's timezone.
-- **Now: M2 Goals** (`PLAN.md` §11.1) on base branch `feat/goals-base`. G.1 (goal CRUD) is done on
-  `feat/goal-crud`; **G.2 (link a habit to a goal) is next.** Q6/Q7 answered 2026-10-02.
+- **Now: M2 Goals** (`PLAN.md` §11.1) on base branch `feat/goals-base`. G.1 (goal CRUD) is merged; G.2 (link a habit
+  to a goal) is on `feat/habit-goal-link`; **G.3 (goal progress) is next.** Q6/Q7 answered 2026-10-02.
 - The frontend is built by another agent in its own repo (`habit-tracker-web`); backend work follows
   this roadmap.
 - Branch flow: step branch from the previous step's branch → PR into the phase's base branch →
