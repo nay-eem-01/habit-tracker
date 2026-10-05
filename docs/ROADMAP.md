@@ -148,7 +148,11 @@ Base branch: `feat/resources-base`. Q9 answered 2026-10-03: notes and links firs
 |---|---|---|
 | R.1 | `Resource` entity (`NOTE` / `LINK`) + `/api/resources` CRUD, `?goalId=`, `?type=`, `?q=`, pin / unpin | ✅ |
 | R.2 | `GET /api/goals/{id}/resources`, pinned first | ✅ |
-| R.3 | File uploads — design drafted in `PLAN.md` §13 (options, taskatask comparison, steps R.3a–R.3d); waiting on Q12–Q14 | 🔄 |
+| R.3 | File uploads — designed in `PLAN.md` §13 (Q12–Q14 answered 2026-10-05); base branch `feat/files-base` | 🔄 |
+| R.3a | `StoredFile` + `FileStorage` (local disk) + type detection and allowlist + limits and quota | ⬜ |
+| R.3b | `ResourceType.FILE`; `POST /api/resources/files` (multipart); `file` in responses | ⬜ |
+| R.3c | `GET /api/resources/{id}/file` download; delete removes the bytes after commit | ⬜ |
+| R.3d | S3-compatible `FileStorage` (MinIO in tests) — with D.1/D.2 | ⬜ |
 
 ### M4 — Levels
 

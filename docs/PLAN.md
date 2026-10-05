@@ -644,11 +644,11 @@ Reminders keep the habit alive; they belong in the core tracker, not after it.
 
 ---
 
-## 13. File uploads — R.3 design (draft 2026-10-05, needs Nayeem's decisions)
+## 13. File uploads — R.3 design (2026-10-05; Q12–Q14 answered with the recommendations)
 
 M3 adds a third resource type, **`FILE`**: a PDF, an image or a text file kept next to a goal, the
-same way a note or link is. Nothing is built until Q12–Q14 below are answered; the options and
-recommendations come first, then the steps.
+same way a note or link is. Q12–Q14 were answered on 2026-10-05 with the recommendations
+(Nayeem: "go with the recommendations"); the options are kept below for the record.
 
 ### 13.1 What taskatask-backend does (looked at 2026-10-05)
 
@@ -750,7 +750,7 @@ sit behind `FileStorage` (`put`, `open`, `delete`), so the switch touches no fea
 - **Logging:** file id, size and detected type only — never the original file name or content
   (observability skill). `StoredFile` and requests mask the name in `toString`.
 
-### 13.4 Steps (once Q12–Q14 are answered — replaces R.3 in the roadmap)
+### 13.4 Steps (replace R.3 in the roadmap)
 
 | # | Step |
 |---|---|
@@ -761,6 +761,6 @@ sit behind `FileStorage` (`put`, `open`, `delete`), so the switch touches no fea
 
 | # | Question | Needed by |
 |---|---|---|
-| 12 | Storage: **local disk now behind `FileStorage`, S3-compatible when deploying (recommended)**, S3 straight away, or Postgres `bytea`? | R.3a |
-| 13 | Limits: **10 MB per file, 100 MB per user; images + PDF + text only (recommended)**? | R.3a |
-| 14 | Upload flow: **one multipart call creates the resource (recommended)**, or two-step upload-then-attach like taskatask? | R.3b |
+| 12 | Storage: **local disk now behind `FileStorage`, S3-compatible when deploying (recommended)**, S3 straight away, or Postgres `bytea`? | R.3a — **answered 2026-10-05 with the recommendation** |
+| 13 | Limits: **10 MB per file, 100 MB per user; images + PDF + text only (recommended)**? | R.3a — **answered 2026-10-05 with the recommendation** |
+| 14 | Upload flow: **one multipart call creates the resource (recommended)**, or two-step upload-then-attach like taskatask? | R.3b — **answered 2026-10-05 with the recommendation** |

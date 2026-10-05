@@ -13,7 +13,7 @@ The step-by-step plan and overall progress are in `docs/ROADMAP.md`; decisions a
   7/30-day stats → reminders (in-app, optional email), all in the user's timezone.
 - **M2 Goals is done and merged.** **M3 Resources (notes + links) is merged to `staging`** (R.1,
   R.2 — PR #46 was reverted by mistake in #48 and restored in #50). **Next: file uploads (R.3)** —
-  design drafted in `PLAN.md` §13, waiting on Nayeem's answers to Q12–Q14; then M4 Levels.
+  designed in `PLAN.md` §13 (Q12–Q14 answered with the recommendations); R.3a in progress, then M4 Levels.
 - The frontend is built by another agent in its own repo (`habit-tracker-web`); backend work follows
   this roadmap.
 - Branch flow: step branch from the previous step's branch → PR into the phase's base branch →
@@ -54,6 +54,9 @@ The step-by-step plan and overall progress are in `docs/ROADMAP.md`; decisions a
 - Options and recommendations for Q12 (storage: local disk behind `FileStorage` now, S3-compatible
   later), Q13 (10 MB / file, 100 MB / user; images, PDF, text), Q14 (one multipart call creates the
   resource). Steps R.3a–R.3d proposed.
+
+**Decided**
+- Q12–Q14 answered with the recommendations (Nayeem, 2026-10-05).
 
 **To know**
 - taskatask-backend has AWS keys committed in its `application-development` / `-staging`
