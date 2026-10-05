@@ -11,10 +11,9 @@ The step-by-step plan and overall progress are in `docs/ROADMAP.md`; decisions a
 - **Phases 0–5 done** (2.3 Google sign-in deferred) — 25 of 26 steps, all on `staging`. **M1 is
   feature-complete.** The core loop works: account → habits → daily check-ins → strict streaks →
   7/30-day stats → reminders (in-app, optional email), all in the user's timezone.
-- **M2 Goals is done and merged.** **M3 Resources (notes + links) is done** (R.1, R.2) on base
-  branch `feat/resources-base`: `feat/resource-crud` → `feat/goal-resources` wait for PRs, then
-  `feat/resources-base` → `staging`. **Next: file uploads (R.3)** — design first (Nayeem's call
-  2026-10-03), then M4 Levels.
+- **M2 Goals is done and merged.** **M3 Resources (notes + links) is merged to `staging`** (R.1,
+  R.2 — PR #46 was reverted by mistake in #48 and restored in #50). **Next: file uploads (R.3)** —
+  design drafted in `PLAN.md` §13, waiting on Nayeem's answers to Q12–Q14; then M4 Levels.
 - The frontend is built by another agent in its own repo (`habit-tracker-web`); backend work follows
   this roadmap.
 - Branch flow: step branch from the previous step's branch → PR into the phase's base branch →
@@ -44,6 +43,21 @@ The step-by-step plan and overall progress are in `docs/ROADMAP.md`; decisions a
 | Week starts on Monday for every user (`PLAN.md` §8b) — per-user week start if anyone asks | later | nothing |
 
 ---
+
+## 2026-10-05 (R.3 file uploads — design draft)
+
+**Done**
+- `PLAN.md` §13: what taskatask-backend's `FileObject` module does, what to copy (file metadata
+  apart from the feature entity, type detected from bytes, random keys, attachment downloads) and
+  what not to (no owner on files, orphans from two-step upload, no type allowlist, 256 MB in
+  memory, public caching of private files).
+- Options and recommendations for Q12 (storage: local disk behind `FileStorage` now, S3-compatible
+  later), Q13 (10 MB / file, 100 MB / user; images, PDF, text), Q14 (one multipart call creates the
+  resource). Steps R.3a–R.3d proposed.
+
+**To know**
+- taskatask-backend has AWS keys committed in its `application-development` / `-staging`
+  properties — flagged to Nayeem, to rotate there.
 
 ## 2026-10-02 (frontend G.0 — test pass)
 

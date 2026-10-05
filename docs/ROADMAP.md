@@ -148,7 +148,7 @@ Base branch: `feat/resources-base`. Q9 answered 2026-10-03: notes and links firs
 |---|---|---|
 | R.1 | `Resource` entity (`NOTE` / `LINK`) + `/api/resources` CRUD, `?goalId=`, `?type=`, `?q=`, pin / unpin | ✅ |
 | R.2 | `GET /api/goals/{id}/resources`, pinned first | ✅ |
-| R.3 | File uploads — design first (where files live, size and type limits, virus/abuse rules), then split into steps | ⬜ |
+| R.3 | File uploads — design drafted in `PLAN.md` §13 (options, taskatask comparison, steps R.3a–R.3d); waiting on Q12–Q14 | 🔄 |
 
 ### M4 — Levels
 
