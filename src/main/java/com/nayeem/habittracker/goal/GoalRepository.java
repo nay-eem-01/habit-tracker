@@ -17,4 +17,6 @@ interface GoalRepository extends JpaRepository<Goal, Long> {
     Page<Goal> findAllByUserId(Long userId, Pageable pageable);
 
     Page<Goal> findAllByUserIdAndStatus(Long userId, GoalStatus status, Pageable pageable);
+
+    long countByUserIdAndStatus(Long userId, GoalStatus status);
 }
