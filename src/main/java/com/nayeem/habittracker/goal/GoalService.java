@@ -36,6 +36,12 @@ public class GoalService {
         return GoalResponse.from(goal);
     }
 
+    /** How many of the user's goals are achieved (each is worth XP, PLAN.md §11.3). */
+    @Transactional(readOnly = true)
+    public long countAchieved(Long userId) {
+        return goalRepository.countByUserIdAndStatus(userId, GoalStatus.ACHIEVED);
+    }
+
     @Transactional(readOnly = true)
     public GoalResponse get(Long userId, Long goalId) {
         return GoalResponse.from(find(userId, goalId));

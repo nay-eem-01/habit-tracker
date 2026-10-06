@@ -14,14 +14,14 @@ The step-by-step plan and overall progress are in `docs/ROADMAP.md`; decisions a
 - **M2 Goals is done and merged.** **M3 Resources is done**: notes and links (R.1, R.2) and file
   uploads (R.3a–R.3c, `PLAN.md` §13) — R.3a/R.3b on `staging` (#51–#54), R.3c on
   `feat/resource-file-download` — all merged to `staging` (#51–#56). R.3d (S3 storage) waits for
-  the deploy steps. **M4 Levels started** (base `feat/levels-base`): X.1 calculator done on
-  `feat/xp-calculator`; **next X.2** `GET /api/me/level`.
+  the deploy steps. **M4 Levels is done** (base `feat/levels-base`): X.1 merged (#57), X.2 on
+  `feat/me-level`. **Next: M5 Dashboard** (A.1 today + completion rates, `PLAN.md` §11.4).
 - The frontend is built by another agent in its own repo (`habit-tracker-web`); backend work follows
   this roadmap.
 - Branch flow: step branch from the previous step's branch → PR into the phase's base branch →
   base PRs into `staging`. Claude commits and pushes and gives PR links (no `gh` on the machine);
   Nayeem opens and merges. Commits carry Nayeem's name only.
-- Tests need Docker running (Testcontainers). 241 tests pass (counted from the XML reports, which include nested test classes).
+- Tests need Docker running (Testcontainers). 244 tests pass (counted from the XML reports, which include nested test classes).
 - To run locally: PostgreSQL running, and a git-ignored `.env` in the project root with `DB_URL`
   (optional), `DB_USERNAME`, `DB_PASSWORD`, `JWT_SECRET` (≥ 32 bytes) — the app reads it itself
   (`spring.config.import`); real environment variables override it, and the old `db_user_name` /
@@ -30,7 +30,7 @@ The step-by-step plan and overall progress are in `docs/ROADMAP.md`; decisions a
 
 ## Next up
 
-1. M4 Levels → M5 Dashboard → M6 AI (`PLAN.md` §11). The frontend has no file upload UI yet.
+1. M5 Dashboard → M6 AI (`PLAN.md` §11). The frontend has no file upload UI yet.
 2. Before any shared deploy: Flyway (D.1), production profile (D.2).
 3. Later: 2.3 Google sign-in.
 
@@ -46,6 +46,23 @@ The step-by-step plan and overall progress are in `docs/ROADMAP.md`; decisions a
 | Week starts on Monday for every user (`PLAN.md` §8b) — per-user week start if anyone asks | later | nothing |
 
 ---
+
+## 2026-10-06 (roadmap X.2 — `GET /api/me/level`; M4 done)
+
+**Done** (branch `feat/me-level` → `feat/levels-base`)
+- `GET /api/me/level` → `{xp, level, tier, xpForNextLevel, progressToNextLevel}` (`Level`, with
+  `@Schema` descriptions; the rules are in the endpoint's description for the frontend).
+- `LevelService`: every habit of the user, **archived ones included**, plus achieved goals; today
+  and each habit's first day in the user's timezone, like streaks. Three queries whatever the
+  number of habits: `HabitService.findAllOwned`, `HabitProgressService.doneDaysByHabit` (one query
+  for all done days, `HabitLogRepository.findDoneDaysOfUser`), `GoalService.countAchieved`.
+- `LevelApiIntegrationTest` (3): new user = level 1; active + archived habit + achieved goal sum to
+  650 → level 4 (abandoned goal and another user's check-ins don't count); 401 without a token.
+  244 tests pass.
+
+**Not done**
+- Level-up notifications (`PLAN.md` §11.3) — they need "what was the level before", i.e. a stored
+  last-seen level; left for when the frontend wants them.
 
 ## 2026-10-06 (roadmap X.1 — XP, level and tier calculator)
 

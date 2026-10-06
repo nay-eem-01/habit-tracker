@@ -110,6 +110,12 @@ public class HabitService {
         return HabitResponse.from(habit);
     }
 
+    /** Every habit of the user, archived ones included (what they earned stays — levels, M4). */
+    @Transactional(readOnly = true)
+    public List<Habit> findAllOwned(Long userId) {
+        return habitRepository.findAllByUserId(userId);
+    }
+
     /** The user's habits linked to the goal, archived ones included, oldest first. */
     @Transactional(readOnly = true)
     public List<Habit> findLinkedToGoal(Long userId, Long goalId) {
