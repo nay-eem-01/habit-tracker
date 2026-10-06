@@ -192,7 +192,7 @@ class ResourceApiIntegrationTest extends IntegrationTest {
         mockMvc.perform(get("/api/resources").param("size", "3").param("page", "1").header(HttpHeaders.AUTHORIZATION, token))
                 .andExpect(jsonPath("$.payload.content.length()").value(1))
                 .andExpect(jsonPath("$.payload.totalPages").value(2));
-        mockMvc.perform(get("/api/resources").param("type", "FILE").header(HttpHeaders.AUTHORIZATION, token))
+        mockMvc.perform(get("/api/resources").param("type", "VIDEO").header(HttpHeaders.AUTHORIZATION, token))
                 .andExpect(status().isBadRequest());
     }
 

@@ -13,17 +13,18 @@ The step-by-step plan and overall progress are in `docs/ROADMAP.md`; decisions a
   7/30-day stats → reminders (in-app, optional email), all in the user's timezone.
 - **M2 Goals is done and merged.** **M3 Resources (notes + links) is merged to `staging`** (R.1,
   R.2 — PR #46 was reverted by mistake in #48 and restored in #50). **Next: file uploads (R.3)** —
-  designed in `PLAN.md` §13 (Q12–Q14 answered with the recommendations); R.3a in progress, then M4 Levels.
+  designed in `PLAN.md` §13 (Q12–Q14 answered with the recommendations); R.3a merged into `feat/files-base` (#52); R.3b done on `feat/resource-file-upload`; **next R.3c** (download + delete the bytes), then `feat/files-base` → `staging`, then M4 Levels.
 - The frontend is built by another agent in its own repo (`habit-tracker-web`); backend work follows
   this roadmap.
 - Branch flow: step branch from the previous step's branch → PR into the phase's base branch →
   base PRs into `staging`. Claude commits and pushes and gives PR links (no `gh` on the machine);
   Nayeem opens and merges. Commits carry Nayeem's name only.
-- Tests need Docker running (Testcontainers). 132 tests pass.
+- Tests need Docker running (Testcontainers). 188 tests pass.
 - To run locally: PostgreSQL running, and a git-ignored `.env` in the project root with `DB_URL`
   (optional), `DB_USERNAME`, `DB_PASSWORD`, `JWT_SECRET` (≥ 32 bytes) — the app reads it itself
   (`spring.config.import`); real environment variables override it, and the old `db_user_name` /
-  `db_password` names still work.
+  `db_password` names still work. Uploaded files go to `~/.habit-tracker/files` unless
+  `APP_FILES_DIR` says otherwise.
 
 ## Next up
 
@@ -43,6 +44,57 @@ The step-by-step plan and overall progress are in `docs/ROADMAP.md`; decisions a
 | Week starts on Monday for every user (`PLAN.md` §8b) — per-user week start if anyone asks | later | nothing |
 
 ---
+
+## 2026-10-06 (roadmap R.3b — upload a file as a resource)
+
+**Done** (branch `feat/resource-file-upload` → `feat/files-base`)
+- `ResourceType.FILE`; `Resource.file` (one-to-one `StoredFile`, `file_id` unique, never swapped).
+- `POST /api/resources/files` — multipart: `file` part + `title`, `body`, `goalId`, `pinned` form
+  fields (`ResourceFileRequest`). 201 + `Location`. The goal is checked before the upload is stored,
+  so a 404 writes no bytes; one transaction with `FileService.store`.
+- Responses carry `file: {name, contentType, sizeBytes}` (null for notes and links); lists fetch it
+  in the same query (`@EntityGraph` on `findAll(spec, pageable)`).
+- JSON `POST /api/resources` with `FILE` → 400 `RESOURCE_INVALID`. `PUT` on a file changes title,
+  body, goal and pin only; the type can't change either way; a file has no `url`.
+- `GlobalExceptionHandler`: missing multipart part / broken multipart → 400 `MALFORMED_REQUEST`
+  (were 500s); Spring's upload limit → 413 `FILE_TOO_LARGE`.
+- `server.tomcat.max-swallow-size=20MB`: checked with a real server — with Tomcat's default 2 MB a
+  12 MB upload had its connection cut mid-response instead of getting the 413. Now a clean 413 up to
+  ~20 MB; beyond that Tomcat still drops the connection (on purpose). The frontend should check
+  `file.size` before sending.
+- `ResourceFileUploadIntegrationTest` (7), 2 cases in `GlobalExceptionHandlerTest`. 188 tests pass.
+
+**Not done yet (R.3c)**
+- Deleting a `FILE` resource leaves its `stored_files` row and bytes behind; R.3c removes them after
+  commit. `feat/files-base` isn't merged to `staging` until then.
+
+## 2026-10-05 (roadmap R.3a — file storage)
+
+**Done** (branch `feat/file-storage` → `feat/files-base`)
+- New `file` package. `StoredFile extends AuditModel` (`stored_files`): `user`, `storageKey` (random
+  UUID, unique), `originalName` (cleaned: last path segment, no control characters, ≤ 255 keeping the
+  extension), `contentType` (detected), `sizeBytes`, `sha256`.
+- `FileStorage` (`put` / `open` / `delete`) with `LocalDiskFileStorage`: `app.files.dir`
+  (`APP_FILES_DIR`, default `~/.habit-tracker/files`), temp file + atomic move so a failed write
+  leaves nothing; keys must be `[A-Za-z0-9-]`, so no path can escape the directory.
+- `FileType` — the allowlist (PNG, JPEG, WebP, GIF, PDF, text `.txt`/`.md`). Type detected from
+  the first 64 KB with Tika core (`tika-core` 4.1.0, magic bytes only); the extension must match.
+  HTML, SVG and XML named `.txt` or `.png` are refused.
+- `FileService.store(userId, upload)` — empty → 400 `FILE_EMPTY`, > 10 MB → 413 `FILE_TOO_LARGE`,
+  type → 415 `FILE_TYPE_NOT_ALLOWED`, over 100 MB per user → 413 `FILE_QUOTA_EXCEEDED`; all checked
+  before a byte is written. Bytes then row; a rollback (also the caller's, R.3b) deletes the bytes.
+  Logs id, size and type — never the name.
+- `app.files.max-file-size` / `user-quota`; multipart limits 10 MB / 11 MB.
+- `FileTypeTest` (6), `LocalDiskFileStorageTest` (3), `FileServiceTest` (2),
+  `FileServiceIntegrationTest` (4). 179 tests pass.
+
+**Moved**
+- The quota check came into R.3a (it belongs in `store`); R.3b keeps the endpoint and maps
+  Spring's multipart-size error to 413.
+
+**Known limit**
+- Two uploads at the same moment can both pass the quota check and go slightly over. Fine at one
+  user's scale.
 
 ## 2026-10-05 (R.3 file uploads — design draft)
 

@@ -12,6 +12,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
+import org.springframework.web.multipart.support.MissingServletRequestPartException;
 
 import static org.hamcrest.Matchers.matchesPattern;
 import static org.hamcrest.Matchers.not;
@@ -63,6 +65,20 @@ class GlobalExceptionHandlerTest {
     }
 
     @Test
+    void anUploadOverSpringsLimitIsFileTooLarge() throws Exception {
+        mockMvc.perform(get("/test/upload-too-large"))
+                .andExpect(status().isContentTooLarge())
+                .andExpect(jsonPath("$.errorCode").value("FILE_TOO_LARGE"));
+    }
+
+    @Test
+    void aMissingMultipartPartIsMalformedRequest() throws Exception {
+        mockMvc.perform(get("/test/missing-part"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errorCode").value("MALFORMED_REQUEST"));
+    }
+
+    @Test
     void unexpectedErrorHidesTheExceptionText() throws Exception {
         mockMvc.perform(get("/test/boom"))
                 .andExpect(status().isInternalServerError())
@@ -102,6 +118,16 @@ class GlobalExceptionHandlerTest {
         @GetMapping("/test/boom")
         void boom() {
             throw new IllegalStateException("secret table users_private is broken");
+        }
+
+        @GetMapping("/test/upload-too-large")
+        void uploadTooLarge() {
+            throw new MaxUploadSizeExceededException(10L * 1024 * 1024);
+        }
+
+        @GetMapping("/test/missing-part")
+        void missingPart() throws MissingServletRequestPartException {
+            throw new MissingServletRequestPartException("file");
         }
 
         @PostMapping("/test/validated")

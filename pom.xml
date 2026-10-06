@@ -29,6 +29,7 @@
     <properties>
         <java.version>21</java.version>
         <jjwt.version>0.13.0</jjwt.version>
+        <tika.version>4.1.0</tika.version>
     </properties>
     <dependencies>
         <dependency>
@@ -65,6 +66,13 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-mail</artifactId>
+        </dependency>
+
+        <!-- File type detection from the bytes (magic numbers) for uploads; core only, no parsers -->
+        <dependency>
+            <groupId>org.apache.tika</groupId>
+            <artifactId>tika-core</artifactId>
+            <version>${tika.version}</version>
         </dependency>
 
         <!-- JWT (access tokens) -->

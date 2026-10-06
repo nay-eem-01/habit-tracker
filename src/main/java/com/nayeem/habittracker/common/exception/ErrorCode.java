@@ -39,6 +39,12 @@ public enum ErrorCode {
     RESOURCE_NOT_FOUND(HttpStatus.NOT_FOUND, "Resource not found"),
     RESOURCE_INVALID(HttpStatus.BAD_REQUEST, "The fields don't fit the resource type"),
 
+    FILE_EMPTY(HttpStatus.BAD_REQUEST, "The file is empty"),
+    FILE_TOO_LARGE(HttpStatus.CONTENT_TOO_LARGE, "The file is too large"),
+    FILE_TYPE_NOT_ALLOWED(HttpStatus.UNSUPPORTED_MEDIA_TYPE,
+            "Only PNG, JPEG, WebP, GIF, PDF and text (.txt, .md) files can be uploaded"),
+    FILE_QUOTA_EXCEEDED(HttpStatus.CONTENT_TOO_LARGE, "Your file storage is full; delete a file first"),
+
     LOG_DATE_OUT_OF_RANGE(HttpStatus.BAD_REQUEST, "You can't check in for that date"),
 
     NOTIFICATION_NOT_FOUND(HttpStatus.NOT_FOUND, "Notification not found");

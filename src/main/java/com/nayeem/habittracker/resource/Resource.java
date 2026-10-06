@@ -1,6 +1,7 @@
 package com.nayeem.habittracker.resource;
 
 import com.nayeem.habittracker.common.AuditModel;
+import com.nayeem.habittracker.file.StoredFile;
 import com.nayeem.habittracker.goal.Goal;
 import com.nayeem.habittracker.user.User;
 import jakarta.persistence.Column;
@@ -11,12 +12,14 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
 
 /**
- * Something a user keeps — a Markdown note or a link — optionally next to a goal (PLAN.md §11.2).
+ * Something a user keeps — a Markdown note, a link or an uploaded file — optionally next to a goal
+ * (PLAN.md §11.2, §13).
  * The API stores text; rendering it is the client's job. A link's address is never fetched by the
  * server.
  */
@@ -51,6 +54,11 @@ public class Resource extends AuditModel {
     /** {@code http(s)} address; required for a link, absent for a note. */
     @Column(length = 2048)
     private String url;
+
+    /** The uploaded file; set once for a {@code FILE} and never swapped, absent otherwise. */
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "file_id", unique = true, updatable = false)
+    private StoredFile file;
 
     @Column(nullable = false)
     private boolean pinned;
