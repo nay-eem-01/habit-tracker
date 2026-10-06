@@ -78,6 +78,34 @@ class StatsCalculatorTest {
         assertThat(stats.rate()).isEqualTo(0.7);
     }
 
+    @Test
+    void previousWindowIsTheSameLengthJustBefore() {
+        // previous 7 days = 13..7 days ago: 7–10 done (4 of 7); this week's check-ins don't count there
+        Set<LocalDate> done = daysAgo(0, 1, 7, 8, 9, 10);
+
+        assertThat(StatsCalculator.previousWindow(FrequencyType.DAILY, null, done, LONG_AGO, TODAY, 7))
+                .isEqualTo(new WindowStats(7, 4, 7, 0.57));
+    }
+
+    @Test
+    void previousWindowCountsItsLastDayEvenWhenUndone() {
+        // 7 days ago is the previous window's last day: over, so it counts against the rate
+        Set<LocalDate> done = daysAgo(8, 9, 10, 11, 12, 13);
+
+        assertThat(StatsCalculator.previousWindow(FrequencyType.DAILY, null, done, LONG_AGO, TODAY, 7))
+                .isEqualTo(new WindowStats(7, 6, 7, 0.86));
+    }
+
+    @Test
+    void previousWindowOfAYoungHabitIsClippedOrEmpty() {
+        // created 9 days ago: the previous window (13..7 days ago) has only 9..7 days ago
+        assertThat(StatsCalculator.previousWindow(FrequencyType.DAILY, null, daysAgo(8), TODAY.minusDays(9), TODAY, 7))
+                .isEqualTo(new WindowStats(7, 1, 3, 0.33));
+        // created 3 days ago: nothing to compare with
+        assertThat(StatsCalculator.previousWindow(FrequencyType.DAILY, null, Set.of(), TODAY.minusDays(3), TODAY, 7))
+                .isEqualTo(new WindowStats(7, 0, 0, null));
+    }
+
     private static WindowStats daily(Set<LocalDate> done, LocalDate start, int days) {
         return StatsCalculator.window(FrequencyType.DAILY, null, done, start, TODAY, days);
     }

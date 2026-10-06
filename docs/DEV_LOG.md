@@ -14,14 +14,15 @@ The step-by-step plan and overall progress are in `docs/ROADMAP.md`; decisions a
 - **M2 Goals is done and merged.** **M3 Resources is done**: notes and links (R.1, R.2) and file
   uploads (R.3a–R.3c, `PLAN.md` §13) — R.3a/R.3b on `staging` (#51–#54), R.3c on
   `feat/resource-file-download` — all merged to `staging` (#51–#56). R.3d (S3 storage) waits for
-  the deploy steps. **M4 Levels is done** (base `feat/levels-base`): X.1 merged (#57), X.2 on
-  `feat/me-level`. **Next: M5 Dashboard** (A.1 today + completion rates, `PLAN.md` §11.4).
+  the deploy steps. **M4 Levels is done** and on `staging` (#57–#59). **M5 Dashboard started**
+  (base `feat/dashboard-base`): A.1 on `feat/dashboard-today`; **next A.2** heatmap, weekday and
+  time-of-day patterns.
 - The frontend is built by another agent in its own repo (`habit-tracker-web`); backend work follows
   this roadmap.
 - Branch flow: step branch from the previous step's branch → PR into the phase's base branch →
   base PRs into `staging`. Claude commits and pushes and gives PR links (no `gh` on the machine);
   Nayeem opens and merges. Commits carry Nayeem's name only.
-- Tests need Docker running (Testcontainers). 244 tests pass (counted from the XML reports, which include nested test classes).
+- Tests need Docker running (Testcontainers). 255 tests pass (counted from the XML reports, which include nested test classes).
 - To run locally: PostgreSQL running, and a git-ignored `.env` in the project root with `DB_URL`
   (optional), `DB_USERNAME`, `DB_PASSWORD`, `JWT_SECRET` (≥ 32 bytes) — the app reads it itself
   (`spring.config.import`); real environment variables override it, and the old `db_user_name` /
@@ -46,6 +47,24 @@ The step-by-step plan and overall progress are in `docs/ROADMAP.md`; decisions a
 | Week starts on Monday for every user (`PLAN.md` §8b) — per-user week start if anyone asks | later | nothing |
 
 ---
+
+## 2026-10-06 (roadmap A.1 — dashboard: today and completion rates)
+
+**Done** (branch `feat/dashboard-today` → `feat/dashboard-base`)
+- `GET /api/dashboard` → `today` (date, `due`, `done`, every active habit: today's count, target,
+  done, due, this week's done days and N for N-a-week, current streak + unit; due first, then by
+  name) and `completion` (7/30/90 days overall and per habit: done, expected, rate, previousRate,
+  change). Four queries whatever the number of habits.
+- `StatsCalculator.previousWindow` — the same-length window just before; `window` and it share one
+  range count. `CompletionCalculator` (pure): per-habit periods and the capped overall rate.
+- `ReminderRules` (notification) → `habit.DueRules`, public: reminders and the dashboard use the
+  same due rule. Test moved with it.
+- `HabitProgressService.countsOn(userId, day)` — today's counts for all habits in one query.
+- Decisions recorded in `PLAN.md` §11.4. `CompletionCalculatorTest` (5), 3 previous-window cases
+  in `StatsCalculatorTest`, `DashboardApiIntegrationTest` (3). 255 tests pass.
+
+**For the frontend**
+- Today view can switch from 2 requests per habit to this one call (noted in F.4).
 
 ## 2026-10-06 (roadmap X.2 — `GET /api/me/level`; M4 done)
 

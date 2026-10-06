@@ -576,6 +576,17 @@ no XP column that can drift, and a level can be recomputed any time.
 
 Heavy parts may become separate endpoints (`/api/dashboard/heatmap`) if the payload grows.
 
+**Settled in A.1 (2026-10-06):**
+- Only **active** habits are on the dashboard (archived ones keep their XP, M4, but aren't "today").
+- **Due today** follows the reminder rule, now shared as `habit.DueRules`: daily always, chosen
+  weekdays on them, N-a-week until the week's N is met — a habit done today stays due today.
+  `today.due` / `today.done` count those, for "N of M done".
+- **Previous period** = the same number of days just before the window; it's over, so every day in
+  it counts. Clipped to the habit's first day; `null` rate and `change` when nothing was expected.
+- **Overall rate** adds the habits up but caps each at what it was asked for, so extra check-ins on an
+  N-a-week habit don't hide another habit's missed days. `change` is in rate points (0.12 = +12 %).
+- Numbers come from `StatsCalculator` / `StreakCalculator`, so the dashboard matches each habit page.
+
 ### 11.5 M6 — AI insights
 
 The dashboard shows the numbers; AI turns them into plain language and one suggestion
