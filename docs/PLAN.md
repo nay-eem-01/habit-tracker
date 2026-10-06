@@ -754,8 +754,8 @@ sit behind `FileStorage` (`put`, `open`, `delete`), so the switch touches no fea
 
 | # | Step |
 |---|---|
-| R.3a | `StoredFile` entity + `FileStorage` interface + local-disk implementation + type detection and allowlist (Tika core) + limits config; unit and integration tests |
-| R.3b | `ResourceType.FILE`; `POST /api/resources/files` (multipart), quota, error codes, `file` in responses; JSON create with `FILE` → 400 |
+| R.3a | `StoredFile` entity + `FileStorage` interface + local-disk implementation + type detection and allowlist (Tika core) + limits config and the per-user quota (`FileService.store`); unit and integration tests |
+| R.3b | `ResourceType.FILE`; `POST /api/resources/files` (multipart), multipart-limit → 413, `file` in responses; JSON create with `FILE` → 400 |
 | R.3c | `GET /api/resources/{id}/file` download headers; delete removes the bytes after commit; ownership tests on both |
 | R.3d | S3-compatible `FileStorage` (MinIO via Testcontainers), switched by config — when the deploy target is known, next to D.1/D.2 |
 
