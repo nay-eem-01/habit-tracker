@@ -40,6 +40,7 @@ public enum ErrorCode {
     RESOURCE_INVALID(HttpStatus.BAD_REQUEST, "The fields don't fit the resource type"),
 
     FILE_EMPTY(HttpStatus.BAD_REQUEST, "The file is empty"),
+    FILE_NOT_FOUND(HttpStatus.NOT_FOUND, "This resource has no file to download"),
     FILE_TOO_LARGE(HttpStatus.CONTENT_TOO_LARGE, "The file is too large"),
     FILE_TYPE_NOT_ALLOWED(HttpStatus.UNSUPPORTED_MEDIA_TYPE,
             "Only PNG, JPEG, WebP, GIF, PDF and text (.txt, .md) files can be uploaded"),

@@ -14,6 +14,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
+import java.nio.file.NoSuchFileException;
 import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -21,7 +22,7 @@ import java.util.HexFormat;
 import java.util.UUID;
 
 /**
- * Stores uploads for the other features (PLAN.md §13.3). Checks come before any byte is written:
+ * Stores, serves and deletes uploads for the other features (PLAN.md §13.3). Checks come before any byte is written:
  * size, type from the bytes, the user's quota. The bytes are written before the row, and removed
  * again if the transaction rolls back — a failed upload leaves neither a row nor a file.
  * Logs ids, sizes and types only — never the file name or content.
@@ -69,6 +70,44 @@ public class FileService {
         file = storedFileRepository.save(file);
         log.info("File {} stored for user {} ({} bytes, {})", file.getId(), userId, size, type);
         return file;
+    }
+
+    /**
+     * Opens the bytes for a download. The caller has already checked the file is the user's.
+     *
+     * @throws ApplicationException {@code FILE_NOT_FOUND} when the bytes are gone from storage
+     */
+    public FileDownload open(StoredFile file) {
+        try {
+            return new FileDownload(file.getOriginalName(), file.getContentType(), file.getSizeBytes(),
+                    fileStorage.open(file.getStorageKey()));
+        } catch (NoSuchFileException e) {
+            log.error("File {} has a row but no bytes (key {})", file.getId(), file.getStorageKey());
+            throw new ApplicationException(ErrorCode.FILE_NOT_FOUND);
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+    }
+
+    /**
+     * Deletes the row now and the bytes once the transaction commits — a rolled-back delete keeps
+     * both. The caller removes whatever points at the file first.
+     */
+    @Transactional
+    public void delete(StoredFile file) {
+        storedFileRepository.delete(file);
+        String key = file.getStorageKey();
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                try {
+                    fileStorage.delete(key);
+                } catch (IOException | RuntimeException e) {
+                    log.error("Orphaned file {} after delete: {}", key, e.getClass().getSimpleName());
+                }
+            }
+        });
+        log.info("File {} deleted", file.getId());
     }
 
     /**
