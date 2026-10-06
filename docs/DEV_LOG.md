@@ -15,14 +15,14 @@ The step-by-step plan and overall progress are in `docs/ROADMAP.md`; decisions a
   uploads (R.3a–R.3c, `PLAN.md` §13) — R.3a/R.3b on `staging` (#51–#54), R.3c on
   `feat/resource-file-download` — all merged to `staging` (#51–#56). R.3d (S3 storage) waits for
   the deploy steps. **M4 Levels is done** and on `staging` (#57–#59). **M5 Dashboard started**
-  (base `feat/dashboard-base`): A.1 on `feat/dashboard-today`; **next A.2** heatmap, weekday and
-  time-of-day patterns.
+  (base `feat/dashboard-base`): A.1 merged (#60), A.2 on `feat/dashboard-patterns`; **next A.3**
+  streaks at risk, best / slipping habits, goals and level on the dashboard.
 - The frontend is built by another agent in its own repo (`habit-tracker-web`); backend work follows
   this roadmap.
 - Branch flow: step branch from the previous step's branch → PR into the phase's base branch →
   base PRs into `staging`. Claude commits and pushes and gives PR links (no `gh` on the machine);
   Nayeem opens and merges. Commits carry Nayeem's name only.
-- Tests need Docker running (Testcontainers). 255 tests pass (counted from the XML reports, which include nested test classes).
+- Tests need Docker running (Testcontainers). 263 tests pass (counted from the XML reports, which include nested test classes).
 - To run locally: PostgreSQL running, and a git-ignored `.env` in the project root with `DB_URL`
   (optional), `DB_USERNAME`, `DB_PASSWORD`, `JWT_SECRET` (≥ 32 bytes) — the app reads it itself
   (`spring.config.import`); real environment variables override it, and the old `db_user_name` /
@@ -47,6 +47,20 @@ The step-by-step plan and overall progress are in `docs/ROADMAP.md`; decisions a
 | Week starts on Monday for every user (`PLAN.md` §8b) — per-user week start if anyone asks | later | nothing |
 
 ---
+
+## 2026-10-06 (roadmap A.2 — heatmap, weekday and time-of-day patterns)
+
+**Done** (branch `feat/dashboard-patterns` → `feat/dashboard-base`)
+- `GET /api/dashboard/patterns` → `heatmap` (365 days: date, done, expected, ratio), `weekdays`
+  (Mon–Sun: done, expected, rate) with `weakestDay` / `strongestDay`, `hours` (24 counts) with
+  `peakHour`. Rules in `PLAN.md` §11.4 ("Settled in A.2"). Four queries.
+- `PatternCalculator` (pure) + `HabitDays`; `HabitProgressService.doneCheckInTimes` (done days with
+  their first-logged time, one query).
+- `PatternCalculatorTest` (7), one more case in `DashboardApiIntegrationTest`. 263 tests pass.
+
+**Known limit**
+- Time of day uses the log row's `createdAt` — the first check-in of the day. For a habit with a
+  daily target above 1 that's when the first of several was logged, not when it was finished.
 
 ## 2026-10-06 (roadmap A.1 — dashboard: today and completion rates)
 

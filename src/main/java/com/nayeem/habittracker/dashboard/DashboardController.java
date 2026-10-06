@@ -31,4 +31,16 @@ class DashboardController {
     ResponseEntity<HttpResponse> dashboard(@AuthenticationPrincipal AuthUser user) {
         return HttpResponse.ok("Dashboard loaded", dashboardService.dashboard(user.id()));
     }
+
+    @Operation(summary = "My patterns: heatmap, weekdays, time of day",
+            description = "Active habits, in my timezone. `heatmap`: the last 365 days, each with done / expected habits "
+                    + "(N-a-week habits only add to the days they were done). `weekdays`: completion by weekday "
+                    + "over the last 12 full weeks, daily and chosen-weekday habits only, with the weakest and "
+                    + "strongest day. `hours`: when done check-ins of the last 90 days happened (first check-in, "
+                    + "same-day only), with the peak hour.")
+    @ApiResponse(responseCode = "200", description = "The patterns")
+    @GetMapping("/api/dashboard/patterns")
+    ResponseEntity<HttpResponse> patterns(@AuthenticationPrincipal AuthUser user) {
+        return HttpResponse.ok("Patterns loaded", dashboardService.patterns(user.id()));
+    }
 }

@@ -13,8 +13,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.ZoneOffset;
+import java.util.List;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.contains;
+import static org.hamcrest.Matchers.hasItem;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -91,6 +94,36 @@ class DashboardApiIntegrationTest extends IntegrationTest {
                 .andExpect(jsonPath("$.payload.today.due").value(0))
                 .andExpect(jsonPath("$.payload.today.habits.length()").value(0))
                 .andExpect(jsonPath("$.payload.completion.last7Days.rate").doesNotExist());
+    }
+
+    @Test
+    void patternsFromRealCheckIns() throws Exception {
+        String token = bearerFor("dash.patterns@example.com");
+        Integer run = habit(token, "{\"name\":\"Run\",\"frequencyType\":\"DAILY\"}", 3);
+        checkIn(token, run, today, 1);
+        checkIn(token, run, today.minusDays(2), 1);   // logged today for 2 days ago: not a time-of-day signal
+        Integer shelved = habit(token, "{\"name\":\"Old\",\"frequencyType\":\"DAILY\"}", 3);
+        checkIn(token, shelved, today, 1);
+        mockMvc.perform(post("/api/habits/{id}/archive", shelved).header(HttpHeaders.AUTHORIZATION, token))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get("/api/dashboard/patterns").header(HttpHeaders.AUTHORIZATION, token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.payload.heatmap.length()").value(365))
+                .andExpect(jsonPath("$.payload.heatmap[364].date").value(today.toString()))
+                .andExpect(jsonPath("$.payload.heatmap[364].done").value(1))
+                .andExpect(jsonPath("$.payload.heatmap[364].expected").value(1))   // the archived habit left out
+                .andExpect(jsonPath("$.payload.heatmap[363].ratio").value(0.0))
+                .andExpect(jsonPath("$.payload.heatmap[362].ratio").value(1.0))
+                .andExpect(jsonPath("$.payload.weekdays.length()").value(7))
+                .andExpect(jsonPath("$.payload.weekdays[0].day").value("MONDAY"))
+                .andExpect(jsonPath("$.payload.hours.length()").value(24))
+                .andExpect(jsonPath("$.payload.hours[*]").value(hasItem(1)))
+                .andExpect(jsonPath("$.payload.peakHour").isNumber());
+        String hours = mockMvc.perform(get("/api/dashboard/patterns").header(HttpHeaders.AUTHORIZATION, token))
+                .andReturn().getResponse().getContentAsString();
+        List<Integer> perHour = JsonPath.read(hours, "$.payload.hours");
+        assertThat(perHour.stream().mapToInt(Integer::intValue).sum()).isEqualTo(1);   // only today's same-day check-in
     }
 
     @Test
