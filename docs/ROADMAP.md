@@ -12,7 +12,7 @@ branch and PRs into the phase base, in order; the base PRs into `staging` when t
 
 **Legend:** ✅ done · 🔄 in progress · ⬜ not started · ⏸ deferred
 
-**Progress:** Phase 5 of 5 · 25 of 26 steps done (plus 2 pre-deploy steps) · M2 Goals ✅ 4 of 4 · M3 Resources ✅ (files too; R.3d S3 with D.1/D.2) · Frontend: Phase F, own repo (another agent)
+**Progress:** Phase 5 of 5 · 25 of 26 steps done (plus 2 pre-deploy steps) · M2 Goals ✅ 4 of 4 · M3 Resources ✅ (files too; R.3d S3 with D.1/D.2) · M4 Levels ✅ · Frontend: Phase F, own repo (another agent)
 
 ## Where we are (2026-10-01)
 
@@ -154,12 +154,14 @@ Base branch: `feat/resources-base`. Q9 answered 2026-10-03: notes and links firs
 | R.3c | `GET /api/resources/{id}/file` download; delete removes the bytes after commit | ✅ |
 | R.3d | S3-compatible `FileStorage` (MinIO in tests) — with D.1/D.2 | ⬜ |
 
-### M4 — Levels
+### M4 — Levels ✅
+
+Base branch: `feat/levels-base`. Q8 answered 2026-10-06: XP is never lost.
 
 | # | Step | Status |
 |---|---|---|
-| X.1 | XP + level + tier calculator, unit-tested (`PLAN.md` §11.3) | ⬜ |
-| X.2 | `GET /api/me/level` | ⬜ |
+| X.1 | XP + level + tier calculator, unit-tested (`PLAN.md` §11.3) | ✅ |
+| X.2 | `GET /api/me/level` | ✅ |
 
 ### M5 — Dashboard
 

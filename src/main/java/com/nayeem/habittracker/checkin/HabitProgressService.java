@@ -9,7 +9,9 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Clock;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 /** Read-side numbers computed from a habit's logs — never stored (plan §1.3). */
@@ -39,6 +41,16 @@ public class HabitProgressService {
     @Transactional(readOnly = true)
     public long doneDays(Long habitId, LocalDate from, LocalDate to) {
         return habitLogRepository.countDoneDays(habitId, from, to);
+    }
+
+    /** Done days of each of the user's habits, by habit id; a habit with none is absent. */
+    @Transactional(readOnly = true)
+    public Map<Long, Set<LocalDate>> doneDaysByHabit(Long userId) {
+        Map<Long, Set<LocalDate>> byHabit = new HashMap<>();
+        for (HabitDoneDay row : habitLogRepository.findDoneDaysOfUser(userId)) {
+            byHabit.computeIfAbsent(row.habitId(), id -> new HashSet<>()).add(row.day());
+        }
+        return byHabit;
     }
 
     private static WindowStats window(Context c, int days) {
