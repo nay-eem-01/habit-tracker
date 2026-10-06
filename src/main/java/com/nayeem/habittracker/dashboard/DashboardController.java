@@ -21,11 +21,13 @@ class DashboardController {
 
     private final DashboardService dashboardService;
 
-    @Operation(summary = "My home screen: today's habits and completion rates",
+    @Operation(summary = "My home screen: today, completion, highlights, goals and level",
             description = "Active habits only, in my timezone. `today` lists every habit with today's count, whether "
                     + "it's due and its current streak. `completion` gives 7/30/90-day rates, overall and per habit, "
-                    + "each with the previous period of the same length and the change. Same numbers as each "
-                    + "habit's own streak and stats.")
+                    + "each with the previous period of the same length and the change. `atRisk`: streaks of 3+ "
+                    + "that end unless something happens today. `best` / `slipping`: top 3 by 30-day rate / by drop. "
+                    + "`goals`: active goals with progress. `level`: as GET /api/me/level. Same numbers as the "
+                    + "habit, goal and level endpoints.")
     @ApiResponse(responseCode = "200", description = "The dashboard")
     @GetMapping("/api/dashboard")
     ResponseEntity<HttpResponse> dashboard(@AuthenticationPrincipal AuthUser user) {

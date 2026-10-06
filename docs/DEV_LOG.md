@@ -14,15 +14,16 @@ The step-by-step plan and overall progress are in `docs/ROADMAP.md`; decisions a
 - **M2 Goals is done and merged.** **M3 Resources is done**: notes and links (R.1, R.2) and file
   uploads (R.3a–R.3c, `PLAN.md` §13) — R.3a/R.3b on `staging` (#51–#54), R.3c on
   `feat/resource-file-download` — all merged to `staging` (#51–#56). R.3d (S3 storage) waits for
-  the deploy steps. **M4 Levels is done** and on `staging` (#57–#59). **M5 Dashboard started**
-  (base `feat/dashboard-base`): A.1 merged (#60), A.2 on `feat/dashboard-patterns`; **next A.3**
-  streaks at risk, best / slipping habits, goals and level on the dashboard.
+  the deploy steps. **M4 Levels is done** and on `staging` (#57–#59). **M5 Dashboard is done**:
+  A.1, A.2 on `staging` (#60–#62); A.3 on `feat/dashboard-highlights` → `staging`. **Next: M6 AI
+  insights** (I.1 opt-in + aggregates + `InsightGenerator` with a fake, `PLAN.md` §11.5; Q10 to
+  confirm first) — or D.1/D.2 if a shared deploy comes first.
 - The frontend is built by another agent in its own repo (`habit-tracker-web`); backend work follows
   this roadmap.
 - Branch flow: step branch from the previous step's branch → PR into the phase's base branch →
   base PRs into `staging`. Claude commits and pushes and gives PR links (no `gh` on the machine);
   Nayeem opens and merges. Commits carry Nayeem's name only.
-- Tests need Docker running (Testcontainers). 263 tests pass (counted from the XML reports, which include nested test classes).
+- Tests need Docker running (Testcontainers). 269 tests pass (counted from the XML reports, which include nested test classes).
 - To run locally: PostgreSQL running, and a git-ignored `.env` in the project root with `DB_URL`
   (optional), `DB_USERNAME`, `DB_PASSWORD`, `JWT_SECRET` (≥ 32 bytes) — the app reads it itself
   (`spring.config.import`); real environment variables override it, and the old `db_user_name` /
@@ -31,7 +32,7 @@ The step-by-step plan and overall progress are in `docs/ROADMAP.md`; decisions a
 
 ## Next up
 
-1. M5 Dashboard → M6 AI (`PLAN.md` §11). The frontend has no file upload UI yet.
+1. M6 AI (`PLAN.md` §11). The frontend has no file upload UI yet.
 2. Before any shared deploy: Flyway (D.1), production profile (D.2).
 3. Later: 2.3 Google sign-in.
 
@@ -47,6 +48,21 @@ The step-by-step plan and overall progress are in `docs/ROADMAP.md`; decisions a
 | Week starts on Monday for every user (`PLAN.md` §8b) — per-user week start if anyone asks | later | nothing |
 
 ---
+
+## 2026-10-06 (roadmap A.3 — highlights, goals and level on the dashboard; M5 done)
+
+**Done** (branch `feat/dashboard-highlights` → `staging`; `feat/dashboard-base` was already merged and deleted)
+- `GET /api/dashboard` gains `atRisk` (streak ≥ 3 ending unless done today; for N-a-week, when the
+  week has no room left; `needed`), `best` / `slipping` (top 3 by 30-day rate / by drop), `goals`
+  (active, with progress percent) and `level`. Rules in `PLAN.md` §11.4 ("Settled in A.3").
+- `HighlightCalculator` (pure). `LevelService.levelOf(…)` computes from loaded data, so the
+  dashboard doesn't re-query habits and done days; `GoalService.findActive`.
+- `HighlightCalculatorTest` (5), one more case in `DashboardApiIntegrationTest` (dashboard level =
+  `/api/me/level`). 269 tests pass.
+
+**Known limit**
+- Goal progress costs a few queries per active goal (it reuses `GoalProgressService` as is). Fine for
+  a handful of goals; batch it if someone keeps dozens.
 
 ## 2026-10-06 (roadmap A.2 — heatmap, weekday and time-of-day patterns)
 

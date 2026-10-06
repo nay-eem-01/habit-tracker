@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Clock;
 import java.time.Instant;
+import java.util.List;
 
 /**
  * Goals of the signed-in user. Every method takes the acting user's id (from the security
@@ -40,6 +41,12 @@ public class GoalService {
     @Transactional(readOnly = true)
     public long countAchieved(Long userId) {
         return goalRepository.countByUserIdAndStatus(userId, GoalStatus.ACHIEVED);
+    }
+
+    /** The user's active goals, oldest first (the dashboard shows their progress). */
+    @Transactional(readOnly = true)
+    public List<Goal> findActive(Long userId) {
+        return goalRepository.findAllByUserIdAndStatusOrderById(userId, GoalStatus.ACTIVE);
     }
 
     @Transactional(readOnly = true)
