@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Clock;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -34,10 +35,19 @@ public class LevelService {
     public Level level(Long userId) {
         ZoneId zone = ZoneId.of(userService.getById(userId).getTimezone());
         LocalDate today = LocalDate.now(clock.withZone(zone));
-        Map<Long, Set<LocalDate>> doneDays = habitProgressService.doneDaysByHabit(userId);
+        return levelOf(habitService.findAllOwned(userId), habitProgressService.doneDaysByHabit(userId), zone, today,
+                goalService.countAchieved(userId));
+    }
 
-        long xp = XpCalculator.goalXp(goalService.countAchieved(userId));
-        for (Habit habit : habitService.findAllOwned(userId)) {
+    /**
+     * The level from data the caller already has (the dashboard loads the same habits and done days).
+     *
+     * @param habits every habit of the user, archived ones included
+     */
+    public static Level levelOf(List<Habit> habits, Map<Long, Set<LocalDate>> doneDays, ZoneId zone, LocalDate today,
+                                long achievedGoals) {
+        long xp = XpCalculator.goalXp(achievedGoals);
+        for (Habit habit : habits) {
             xp += XpCalculator.habitXp(habit.getFrequencyType(), habit.getFrequencyConfig(),
                     doneDays.getOrDefault(habit.getId(), Set.of()), habit.getCreatedAt().atZone(zone).toLocalDate(),
                     today);

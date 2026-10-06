@@ -20,6 +20,7 @@ import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.hasItem;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -88,6 +89,41 @@ class DashboardApiIntegrationTest extends IntegrationTest {
     }
 
     @Test
+    void highlightsGoalsAndTheLevel() throws Exception {
+        String token = bearerFor("dash.highlights@example.com");
+        // done the 5 days before today, not yet today: a 5-day streak at risk
+        Integer run = habit(token, "{\"name\":\"Run\",\"frequencyType\":\"DAILY\"}", 10);
+        for (int daysAgo = 5; daysAgo >= 1; daysAgo--) {
+            checkIn(token, run, today.minusDays(daysAgo), 1);
+        }
+        Integer active = createGoal(token, "Run a 5K");
+        mockMvc.perform(put("/api/habits/{id}/goal", run).header(HttpHeaders.AUTHORIZATION, token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"goalId\":" + active + ",\"goalTargetDays\":10}"))
+                .andExpect(status().isOk());
+        mockMvc.perform(post("/api/goals/{id}/achieve", createGoal(token, "Done one")).header(HttpHeaders.AUTHORIZATION, token))
+                .andExpect(status().isOk());
+
+        String level = mockMvc.perform(get("/api/me/level").header(HttpHeaders.AUTHORIZATION, token))
+                .andReturn().getResponse().getContentAsString();
+        mockMvc.perform(get("/api/dashboard").header(HttpHeaders.AUTHORIZATION, token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.payload.atRisk.length()").value(1))
+                .andExpect(jsonPath("$.payload.atRisk[0].name").value("Run"))
+                .andExpect(jsonPath("$.payload.atRisk[0].streak").value(5))
+                .andExpect(jsonPath("$.payload.atRisk[0].needed").value(1))
+                .andExpect(jsonPath("$.payload.best[0].habitId").value(run))
+                .andExpect(jsonPath("$.payload.slipping.length()").value(0))
+                // only the active goal; linked today, so nothing counted yet
+                .andExpect(jsonPath("$.payload.goals.length()").value(1))
+                .andExpect(jsonPath("$.payload.goals[0].title").value("Run a 5K"))
+                .andExpect(jsonPath("$.payload.goals[0].percent").value(0))
+                // 5 days (50) + an achieved goal (500): the same as GET /api/me/level
+                .andExpect(jsonPath("$.payload.level.xp").value(550))
+                .andExpect(jsonPath("$.payload.level.level").value((Integer) JsonPath.read(level, "$.payload.level")));
+    }
+
+    @Test
     void aNewUserHasAnEmptyDashboard() throws Exception {
         mockMvc.perform(get("/api/dashboard").header(HttpHeaders.AUTHORIZATION, bearerFor("dash.new@example.com")))
                 .andExpect(status().isOk())
@@ -141,6 +177,14 @@ class DashboardApiIntegrationTest extends IntegrationTest {
                 createdDaysAgo, id);
         entityManager.clear();   // drop the cached habit so the backdated created_at is read
         return id;
+    }
+
+    private Integer createGoal(String token, String title) throws Exception {
+        String body = mockMvc.perform(post("/api/goals").header(HttpHeaders.AUTHORIZATION, token)
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"title\":\"" + title + "\"}"))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+        return JsonPath.read(body, "$.payload.id");
     }
 
     private void checkIn(String token, Integer habitId, LocalDate date, int count) throws Exception {

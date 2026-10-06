@@ -601,6 +601,15 @@ Heavy parts may become separate endpoints (`/api/dashboard/heatmap`) if the payl
   (catching up says nothing about when the habit happens). Peak hour, ties to the earlier hour.
 - Active habits only, like the dashboard.
 
+**Settled in A.3 (2026-10-06):**
+- **At risk** = a streak of 3 or more that ends unless something happens today: a daily /
+  chosen-weekday habit due and not done; an N-a-week habit needing as many more days as the week
+  has left (today included if not yet done). Longest streak first; `needed` says how many.
+- **Best** = top 3 by 30-day rate; **slipping** = top 3 drops in the 30-day rate against the 30 days
+  before (only real drops). 30 days: enough data to mean something, recent enough to act on.
+- **Goals**: active goals with the same percent as `GET /api/goals/{id}/progress`; **level**: the
+  same as `GET /api/me/level` (computed from the habits and done days the dashboard already loaded).
+
 ### 11.5 M6 — AI insights
 
 The dashboard shows the numbers; AI turns them into plain language and one suggestion

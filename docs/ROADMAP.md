@@ -12,7 +12,7 @@ branch and PRs into the phase base, in order; the base PRs into `staging` when t
 
 **Legend:** ✅ done · 🔄 in progress · ⬜ not started · ⏸ deferred
 
-**Progress:** Phase 5 of 5 · 25 of 26 steps done (plus 2 pre-deploy steps) · M2 Goals ✅ 4 of 4 · M3 Resources ✅ (files too; R.3d S3 with D.1/D.2) · M4 Levels ✅ · M5 Dashboard 2 of 3 · Frontend: Phase F, own repo (another agent)
+**Progress:** Phase 5 of 5 · 25 of 26 steps done (plus 2 pre-deploy steps) · M2 Goals ✅ 4 of 4 · M3 Resources ✅ (files too; R.3d S3 with D.1/D.2) · M4 Levels ✅ · M5 Dashboard ✅ · Frontend: Phase F, own repo (another agent)
 
 ## Where we are (2026-10-01)
 
@@ -163,15 +163,15 @@ Base branch: `feat/levels-base`. Q8 answered 2026-10-06: XP is never lost.
 | X.1 | XP + level + tier calculator, unit-tested (`PLAN.md` §11.3) | ✅ |
 | X.2 | `GET /api/me/level` | ✅ |
 
-### M5 — Dashboard
+### M5 — Dashboard ✅
 
-Base branch: `feat/dashboard-base`. One call, `GET /api/dashboard`; A.2 and A.3 add to it.
+Base branch: `feat/dashboard-base` (A.1, A.2; merged #62). A.3 went straight to `staging` — the base was deleted after its merge. `GET /api/dashboard` + `GET /api/dashboard/patterns`.
 
 | # | Step | Status |
 |---|---|---|
 | A.1 | Today + completion rates (7/30/90, change vs previous period) | ✅ |
 | A.2 | Heatmap, weekday and time-of-day patterns (`GET /api/dashboard/patterns`) | ✅ |
-| A.3 | Streaks at risk, best / slipping habits, goals and level on the dashboard | ⬜ |
+| A.3 | Streaks at risk, best / slipping habits, goals and level on the dashboard | ✅ |
 
 ### M6 — AI insights
 
