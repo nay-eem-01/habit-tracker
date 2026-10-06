@@ -540,10 +540,21 @@ no XP column that can drift, and a level can be recomputed any time.
 | streak reaches 7 / 30 / 100 / 365 | +50 / +200 / +500 / +1500, once per streak run |
 | goal marked `ACHIEVED` (M2) | +500 |
 
-- **Level** `n` needs `50 · n · (n + 1)` total XP: level 2 at 100, 3 at 300, 4 at 600, 10 at 4 950.
+- **Level** `n + 1` needs `50 · n · (n + 1)` total XP: level 2 at 100, 3 at 300, 4 at 600, 10 at 4 500
+  (corrected 2026-10-06 — the draft said 4 950, which doesn't fit the formula or the other examples).
   Early levels come fast, later ones need weeks of consistency.
 - **Tiers** group levels: Bronze 1–4 · Silver 5–9 · Gold 10–19 · Platinum 20–34 · Diamond 35+.
-- **No XP is ever lost** (Q8): breaking a streak stops the bonuses; it doesn't take anything back.
+- **No XP is ever lost** (Q8, confirmed 2026-10-06): breaking a streak stops the bonuses; it doesn't
+  take anything back.
+- **Which days earn XP** (settled in X.1, 2026-10-06): the days the streak counts — scheduled done
+  days; for N-times-a-week at most N done days a week. A check-in on an unscheduled day earns
+  nothing (as for streaks and rates, §12.1). The calculator walks the same units as
+  `StreakCalculator` (`StreakCalculator.walk`), so the two can't disagree.
+- **N-times-a-week habits** count in weeks: the bonus applies from a 1-week run, milestones at
+  1 / 4 / 14 / 52 weeks (≈ 7 / 30 / 100 / 365 days).
+- A milestone is paid each time a run reaches it, so a new run after a break earns it again.
+- XP is recomputed from logs, so **correcting** history (undoing a check-in within the 7-day window,
+  raising a habit's target) can lower it — that's a correction, not a streak penalty.
 - **API:** `GET /api/me/level` → `xp`, `level`, `tier`, `xpForNextLevel`, `progressToNextLevel`.
   Level-ups become a notification type once Phase 5 exists (§12.2).
 - One calculator class, pure Java, unit-tested like the streak calculator. At one user's scale
@@ -590,7 +601,7 @@ Recommendations are in bold; confirm or change them before the milestone starts.
 |---|---|---|
 | 6 | Can one habit serve **one goal (recommended — simpler, no double counting)** or several? | M2 |
 | 7 | Goal progress: **target done-days per habit (recommended, §11.1)**, or "done / scheduled days until the target date"? And is a goal at 100 % achieved automatically, or **does the user confirm (recommended)**? | M2 |
-| 8 | Levels: **XP never lost (recommended)**, or does breaking streaks cost XP? | M4 |
+| 8 | Levels: **XP never lost (recommended)**, or does breaking streaks cost XP? | M4 — **answered 2026-10-06: never lost** |
 | 9 | Resources: **notes + links first (recommended)**; file uploads (S3) later? | M3 |
 | 10 | AI: **opt-in, aggregates + habit names only (recommended)**; allow notes with a second opt-in? | M6 |
 
