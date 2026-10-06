@@ -1,7 +1,8 @@
 package com.nayeem.habittracker.resource;
 
-/** What a resource is. Files come later (PLAN.md §11.6, Q9). */
+/** What a resource is. A {@code FILE} is uploaded through its own endpoint (PLAN.md §13). */
 public enum ResourceType {
     NOTE,
-    LINK
+    LINK,
+    FILE
 }

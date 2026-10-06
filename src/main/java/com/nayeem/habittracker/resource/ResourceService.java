@@ -4,6 +4,8 @@ import com.nayeem.habittracker.common.exception.ApplicationException;
 import com.nayeem.habittracker.common.exception.ErrorCode;
 import com.nayeem.habittracker.common.pagination.PageRequests;
 import com.nayeem.habittracker.common.response.PageResponse;
+import com.nayeem.habittracker.file.FileService;
+import com.nayeem.habittracker.goal.Goal;
 import com.nayeem.habittracker.goal.GoalService;
 import com.nayeem.habittracker.user.UserService;
 import lombok.RequiredArgsConstructor;
@@ -13,6 +15,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -21,9 +24,9 @@ import java.util.List;
 import java.util.Locale;
 
 /**
- * Notes and links of the signed-in user. Every method takes the acting user's id (from the security
+ * Notes, links and files of the signed-in user. Every method takes the acting user's id (from the security
  * context, never the request) and only ever sees that user's resources — anyone else's is 404.
- * Note text and addresses are never logged.
+ * Note text, addresses and file names are never logged.
  */
 @Slf4j
 @Service
@@ -39,6 +42,7 @@ public class ResourceService {
     private final ResourceRepository resourceRepository;
     private final UserService userService;
     private final GoalService goalService;
+    private final FileService fileService;
 
     @Transactional
     public ResourceResponse create(Long userId, ResourceRequest request) {
@@ -47,6 +51,26 @@ public class ResourceService {
         apply(userId, resource, request);
         resource = resourceRepository.save(resource);
         log.info("Resource {} ({}) created by user {}", resource.getId(), resource.getType(), userId);
+        return ResourceResponse.from(resource);
+    }
+
+    /**
+     * Saves an uploaded file as a {@code FILE} resource. One transaction: if the resource can't be
+     * saved, the stored bytes are removed again ({@link FileService#store}).
+     */
+    @Transactional
+    public ResourceResponse createFile(Long userId, ResourceFileRequest request, MultipartFile upload) {
+        Resource resource = new Resource();
+        resource.setUser(userService.getById(userId));
+        resource.setType(ResourceType.FILE);
+        resource.setTitle(request.getTitle().trim());
+        resource.setBody(blankToNull(request.getBody()));
+        // checked before the upload is stored, so a refused request writes no bytes
+        resource.setGoal(ownedGoal(userId, request.getGoalId()));
+        resource.setPinned(Boolean.TRUE.equals(request.getPinned()));
+        resource.setFile(fileService.store(userId, upload));
+        resource = resourceRepository.save(resource);
+        log.info("Resource {} (FILE) created by user {}", resource.getId(), userId);
         return ResourceResponse.from(resource);
     }
 
@@ -113,28 +137,48 @@ public class ResourceService {
                 .orElseThrow(() -> new ApplicationException(ErrorCode.RESOURCE_NOT_FOUND));
     }
 
+    /** Create and full replace. A file is never added or swapped here — only its title, body, goal, pin. */
     private void apply(Long userId, Resource resource, ResourceRequest request) {
         String body = blankToNull(request.getBody());
         String url = blankToNull(request.getUrl());
-        if (request.getType() == ResourceType.NOTE) {
-            if (body == null) {
-                throw invalid("A note needs a body");
+        boolean isFile = resource.getType() == ResourceType.FILE;
+        if (request.getType() == ResourceType.FILE && !isFile) {
+            throw invalid("Upload files with POST /api/resources/files");
+        }
+        if (isFile && request.getType() != ResourceType.FILE) {
+            throw invalid("A file resource stays a FILE; save a new resource instead");
+        }
+        switch (request.getType()) {
+            case NOTE -> {
+                if (body == null) {
+                    throw invalid("A note needs a body");
+                }
+                if (url != null) {
+                    throw invalid("A note has no url; make it a LINK");
+                }
             }
-            if (url != null) {
-                throw invalid("A note has no url; make it a LINK");
+            case LINK -> {
+                if (url == null) {
+                    throw invalid("A link needs a url");
+                }
+                requireHttpUrl(url);
             }
-        } else {
-            if (url == null) {
-                throw invalid("A link needs a url");
+            case FILE -> {
+                if (url != null) {
+                    throw invalid("A file has no url");
+                }
             }
-            requireHttpUrl(url);
         }
         resource.setType(request.getType());
         resource.setTitle(request.getTitle().trim());
         resource.setBody(body);
         resource.setUrl(url);
-        resource.setGoal(request.getGoalId() == null ? null : goalService.getOwnedGoal(userId, request.getGoalId()));
+        resource.setGoal(ownedGoal(userId, request.getGoalId()));
         resource.setPinned(Boolean.TRUE.equals(request.getPinned()));
+    }
+
+    private Goal ownedGoal(Long userId, Long goalId) {
+        return goalId == null ? null : goalService.getOwnedGoal(userId, goalId);
     }
 
     /** Only absolute http(s) addresses with a host: no {@code javascript:}, {@code file:} or {@code data:}. */
