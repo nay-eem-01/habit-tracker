@@ -641,3 +641,126 @@ Reminders keep the habit alive; they belong in the core tracker, not after it.
 |---|---|---|
 | 11 | Reminder channels: **in-app + email (recommended)** now, push when a frontend exists? Which email provider — **SMTP (e.g. a Gmail app password) to start (recommended)**? | 5.4 — **answered 2026-10-01 with the recommendation** (email off until configured; no per-user opt-out yet) |
 
+
+---
+
+## 13. File uploads — R.3 design (2026-10-05; Q12–Q14 answered with the recommendations)
+
+M3 adds a third resource type, **`FILE`**: a PDF, an image or a text file kept next to a goal, the
+same way a note or link is. Q12–Q14 were answered on 2026-10-05 with the recommendations
+(Nayeem: "go with the recommendations"); the options are kept below for the record.
+
+### 13.1 What taskatask-backend does (looked at 2026-10-05)
+
+`taskatask-common/…/fileobject` is a generic file module the whole app shares:
+
+- **`FileObject` record, separate from the feature** — `originalName`, generated `name`,
+  `uploadType`, `fileExtension`, `mimeType` (found by Apache Tika from the bytes, not trusted from the
+  client), `fileKey`, `fileSize`, `bucket`, `isPublic`, `filePublicUrl`. A feature entity (e.g.
+  `CostDocument`) points at it.
+- **Two-step upload:** `POST /api/file/upload?type=TASK_IMAGE` (multipart) stores the bytes and returns
+  the `FileObject`; the client then sends that `fileId` in the feature's own request (`addDocument
+  { fileId }`).
+- **S3 through Spring Cloud AWS `S3Template`.** Key = `[public/]<type folder>/<random name>`; the
+  user's file name never becomes the key. `FileUploadType` → folder; a privacy matrix decides public
+  vs private.
+- **Downloads:** a pre-signed GET URL valid 10 minutes (main path), or bytes streamed through the
+  server as `attachment` (fallback).
+- **Delete:** the S3 object, then the `FileObject`, then the feature row.
+
+**Worth copying:** file metadata kept apart from the feature entity; type found from the bytes;
+random storage keys; downloads as `attachment`; a storage service the features call instead of S3.
+
+**Not worth copying (problems for us):**
+
+| In taskatask | Why it matters here |
+|---|---|
+| `FileObject` has **no owner**; `/api/file?fileIds=…`, `/as-resource` and `DELETE /api/file` act on any id for any signed-in user | breaks our rule that every read and write checks ownership (404 for someone else's) |
+| Upload and attach are separate calls; nothing removes an uploaded file that is never attached | orphan files pile up forever, and need a clean-up job to fix |
+| Tika's result is recorded but **never checked against an allowlist**; limit 256 MB | anything can be uploaded, HTML and SVG included |
+| Whole file read into a `byte[]` in memory | fine for small files, not at 256 MB |
+| `Cache-Control: public, immutable, 1 year` on private downloads | shared caches may keep a private file |
+| S3 delete and row delete aren't coordinated | a failure halfway leaves a dangling row or a lost file |
+| WebFlux / reactive | we're on blocking Spring MVC (the stack line at the top) |
+
+Separately: taskatask's `application-development.properties` and `application-staging.properties`
+contain an AWS access key and secret in git. Those should be rotated there. Here, credentials only ever
+come from the environment (security-checklist).
+
+### 13.2 Decisions to take
+
+**Q12 — Where the bytes live**
+
+| Option | For | Against |
+|---|---|---|
+| A. **Local disk** (`app.files.dir`) behind a `FileStorage` interface | no account or cost, simple to test (`@TempDir`), right for one server with a persistent disk | lost on hosts with an ephemeral disk (most PaaS); one server only |
+| B. **S3-compatible** (AWS S3 / Cloudflare R2 / MinIO) behind the same interface | survives redeploys, scales, pre-signed URLs take the download load off the app | needs a bucket and credentials now; tests need a MinIO container |
+| C. PostgreSQL `bytea` | one backup, transactional with the row | bloats the database and its backups; poor for anything large |
+
+**Recommended: A now, B as its own step when the deploy target is chosen** (with D.1/D.2). Both
+sit behind `FileStorage` (`put`, `open`, `delete`), so the switch touches no feature code.
+
+**Q13 — Limits and types**
+
+**Recommended:**
+- **10 MB per file**, **100 MB per user** (sum of stored sizes, checked before saving).
+  `spring.servlet.multipart.max-file-size=10MB`, `max-request-size=11MB`.
+- **Allowed:** PNG, JPEG, WebP, GIF, PDF, plain text (`.txt`, `.md`). The type is detected from the
+  bytes (Tika core, magic bytes) and **must** be on the list. The extension must match it.
+- **Not allowed:** SVG and HTML (can carry scripts), Office files (macros), archives, executables.
+  Add types when there's a reason.
+- Answers: too big → **413 `FILE_TOO_LARGE`**, type not allowed → **415 `FILE_TYPE_NOT_ALLOWED`**,
+  quota full → **413 `FILE_QUOTA_EXCEEDED`**.
+
+**Q14 — Upload flow**
+
+| Option | For | Against |
+|---|---|---|
+| A. **One multipart request creates the resource**: `POST /api/resources/files` with `file` + `title`, `body`, `goalId`, `pinned` | no orphans, no clean-up job, ownership set at creation | a generic upload endpoint for other features (avatars) is a separate endpoint later |
+| B. Two-step like taskatask: `POST /api/files` → `fileId`, then `POST /api/resources {type: FILE, fileId}` | one upload endpoint reused by every feature | orphans need a clean-up job; a `fileId` must be checked as owned *and* unused |
+
+**Recommended: A.** It's the right size for one feature. If a second feature needs files, the
+`StoredFile` table and `FileStorage` are already shared, and only a new endpoint is needed.
+
+### 13.3 Design (with the recommendations)
+
+- **`StoredFile` entity** (`files` package), separate from `Resource` like taskatask's `FileObject`,
+  **but owned**: `user`, `storageKey` (random UUID, never the user's name — no path traversal),
+  `originalName` (cleaned, ≤ 255), `contentType` (the detected one), `sizeBytes`, `sha256`,
+  audit columns. `Resource` gets `file` (one-to-one, nullable). `ResourceType.FILE`.
+- **Rules for a `FILE` resource:** `file` required, `url` not allowed, `body` an optional comment.
+  `PUT` changes title, body, goal and pinned only — a different file means a new resource. JSON
+  `POST /api/resources` with `type: FILE` → 400 (files go through the multipart endpoint).
+- **Upload order:** check size → detect type → check quota → write the bytes → insert rows. If the
+  insert fails, delete the bytes again. Streamed to storage from Spring's temp file; never a
+  whole-file `byte[]`.
+- **Download:** `GET /api/resources/{id}/file`, owner only (someone else's → 404). Headers:
+  `Content-Type` = the stored type, `Content-Disposition: attachment; filename*=UTF-8''…`,
+  `X-Content-Type-Options: nosniff`, `Cache-Control: private, no-store`. The frontend keeps the access
+  token in memory, so a plain `<a href>` can't send it. It downloads with `fetch` and saves or
+  previews the blob. (A short-lived signed link can be added with S3, Q12 B.)
+- **Delete:** deleting a `FILE` resource deletes its rows; the bytes are deleted **after commit**
+  (`@TransactionalEventListener(AFTER_COMMIT)`, like `NotificationDispatcher`). If that fails, the
+  orphan is logged by storage key (never the file name). A sweeper can come later if it ever happens.
+- **Resource responses** gain `file: { name, contentType, sizeBytes }` for `FILE` resources; list
+  filters (`?type=FILE`, `?goalId=`, `?q=`) work unchanged.
+- **Abuse / viruses:** single-user scale, so **no virus scanner for now**. The protection is the
+  allowlist, attachment-only downloads with `nosniff`, random keys and the quota. Before sign-up
+  opens to strangers, add ClamAV (`clamd` container) or a hosted scanner as its own step.
+- **Logging:** file id, size and detected type only — never the original file name or content
+  (observability skill). `StoredFile` and requests mask the name in `toString`.
+
+### 13.4 Steps (replace R.3 in the roadmap)
+
+| # | Step |
+|---|---|
+| R.3a | `StoredFile` entity + `FileStorage` interface + local-disk implementation + type detection and allowlist (Tika core) + limits config; unit and integration tests |
+| R.3b | `ResourceType.FILE`; `POST /api/resources/files` (multipart), quota, error codes, `file` in responses; JSON create with `FILE` → 400 |
+| R.3c | `GET /api/resources/{id}/file` download headers; delete removes the bytes after commit; ownership tests on both |
+| R.3d | S3-compatible `FileStorage` (MinIO via Testcontainers), switched by config — when the deploy target is known, next to D.1/D.2 |
+
+| # | Question | Needed by |
+|---|---|---|
+| 12 | Storage: **local disk now behind `FileStorage`, S3-compatible when deploying (recommended)**, S3 straight away, or Postgres `bytea`? | R.3a — **answered 2026-10-05 with the recommendation** |
+| 13 | Limits: **10 MB per file, 100 MB per user; images + PDF + text only (recommended)**? | R.3a — **answered 2026-10-05 with the recommendation** |
+| 14 | Upload flow: **one multipart call creates the resource (recommended)**, or two-step upload-then-attach like taskatask? | R.3b — **answered 2026-10-05 with the recommendation** |
