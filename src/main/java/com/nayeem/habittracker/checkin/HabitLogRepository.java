@@ -21,6 +21,11 @@ interface HabitLogRepository extends JpaRepository<HabitLog, Long> {
             + " where l.habit.user.id = :userId and l.completedCount >= l.habit.targetCount")
     List<HabitDoneDay> findDoneDaysOfUser(@Param("userId") Long userId);
 
+    /** When each done day since {@code from} was first logged — for the time-of-day pattern. */
+    @Query("select new com.nayeem.habittracker.checkin.CheckInTime(l.habit.id, l.logDate, l.createdAt) from HabitLog l"
+            + " where l.habit.user.id = :userId and l.logDate >= :from and l.completedCount >= l.habit.targetCount")
+    List<CheckInTime> findDoneCheckInTimes(@Param("userId") Long userId, @Param("from") LocalDate from);
+
     /** Each of the user's habits checked in on {@code day}, with that day's count. */
     @Query("select new com.nayeem.habittracker.checkin.HabitDayCount(l.habit.id, l.completedCount) from HabitLog l"
             + " where l.habit.user.id = :userId and l.logDate = :day")

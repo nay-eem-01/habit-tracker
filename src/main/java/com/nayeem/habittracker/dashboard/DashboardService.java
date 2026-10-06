@@ -1,5 +1,6 @@
 package com.nayeem.habittracker.dashboard;
 
+import com.nayeem.habittracker.checkin.CheckInTime;
 import com.nayeem.habittracker.checkin.HabitProgressService;
 import com.nayeem.habittracker.checkin.StatsCalculator;
 import com.nayeem.habittracker.checkin.Streak;
@@ -9,6 +10,7 @@ import com.nayeem.habittracker.dashboard.DashboardResponse.Completion;
 import com.nayeem.habittracker.dashboard.DashboardResponse.HabitCompletion;
 import com.nayeem.habittracker.dashboard.DashboardResponse.Today;
 import com.nayeem.habittracker.dashboard.DashboardResponse.TodayHabit;
+import com.nayeem.habittracker.dashboard.PatternsResponse.WeekdayRate;
 import com.nayeem.habittracker.habit.DueRules;
 import com.nayeem.habittracker.habit.FrequencyType;
 import com.nayeem.habittracker.habit.Habit;
@@ -28,6 +30,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * The home screen, computed on read from logs in the user's timezone (PLAN.md §11.4). Four queries
@@ -88,6 +91,33 @@ public class DashboardService {
                         CompletionCalculator.overall(WINDOWS[1], current.get(1), previous.get(1)),
                         CompletionCalculator.overall(WINDOWS[2], current.get(2), previous.get(2)),
                         completions));
+    }
+
+    /**
+     * Heatmap, weekday and time-of-day patterns over active habits — a separate call, because they
+     * change slowly while the dashboard reloads after every check-in. Four queries.
+     */
+    @Transactional(readOnly = true)
+    public PatternsResponse patterns(Long userId) {
+        ZoneId zone = ZoneId.of(userService.getById(userId).getTimezone());
+        LocalDate today = LocalDate.now(clock.withZone(zone));
+        Map<Long, Set<LocalDate>> doneDays = habitProgressService.doneDaysByHabit(userId);
+        List<Habit> active = habitService.findAllOwned(userId).stream().filter(habit -> !habit.isArchived()).toList();
+        List<HabitDays> habits = active.stream()
+                .map(habit -> new HabitDays(habit.getFrequencyType(), habit.getFrequencyConfig(),
+                        habit.getCreatedAt().atZone(zone).toLocalDate(), doneDays.getOrDefault(habit.getId(), Set.of())))
+                .toList();
+        Set<Long> activeIds = active.stream().map(Habit::getId).collect(Collectors.toSet());
+        List<CheckInTime> checkIns = habitProgressService
+                .doneCheckInTimes(userId, today.minusDays(PatternCalculator.HOURS_DAYS - 1L)).stream()
+                .filter(checkIn -> activeIds.contains(checkIn.habitId()))
+                .toList();
+
+        List<WeekdayRate> weekdays = PatternCalculator.weekdays(habits, today);
+        int[] hours = PatternCalculator.hours(checkIns, zone);
+        return new PatternsResponse(PatternCalculator.heatmap(habits, today), weekdays,
+                PatternCalculator.weakest(weekdays), PatternCalculator.strongest(weekdays),
+                PatternCalculator.asList(hours), PatternCalculator.peakHour(hours));
     }
 
     private static TodayHabit todayHabit(Habit habit, Set<LocalDate> done, LocalDate start, LocalDate today,
