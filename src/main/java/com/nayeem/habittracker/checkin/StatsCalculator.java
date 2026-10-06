@@ -7,7 +7,7 @@ import java.time.LocalDate;
 import java.util.Set;
 
 /**
- * Completion rate over a window ending today (PLAN.md §12.1). Pure, like {@link StreakCalculator}.
+ * Completion rate over a window ending today, or the one before it (PLAN.md §12.1, §11.4). Pure, like {@link StreakCalculator}.
  *
  * <ul>
  *   <li>The window is clipped to the habit's first day, so a new habit isn't judged on days
@@ -26,9 +26,24 @@ public final class StatsCalculator {
 
     public static WindowStats window(FrequencyType type, FrequencyConfig config, Set<LocalDate> doneDays,
                                      LocalDate start, LocalDate today, int days) {
-        LocalDate windowStart = today.minusDays(days - 1L);
-        LocalDate from = windowStart.isBefore(start) ? start : windowStart;
         LocalDate to = doneDays.contains(today) ? today : today.minusDays(1);
+        return range(type, config, doneDays, start, today.minusDays(days - 1L), to, days);
+    }
+
+    /**
+     * The {@code days} days just before {@link #window}'s — for "change against the previous
+     * period" (PLAN.md §11.4). Already over, so every day counts, done or not.
+     */
+    public static WindowStats previousWindow(FrequencyType type, FrequencyConfig config, Set<LocalDate> doneDays,
+                                             LocalDate start, LocalDate today, int days) {
+        LocalDate to = today.minusDays(days);
+        return range(type, config, doneDays, start, to.minusDays(days - 1L), to, days);
+    }
+
+    /** {@code from..to} inclusive, clipped to the habit's first day; empty when it ends first. */
+    private static WindowStats range(FrequencyType type, FrequencyConfig config, Set<LocalDate> doneDays,
+                                     LocalDate start, LocalDate windowStart, LocalDate to, int days) {
+        LocalDate from = windowStart.isBefore(start) ? start : windowStart;
 
         int done = 0;
         double expected = 0;
@@ -57,7 +72,7 @@ public final class StatsCalculator {
         return new WindowStats(days, done, round2(expected), rate);
     }
 
-    private static double round2(double value) {
+    static double round2(double value) {
         return Math.round(value * 100) / 100.0;
     }
 }

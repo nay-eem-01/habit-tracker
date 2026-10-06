@@ -53,6 +53,16 @@ public class HabitProgressService {
         return byHabit;
     }
 
+    /** Each of the user's habits checked in on {@code day} → that day's count; others are absent. */
+    @Transactional(readOnly = true)
+    public Map<Long, Integer> countsOn(Long userId, LocalDate day) {
+        Map<Long, Integer> counts = new HashMap<>();
+        for (HabitDayCount row : habitLogRepository.findCountsOn(userId, day)) {
+            counts.put(row.habitId(), row.completedCount());
+        }
+        return counts;
+    }
+
     private static WindowStats window(Context c, int days) {
         return StatsCalculator.window(c.habit.getFrequencyType(), c.habit.getFrequencyConfig(), c.doneDays,
                 c.start, c.today, days);
