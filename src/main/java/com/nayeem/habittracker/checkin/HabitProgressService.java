@@ -11,6 +11,7 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -51,6 +52,22 @@ public class HabitProgressService {
             byHabit.computeIfAbsent(row.habitId(), id -> new HashSet<>()).add(row.day());
         }
         return byHabit;
+    }
+
+    /** The user's done days since {@code from}, with when each was first logged. */
+    @Transactional(readOnly = true)
+    public List<CheckInTime> doneCheckInTimes(Long userId, LocalDate from) {
+        return habitLogRepository.findDoneCheckInTimes(userId, from);
+    }
+
+    /** Each of the user's habits checked in on {@code day} → that day's count; others are absent. */
+    @Transactional(readOnly = true)
+    public Map<Long, Integer> countsOn(Long userId, LocalDate day) {
+        Map<Long, Integer> counts = new HashMap<>();
+        for (HabitDayCount row : habitLogRepository.findCountsOn(userId, day)) {
+            counts.put(row.habitId(), row.completedCount());
+        }
+        return counts;
     }
 
     private static WindowStats window(Context c, int days) {

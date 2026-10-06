@@ -576,6 +576,31 @@ no XP column that can drift, and a level can be recomputed any time.
 
 Heavy parts may become separate endpoints (`/api/dashboard/heatmap`) if the payload grows.
 
+**Settled in A.1 (2026-10-06):**
+- Only **active** habits are on the dashboard (archived ones keep their XP, M4, but aren't "today").
+- **Due today** follows the reminder rule, now shared as `habit.DueRules`: daily always, chosen
+  weekdays on them, N-a-week until the week's N is met — a habit done today stays due today.
+  `today.due` / `today.done` count those, for "N of M done".
+- **Previous period** = the same number of days just before the window; it's over, so every day in
+  it counts. Clipped to the habit's first day; `null` rate and `change` when nothing was expected.
+- **Overall rate** adds the habits up but caps each at what it was asked for, so extra check-ins on an
+  N-a-week habit don't hide another habit's missed days. `change` is in rate points (0.12 = +12 %).
+- Numbers come from `StatsCalculator` / `StreakCalculator`, so the dashboard matches each habit page.
+
+**Settled in A.2 (2026-10-06):**
+- Patterns are their own call, `GET /api/dashboard/patterns`: they change slowly, while the
+  dashboard reloads after every check-in.
+- **N-a-week habits have no fixed days**: on the heatmap they add to a day they were done and never
+  count against one; they're left out of the weekday rates.
+- **Heatmap**: 365 days ending today; a cell = habits done / habits expected that day (daily and
+  chosen-weekday habits from their first day, plus N-a-week habits done that day).
+- **Weekdays**: the last 12 full weeks before today, so each weekday has 12 samples and today's
+  unfinished day doesn't drag its weekday down; weakest / strongest day, ties to the earlier day.
+- **Time of day**: done days of the last 90 days by the hour of their first check-in
+  (`HabitLog.createdAt`) in the user's timezone; a check-in logged for an earlier day is skipped
+  (catching up says nothing about when the habit happens). Peak hour, ties to the earlier hour.
+- Active habits only, like the dashboard.
+
 ### 11.5 M6 — AI insights
 
 The dashboard shows the numbers; AI turns them into plain language and one suggestion

@@ -1,6 +1,7 @@
 package com.nayeem.habittracker.notification;
 
 import com.nayeem.habittracker.checkin.HabitProgressService;
+import com.nayeem.habittracker.habit.DueRules;
 import com.nayeem.habittracker.habit.FrequencyType;
 import com.nayeem.habittracker.habit.Habit;
 import com.nayeem.habittracker.habit.HabitService;
@@ -58,6 +59,6 @@ public class ReminderService {
             LocalDate monday = today.with(DayOfWeek.MONDAY);
             doneThisWeek = habitProgressService.doneDays(habit.getId(), monday, monday.plusDays(6));
         }
-        return ReminderRules.isDue(habit.getFrequencyType(), habit.getFrequencyConfig(), today, doneThisWeek);
+        return DueRules.isDue(habit.getFrequencyType(), habit.getFrequencyConfig(), today, doneThisWeek);
     }
 }
