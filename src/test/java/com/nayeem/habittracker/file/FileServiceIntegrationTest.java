@@ -72,6 +72,23 @@ class FileServiceIntegrationTest extends IntegrationTest {
     }
 
     @Test
+    void deleteRemovesTheBytesOnlyOnceCommitted() {
+        Long userId = user("files.delete@example.com");
+        StoredFile file = transactionTemplate.execute(status -> fileService.store(userId, png("a.png")));
+
+        assertThatThrownBy(() -> transactionTemplate.executeWithoutResult(status -> {
+            fileService.delete(file);
+            throw new IllegalStateException("rolled back");
+        })).isInstanceOf(IllegalStateException.class);
+        assertThat(storedFileRepository.existsById(file.getId())).isTrue();
+        assertThat(properties.getDir().resolve(file.getStorageKey())).exists();
+
+        transactionTemplate.executeWithoutResult(status -> fileService.delete(file));
+        assertThat(storedFileRepository.existsById(file.getId())).isFalse();
+        assertThat(properties.getDir().resolve(file.getStorageKey())).doesNotExist();
+    }
+
+    @Test
     void refusesEmptyTooLargeAndDisallowedFilesBeforeWritingAnything() throws IOException {
         Long userId = user("files.refuse@example.com");
         long filesBefore = filesOnDisk();

@@ -3,6 +3,7 @@ package com.nayeem.habittracker.resource;
 import com.nayeem.habittracker.common.AppConstants;
 import com.nayeem.habittracker.common.pagination.PageRequests;
 import com.nayeem.habittracker.common.response.HttpResponse;
+import com.nayeem.habittracker.file.FileDownload;
 import com.nayeem.habittracker.security.AuthUser;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -11,6 +12,9 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.http.CacheControl;
+import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -28,6 +32,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.nio.charset.StandardCharsets;
 
 @Tag(name = "Resources")
 @SecurityRequirement(name = AppConstants.JWT_TOKEN)
@@ -78,6 +84,26 @@ class ResourceController {
         return HttpResponse.ok("Resource loaded", resourceService.get(user.id(), id));
     }
 
+    @Operation(summary = "Download a FILE resource's file",
+            description = "Always as an attachment, with the stored (detected) type. Send the bearer token: "
+                    + "fetch it and save or show the blob — a plain link can't carry the header.")
+    @ApiResponse(responseCode = "200", description = "The file's bytes")
+    @ApiResponse(responseCode = "404", description = "No such resource or not yours (RESOURCE_NOT_FOUND), "
+            + "or it has no file (FILE_NOT_FOUND)")
+    @GetMapping("/resources/{id}/file")
+    ResponseEntity<InputStreamResource> download(@AuthenticationPrincipal AuthUser user, @PathVariable Long id) {
+        FileDownload file = resourceService.download(user.id(), id);
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType(file.contentType()))
+                .contentLength(file.sizeBytes())
+                .header(HttpHeaders.CONTENT_DISPOSITION,
+                        ContentDisposition.attachment().filename(file.name(), StandardCharsets.UTF_8).build().toString())
+                // never rendered as something else (an HTML guess), never kept by a shared cache
+                .header("X-Content-Type-Options", "nosniff")
+                .cacheControl(CacheControl.noStore().cachePrivate())
+                .body(new InputStreamResource(file.content()));
+    }
+
     @Operation(summary = "Replace a resource",
             description = "A FILE keeps its file: only title, body, goal and pin change, and the type stays FILE.")
     @ApiResponse(responseCode = "200", description = "The updated resource")
@@ -105,7 +131,7 @@ class ResourceController {
         return HttpResponse.ok("Resource unpinned", resourceService.setPinned(user.id(), id, false));
     }
 
-    @Operation(summary = "Delete a resource for good")
+    @Operation(summary = "Delete a resource for good", description = "A FILE resource's file is deleted with it.")
     @ApiResponse(responseCode = "204", description = "Deleted")
     @ApiResponse(responseCode = "404", description = "No such resource, or not yours (RESOURCE_NOT_FOUND)")
     @DeleteMapping("/resources/{id}")
