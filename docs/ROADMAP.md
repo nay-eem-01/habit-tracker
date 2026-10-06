@@ -12,7 +12,7 @@ branch and PRs into the phase base, in order; the base PRs into `staging` when t
 
 **Legend:** ✅ done · 🔄 in progress · ⬜ not started · ⏸ deferred
 
-**Progress:** Phase 5 of 5 · 25 of 26 steps done (plus 2 pre-deploy steps) · M2 Goals ✅ 4 of 4 · M3 Resources 2 of 3 (R.3a, R.3b ✅) · Frontend: Phase F, own repo (another agent)
+**Progress:** Phase 5 of 5 · 25 of 26 steps done (plus 2 pre-deploy steps) · M2 Goals ✅ 4 of 4 · M3 Resources ✅ (files too; R.3d S3 with D.1/D.2) · Frontend: Phase F, own repo (another agent)
 
 ## Where we are (2026-10-01)
 
@@ -140,7 +140,7 @@ Base branch: `feat/goals-base`. G.1 merged; G.2–G.4 are stacked step branches 
 | G.3 | Goal progress — calculator (unit-tested) + `GET /api/goals/{id}/progress` | ✅ |
 | G.4 | Mark achieved / abandoned | ✅ |
 
-### M3 — Resources ✅ (notes and links)
+### M3 — Resources ✅ (notes, links, files)
 
 Base branch: `feat/resources-base`. Q9 answered 2026-10-03: notes and links first; **file uploads come right after M3** (own steps, to be designed — storage, size and type limits).
 
@@ -148,10 +148,10 @@ Base branch: `feat/resources-base`. Q9 answered 2026-10-03: notes and links firs
 |---|---|---|
 | R.1 | `Resource` entity (`NOTE` / `LINK`) + `/api/resources` CRUD, `?goalId=`, `?type=`, `?q=`, pin / unpin | ✅ |
 | R.2 | `GET /api/goals/{id}/resources`, pinned first | ✅ |
-| R.3 | File uploads — designed in `PLAN.md` §13 (Q12–Q14 answered 2026-10-05); base branch `feat/files-base` | 🔄 |
+| R.3 | File uploads — designed in `PLAN.md` §13 (Q12–Q14 answered 2026-10-05); base branch `feat/files-base`; R.3d waits for the deploy steps | ✅ |
 | R.3a | `StoredFile` + `FileStorage` (local disk) + type detection and allowlist + limits and quota | ✅ |
 | R.3b | `ResourceType.FILE`; `POST /api/resources/files` (multipart); `file` in responses | ✅ |
-| R.3c | `GET /api/resources/{id}/file` download; delete removes the bytes after commit | ⬜ |
+| R.3c | `GET /api/resources/{id}/file` download; delete removes the bytes after commit | ✅ |
 | R.3d | S3-compatible `FileStorage` (MinIO in tests) — with D.1/D.2 | ⬜ |
 
 ### M4 — Levels

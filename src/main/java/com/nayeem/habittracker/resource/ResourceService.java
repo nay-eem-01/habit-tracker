@@ -4,6 +4,7 @@ import com.nayeem.habittracker.common.exception.ApplicationException;
 import com.nayeem.habittracker.common.exception.ErrorCode;
 import com.nayeem.habittracker.common.pagination.PageRequests;
 import com.nayeem.habittracker.common.response.PageResponse;
+import com.nayeem.habittracker.file.FileDownload;
 import com.nayeem.habittracker.file.FileService;
 import com.nayeem.habittracker.goal.Goal;
 import com.nayeem.habittracker.goal.GoalService;
@@ -126,9 +127,24 @@ public class ResourceService {
         return ResourceResponse.from(resource);
     }
 
+    /** A FILE resource's bytes, for download; 404 when it isn't the user's or has no file. */
+    @Transactional(readOnly = true)
+    public FileDownload download(Long userId, Long resourceId) {
+        Resource resource = find(userId, resourceId);
+        if (resource.getFile() == null) {
+            throw new ApplicationException(ErrorCode.FILE_NOT_FOUND);
+        }
+        return fileService.open(resource.getFile());
+    }
+
+    /** A FILE resource takes its file with it; the bytes go once the delete has committed. */
     @Transactional
     public void delete(Long userId, Long resourceId) {
-        resourceRepository.delete(find(userId, resourceId));
+        Resource resource = find(userId, resourceId);
+        resourceRepository.delete(resource);
+        if (resource.getFile() != null) {
+            fileService.delete(resource.getFile());
+        }
         log.info("Resource {} deleted by user {}", resourceId, userId);
     }
 

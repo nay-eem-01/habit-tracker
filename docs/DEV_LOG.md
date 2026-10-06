@@ -11,15 +11,16 @@ The step-by-step plan and overall progress are in `docs/ROADMAP.md`; decisions a
 - **Phases 0–5 done** (2.3 Google sign-in deferred) — 25 of 26 steps, all on `staging`. **M1 is
   feature-complete.** The core loop works: account → habits → daily check-ins → strict streaks →
   7/30-day stats → reminders (in-app, optional email), all in the user's timezone.
-- **M2 Goals is done and merged.** **M3 Resources (notes + links) is merged to `staging`** (R.1,
-  R.2 — PR #46 was reverted by mistake in #48 and restored in #50). **Next: file uploads (R.3)** —
-  designed in `PLAN.md` §13 (Q12–Q14 answered with the recommendations); R.3a merged into `feat/files-base` (#52); R.3b done on `feat/resource-file-upload`; **next R.3c** (download + delete the bytes), then `feat/files-base` → `staging`, then M4 Levels.
+- **M2 Goals is done and merged.** **M3 Resources is done**: notes and links (R.1, R.2) and file
+  uploads (R.3a–R.3c, `PLAN.md` §13) — R.3a/R.3b on `staging` (#51–#54), R.3c on
+  `feat/resource-file-download`. R.3d (S3 storage) waits for the deploy steps. **Next: M4 Levels**
+  (X.1 XP/level/tier calculator, `PLAN.md` §11.3; Q8 to confirm first).
 - The frontend is built by another agent in its own repo (`habit-tracker-web`); backend work follows
   this roadmap.
 - Branch flow: step branch from the previous step's branch → PR into the phase's base branch →
   base PRs into `staging`. Claude commits and pushes and gives PR links (no `gh` on the machine);
   Nayeem opens and merges. Commits carry Nayeem's name only.
-- Tests need Docker running (Testcontainers). 188 tests pass.
+- Tests need Docker running (Testcontainers). 194 tests pass.
 - To run locally: PostgreSQL running, and a git-ignored `.env` in the project root with `DB_URL`
   (optional), `DB_USERNAME`, `DB_PASSWORD`, `JWT_SECRET` (≥ 32 bytes) — the app reads it itself
   (`spring.config.import`); real environment variables override it, and the old `db_user_name` /
@@ -28,7 +29,7 @@ The step-by-step plan and overall progress are in `docs/ROADMAP.md`; decisions a
 
 ## Next up
 
-1. M3 Resources → file uploads → M4 Levels → M5 Dashboard → M6 AI (`PLAN.md` §11).
+1. M4 Levels → M5 Dashboard → M6 AI (`PLAN.md` §11). The frontend has no file upload UI yet.
 2. Before any shared deploy: Flyway (D.1), production profile (D.2).
 3. Later: 2.3 Google sign-in.
 
@@ -44,6 +45,25 @@ The step-by-step plan and overall progress are in `docs/ROADMAP.md`; decisions a
 | Week starts on Monday for every user (`PLAN.md` §8b) — per-user week start if anyone asks | later | nothing |
 
 ---
+
+## 2026-10-06 (roadmap R.3c — download and delete files; M3 done)
+
+**Done** (branch `feat/resource-file-download` → `feat/files-base`)
+- `GET /api/resources/{id}/file` — owner only (someone else's → 404 `RESOURCE_NOT_FOUND`), a note
+  or link → 404 `FILE_NOT_FOUND`. Streams the bytes with the stored type, `Content-Length`,
+  `Content-Disposition: attachment` (`filename*=UTF-8''…`, so any name survives),
+  `X-Content-Type-Options: nosniff`, `Cache-Control: no-store, private`.
+- Bytes gone from storage but row still there → 404 `FILE_NOT_FOUND` and an ERROR log with the file
+  id and key (not a 500).
+- Deleting a `FILE` resource deletes its `stored_files` row in the same transaction and the bytes
+  after commit (`FileService.delete`); a rolled-back delete keeps both. Fixes the R.3b gap that
+  reached `staging` with #54.
+- `ResourceFileDownloadIntegrationTest` (5), one more case in `FileServiceIntegrationTest`.
+  194 tests pass.
+
+**For the frontend**
+- Download with `fetch` + the bearer token, then save or preview the blob — an `<a href>` can't send
+  the header. Check `file.size` ≤ 10 MB before uploading (see R.3b).
 
 ## 2026-10-06 (roadmap R.3b — upload a file as a resource)
 
