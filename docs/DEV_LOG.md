@@ -13,14 +13,15 @@ The step-by-step plan and overall progress are in `docs/ROADMAP.md`; decisions a
   7/30-day stats → reminders (in-app, optional email), all in the user's timezone.
 - **M2 Goals is done and merged.** **M3 Resources is done**: notes and links (R.1, R.2) and file
   uploads (R.3a–R.3c, `PLAN.md` §13) — R.3a/R.3b on `staging` (#51–#54), R.3c on
-  `feat/resource-file-download`. R.3d (S3 storage) waits for the deploy steps. **Next: M4 Levels**
-  (X.1 XP/level/tier calculator, `PLAN.md` §11.3; Q8 to confirm first).
+  `feat/resource-file-download` — all merged to `staging` (#51–#56). R.3d (S3 storage) waits for
+  the deploy steps. **M4 Levels started** (base `feat/levels-base`): X.1 calculator done on
+  `feat/xp-calculator`; **next X.2** `GET /api/me/level`.
 - The frontend is built by another agent in its own repo (`habit-tracker-web`); backend work follows
   this roadmap.
 - Branch flow: step branch from the previous step's branch → PR into the phase's base branch →
   base PRs into `staging`. Claude commits and pushes and gives PR links (no `gh` on the machine);
   Nayeem opens and merges. Commits carry Nayeem's name only.
-- Tests need Docker running (Testcontainers). 194 tests pass.
+- Tests need Docker running (Testcontainers). 241 tests pass (counted from the XML reports, which include nested test classes).
 - To run locally: PostgreSQL running, and a git-ignored `.env` in the project root with `DB_URL`
   (optional), `DB_USERNAME`, `DB_PASSWORD`, `JWT_SECRET` (≥ 32 bytes) — the app reads it itself
   (`spring.config.import`); real environment variables override it, and the old `db_user_name` /
@@ -45,6 +46,24 @@ The step-by-step plan and overall progress are in `docs/ROADMAP.md`; decisions a
 | Week starts on Monday for every user (`PLAN.md` §8b) — per-user week start if anyone asks | later | nothing |
 
 ---
+
+## 2026-10-06 (roadmap X.1 — XP, level and tier calculator)
+
+**Decided**
+- Q8: earned XP is never lost (Nayeem, 2026-10-06).
+- Details settled for the calculator, recorded in `PLAN.md` §11.3: XP days are the days the streak
+  counts (scheduled days; ≤ N a week for N-a-week); N-a-week habits use week thresholds (bonus from
+  1 week, milestones 1 / 4 / 14 / 52 weeks); a milestone is paid again in a new run.
+- §11.3 said "level 10 at 4 950"; the formula and the other three examples give 4 500. Corrected.
+
+**Done** (branch `feat/xp-calculator` → `feat/levels-base`)
+- `StreakCalculator.walk(…, UnitVisitor)` — the forward walk over scheduled days / weeks, exposed;
+  `calculate` is now built on it (all 16 streak tests unchanged and green).
+- New `level` package: `XpCalculator.habitXp` (+10 per counted day, +5 while the run is ≥ 7 days / 1
+  week, milestones +50 / +200 / +500 / +1500), `goalXp` (+500 per achieved goal); `Level.of(xp)` →
+  level, `Tier` (Bronze 1–4 … Diamond 35+), `xpForNextLevel`, `progressToNextLevel` (0–1, rounded
+  down so it never shows 1.0 early). All pure Java.
+- `XpCalculatorTest` (14), `LevelTest` (17). 241 tests pass.
 
 ## 2026-10-06 (roadmap R.3c — download and delete files; M3 done)
 

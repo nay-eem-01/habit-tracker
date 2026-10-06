@@ -22,10 +22,28 @@ import java.util.Set;
  *       current week doesn't break it while it's going, and neither does the habit's first
  *       (possibly partial) week.</li>
  * </ul>
+ *
+ * <p>{@link #walk} exposes the run unit by unit, so other read-side numbers (XP, PLAN.md §11.3)
+ * follow exactly the same rules instead of a copy of them.
  */
 public final class StreakCalculator {
 
     private StreakCalculator() {
+    }
+
+    /** Sees every unit (scheduled day, or week) from the habit's first to today, in order. */
+    @FunctionalInterface
+    public interface UnitVisitor {
+        /**
+         * @param countedDays done days in this unit that count: 0 or 1 for a day; for a week, the
+         *                    done days up to N (extra days don't count twice)
+         * @param run         the streak right after this unit
+         */
+        void visit(int countedDays, int run);
+    }
+
+    public static StreakUnit unitOf(FrequencyType type) {
+        return type == FrequencyType.X_TIMES_PER_WEEK ? StreakUnit.WEEKS : StreakUnit.DAYS;
     }
 
     /**
@@ -35,31 +53,45 @@ public final class StreakCalculator {
      */
     public static Streak calculate(FrequencyType type, FrequencyConfig config, Set<LocalDate> doneDays,
                                    LocalDate start, LocalDate today) {
-        return switch (type) {
-            case DAILY -> dayStreak(doneDays, start, today, null);
-            case SPECIFIC_DAYS -> dayStreak(doneDays, start, today, config.days());
-            case X_TIMES_PER_WEEK -> weekStreak(doneDays, start, today, config.timesPerWeek());
-        };
+        int[] current = {0};
+        int[] longest = {0};
+        walk(type, config, doneDays, start, today, (countedDays, run) -> {
+            current[0] = run;
+            longest[0] = Math.max(longest[0], run);
+        });
+        return new Streak(current[0], longest[0], unitOf(type));
+    }
+
+    /** Walks the habit's units from {@code start} to {@code today} with the same rules as {@link #calculate}. */
+    public static void walk(FrequencyType type, FrequencyConfig config, Set<LocalDate> doneDays,
+                            LocalDate start, LocalDate today, UnitVisitor visitor) {
+        switch (type) {
+            case DAILY -> walkDays(doneDays, start, today, null, visitor);
+            case SPECIFIC_DAYS -> walkDays(doneDays, start, today, config.days(), visitor);
+            case X_TIMES_PER_WEEK -> walkWeeks(doneDays, start, today, config.timesPerWeek(), visitor);
+        }
     }
 
     /** @param days the scheduled weekdays, or {@code null} for every day */
-    private static Streak dayStreak(Set<LocalDate> doneDays, LocalDate start, LocalDate today, Set<DayOfWeek> days) {
+    private static void walkDays(Set<LocalDate> doneDays, LocalDate start, LocalDate today, Set<DayOfWeek> days,
+                                 UnitVisitor visitor) {
         int run = 0;
-        int longest = 0;
         for (LocalDate day = start; !day.isAfter(today); day = day.plusDays(1)) {
             if (days != null && !days.contains(day.getDayOfWeek())) {
                 continue;
             }
-            if (doneDays.contains(day)) {
-                longest = Math.max(longest, ++run);
+            boolean done = doneDays.contains(day);
+            if (done) {
+                run++;
             } else if (!day.equals(today)) {
                 run = 0;
             }
+            visitor.visit(done ? 1 : 0, run);
         }
-        return new Streak(run, longest, StreakUnit.DAYS);
     }
 
-    private static Streak weekStreak(Set<LocalDate> doneDays, LocalDate start, LocalDate today, int timesPerWeek) {
+    private static void walkWeeks(Set<LocalDate> doneDays, LocalDate start, LocalDate today, int timesPerWeek,
+                                  UnitVisitor visitor) {
         Map<LocalDate, Integer> doneByWeek = new HashMap<>();
         for (LocalDate day : doneDays) {
             if (!day.isBefore(start) && !day.isAfter(today)) {
@@ -70,15 +102,15 @@ public final class StreakCalculator {
         LocalDate firstWeek = weekOf(start);
         LocalDate thisWeek = weekOf(today);
         int run = 0;
-        int longest = 0;
         for (LocalDate week = firstWeek; !week.isAfter(thisWeek); week = week.plusWeeks(1)) {
-            if (doneByWeek.getOrDefault(week, 0) >= timesPerWeek) {
-                longest = Math.max(longest, ++run);
+            int done = doneByWeek.getOrDefault(week, 0);
+            if (done >= timesPerWeek) {
+                run++;
             } else if (!week.equals(thisWeek) && !week.equals(firstWeek)) {
                 run = 0;
             }
+            visitor.visit(Math.min(done, timesPerWeek), run);
         }
-        return new Streak(run, longest, StreakUnit.WEEKS);
     }
 
     static LocalDate weekOf(LocalDate day) {
