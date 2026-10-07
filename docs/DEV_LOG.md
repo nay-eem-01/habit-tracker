@@ -15,15 +15,16 @@ The step-by-step plan and overall progress are in `docs/ROADMAP.md`; decisions a
   uploads (R.3a–R.3c, `PLAN.md` §13) — R.3a/R.3b on `staging` (#51–#54), R.3c on
   `feat/resource-file-download` — all merged to `staging` (#51–#56). R.3d (S3 storage) waits for
   the deploy steps. **M4 Levels is done** and on `staging` (#57–#59). **M5 Dashboard is done**:
-  A.1, A.2 on `staging` (#60–#62); A.3 on `feat/dashboard-highlights` → `staging`. **Next: M6 AI
-  insights** (I.1 opt-in + aggregates + `InsightGenerator` with a fake, `PLAN.md` §11.5; Q10 to
-  confirm first) — or D.1/D.2 if a shared deploy comes first.
+  all on `staging` (#60–#63). **M6 AI insights is set aside** (Nayeem, 2026-10-07).
+- **Deploy readiness** (assessed 2026-10-07): features complete, operations not. Now on the
+  pre-deploy steps (base `feat/deploy-base`): **D.1 Flyway done** on `feat/flyway`; next D.2
+  production profile + log retention, then packaging (Dockerfile / compose), backups, HTTPS.
 - The frontend is built by another agent in its own repo (`habit-tracker-web`); backend work follows
   this roadmap.
 - Branch flow: step branch from the previous step's branch → PR into the phase's base branch →
   base PRs into `staging`. Claude commits and pushes and gives PR links (no `gh` on the machine);
   Nayeem opens and merges. Commits carry Nayeem's name only.
-- Tests need Docker running (Testcontainers). 269 tests pass (counted from the XML reports, which include nested test classes).
+- Tests need Docker running (Testcontainers). 271 tests pass (counted from the XML reports, which include nested test classes).
 - To run locally: PostgreSQL running, and a git-ignored `.env` in the project root with `DB_URL`
   (optional), `DB_USERNAME`, `DB_PASSWORD`, `JWT_SECRET` (≥ 32 bytes) — the app reads it itself
   (`spring.config.import`); real environment variables override it, and the old `db_user_name` /
@@ -32,8 +33,10 @@ The step-by-step plan and overall progress are in `docs/ROADMAP.md`; decisions a
 
 ## Next up
 
-1. M6 AI (`PLAN.md` §11). The frontend has no file upload UI yet.
-2. Before any shared deploy: Flyway (D.1), production profile (D.2).
+1. Pre-deploy: D.2 production profile (+ log retention: `logback-spring.xml` has no
+   `maxHistory` / `totalSizeCap`), Dockerfile + compose, backups, HTTPS / forwarded headers. The frontend has no file upload UI yet.
+2. Before strangers sign up: password reset + email verification, rate limiting on login /
+   register, account deletion and export, email opt-out, error monitoring. M6 AI later.
 3. Later: 2.3 Google sign-in.
 
 ## Open items
@@ -48,6 +51,32 @@ The step-by-step plan and overall progress are in `docs/ROADMAP.md`; decisions a
 | Week starts on Monday for every user (`PLAN.md` §8b) — per-user week start if anyone asks | later | nothing |
 
 ---
+
+## 2026-10-07 (roadmap D.1 — Flyway; the FILE upload 500)
+
+**Found** (by the frontend agent, M3.3)
+- The first real file upload answered 500: the local `resources` table predated R.3, and
+  `ddl-auto=update` never changes Hibernate's existing enum check constraint, so
+  `resources_type_check` still allowed only NOTE and LINK. Tests passed because they build a fresh
+  schema. The frontend agent widened the constraint in the local database by hand; I checked every
+  other enum check there — all current. Not a bug in the upload code.
+
+**Done** (branch `feat/flyway` → `feat/deploy-base`)
+- `spring-boot-starter-flyway` + `flyway-database-postgresql` (Flyway 12.4, Boot-managed);
+  `ddl-auto=validate`.
+- `V1__init_schema.sql` from a Hibernate-generated schema (throwaway Postgres + `pg_dump`), tidied,
+  Hibernate's constraint / FK names kept. `V2__restate_enum_checks.sql` heals stale enum checks.
+- `baseline-on-migrate` at version 1: checked on a throwaway pre-Flyway database with the stale
+  constraint and a user row — baselined, V2 applied, FILE allowed, data kept, app started. The local
+  dev database's columns match V1 exactly (compared read-only), so its next start just baselines.
+- `EnumCheckConstraintsTest` (2): every enum attribute in the JPA metamodel has its check listed, and
+  each check allows exactly the enum's values; proven to fail by adding an unmigrated value.
+- Tests now build the schema through the migrations, so `validate` checks V1 against the entities on
+  every run. 271 tests pass. Rules in `PLAN.md` §3.
+
+**From now on**
+- Schema changes are a new `V{n}__…sql`; adding an enum value too. Never edit an applied migration.
+- The `testing-and-deployment` skill's schema section describes this; it's local (git-ignored).
 
 ## 2026-10-06 (roadmap A.3 — highlights, goals and level on the dashboard; M5 done)
 

@@ -111,16 +111,17 @@ branches and PRs live in the frontend repo, same flow (phase base → step branc
 
 ## Before any shared deploy
 
+Base branch: `feat/deploy-base`.
+
 | # | Step | Status |
 |---|---|---|
-| D.1 | Flyway back in: `ddl-auto=validate` + `V1__init_schema.sql` from the entities at that point (`PLAN.md` §3, R1) | ⬜ |
+| D.1 | Flyway back in: `ddl-auto=validate` + `V1__init_schema.sql` from the entities at that point (`PLAN.md` §3, R1); V2 heals stale enum checks; enum drift test | ✅ |
 | D.2 | Production profile: no `show-sql`, no security DEBUG, Swagger off, actuator `health`/`info` only | ⬜ |
 
 ## Deferred ⏸
 
 | Item | Returns when |
 |---|---|
-| Flyway | before the first shared or production deploy (D.1) |
 | 2.3 Google sign-in | when Nayeem picks it up; needs a Google OAuth client id + secret |
 
 ## After M1 — goals, resources, levels, dashboard, AI

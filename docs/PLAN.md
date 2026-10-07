@@ -212,6 +212,18 @@ spring:
 
 Tradeoff to be explicit about: `ddl-auto: update` is fine solo, local, early-stage — it lets the entity model in §2 be the single source of truth while it's still moving. It becomes a liability the moment more than one person touches the DB, or you deploy anywhere shared, because there's no migration history and Hibernate's auto-update can do surprising things with column type changes or renames (it won't rename a column — it'll add a new one and leave the old one orphaned). Re-introduce Flyway (`ddl-auto: validate` + `V1__init_schema.sql` generated from the then-current entity state) before that point. No action needed now — just don't forget this is a deliberate, temporary trade.
 
+**Done 2026-10-07 (roadmap D.1).** It bit twice before it was done: stale columns broke sign-up
+(2026-10-02), and a stale enum check constraint made the first real file upload a 500 (2026-10-07).
+Now Flyway owns the schema (`src/main/resources/db/migration`) and Hibernate only validates:
+- `V1__init_schema.sql` — the schema Hibernate generated from the entities on 2026-10-07, keeping
+  its constraint and foreign-key names so old and new databases are identical.
+- A database made by `ddl-auto=update` is **baselined at version 1** on first start
+  (`baseline-on-migrate`), then later migrations run on it. `V2__restate_enum_checks.sql` re-states
+  every enum check, which heals the stale ones.
+- **Adding an enum value needs a migration** re-stating that column's check;
+  `EnumCheckConstraintsTest` fails until it exists (it also fails when a new enum column isn't listed).
+- Applied migrations are never edited.
+
 ---
 
 ## 4. Security: JWT-first
@@ -436,7 +448,7 @@ We take the calendar-week model — simpler to explain and to test:
 
 ## 9. Risks
 
-**R1 — `ddl-auto=update` (§3).** Deliberate and temporary. It becomes a liability the moment the DB
+**R1 — `ddl-auto=update` (§3).** *Resolved 2026-10-07 by D.1 (Flyway).* Deliberate and temporary. It becomes a liability the moment the DB
 is shared or deployed. Re-introduce Flyway (`validate` + `V1__init_schema.sql`) before any deploy —
 it is on the roadmap as a step, not a someday.
 
