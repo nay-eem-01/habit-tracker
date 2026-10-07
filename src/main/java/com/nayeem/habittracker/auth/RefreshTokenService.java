@@ -77,6 +77,12 @@ class RefreshTokenService {
         repository.findByTokenHash(hash(raw)).ifPresent(token -> token.setRevoked(true));
     }
 
+    /** Signs the user out everywhere (password reset or change). */
+    @Transactional
+    public int revokeAll(Long userId) {
+        return repository.revokeAllForUser(userId);
+    }
+
     static String hash(String raw) {
         try {
             byte[] digest = MessageDigest.getInstance("SHA-256").digest(raw.getBytes(StandardCharsets.UTF_8));

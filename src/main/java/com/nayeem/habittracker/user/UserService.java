@@ -66,6 +66,12 @@ public class UserService {
         return userRepository.findByEmail(normalizeEmail(email));
     }
 
+    /** Sets (or replaces) the password. A Google-only account gains one this way. */
+    @Transactional
+    public void updatePasswordHash(Long userId, String passwordHash) {
+        getById(userId).setPasswordHash(passwordHash);
+    }
+
     @Transactional(readOnly = true)
     public User getById(Long id) {
         return userRepository.findById(id)
