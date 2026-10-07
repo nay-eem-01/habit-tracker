@@ -28,7 +28,7 @@ The step-by-step plan and overall progress are in `docs/ROADMAP.md`; decisions a
 - Branch flow: step branch from the previous step's branch → PR into the phase's base branch →
   base PRs into `staging`. Claude commits and pushes and gives PR links (no `gh` on the machine);
   Nayeem opens and merges. Commits carry Nayeem's name only.
-- Tests need Docker running (Testcontainers). 284 tests pass (counted from the XML reports, which include nested test classes).
+- Tests need Docker running (Testcontainers). 289 tests pass (counted from the XML reports, which include nested test classes).
 - To run locally: PostgreSQL running, and a git-ignored `.env` in the project root with `DB_URL`
   (optional), `DB_USERNAME`, `DB_PASSWORD`, `JWT_SECRET` (≥ 32 bytes) — the app reads it itself
   (`spring.config.import`); real environment variables override it, and the old `db_user_name` /
@@ -37,8 +37,7 @@ The step-by-step plan and overall progress are in `docs/ROADMAP.md`; decisions a
 
 ## Next up
 
-1. Pre-deploy: D.2 production profile (+ log retention: `logback-spring.xml` has no
-   `maxHistory` / `totalSizeCap`), Dockerfile + compose, backups, HTTPS / forwarded headers. The frontend has no file upload UI yet.
+1. Pre-deploy: D.2 production profile, Dockerfile + compose, backups, HTTPS / forwarded headers. The frontend has no file upload UI yet.
 2. Before strangers sign up: password reset + email verification, rate limiting on login /
    register, account deletion and export, email opt-out, error monitoring. M6 AI later.
 3. Later: 2.3 Google sign-in.
@@ -55,6 +54,28 @@ The step-by-step plan and overall progress are in `docs/ROADMAP.md`; decisions a
 | Week starts on Monday for every user (`PLAN.md` §8b) — per-user week start if anyone asks | later | nothing |
 
 ---
+
+## 2026-10-08 (D.1b — logging like taskatask-backend)
+
+**Done** (`chore/otel-logging`)
+- OpenTelemetry Spring Boot starter 2.32.0 (BOM + alpha BOM; the first line with Boot 4 support)
+  and `opentelemetry-logback-mdc-1.0`. Every request gets a trace; log lines show
+  `[trace=…, span=…, cid=…]`. `cid` is still the `X-Correlation-Id` that error bodies return.
+  Exporters are `none` (`OTEL_TRACES_EXPORTER` etc. turn them on when a collector exists).
+- `logback-spring.xml` rebuilt on taskatask's layout: `OTEL_MDC` appender outermost (it copies the
+  ids on the calling thread, so they survive the async hand-off) → `ASYNC_FILE` / `ASYNC_STDOUT`
+  (8192 queue, `neverBlock`) → console (coloured) / rolling file (plain). Retention now has
+  `maxHistory` 30, `totalSizeCap` 5GB, `.gz`.
+- `LogbackMaskingPatternLayout` (from taskatask, widened): any JSON key or `key=` containing
+  password / token / secret / credential, `Bearer …`, JWT-shaped strings, Google `ya29.` tokens.
+  The sensitive DTOs still mask their own `toString()`; this is the backstop. Unit-tested.
+- Checked against a running server: a failed login logs trace, span and cid; the attempted password
+  appears nowhere; the file has no colour codes. 289 tests pass.
+
+**Decided**
+- Not taken from taskatask: the per-`username` `SiftingAppender` (it would need the email in the
+  MDC, which `observability` forbids, and taskatask never sets that key anyway) and the
+  `%C`/`%L` caller data (expensive; the logger name is enough).
 
 ## 2026-10-07 (roadmap 2.4b — change password; a reuse-detection bug)
 

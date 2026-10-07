@@ -118,6 +118,7 @@ Base branch: `feat/deploy-base`.
 | # | Step | Status |
 |---|---|---|
 | D.1 | Flyway back in: `ddl-auto=validate` + `V1__init_schema.sql` from the entities at that point (`PLAN.md` §3, R1); V2 heals stale enum checks; enum drift test | ✅ |
+| D.1b | Logging: OpenTelemetry trace / span ids in every line (`opentelemetry-spring-boot-starter` + logback MDC appender, exporters off), masking layout for passwords / tokens / cookies, async appenders, retention (`maxHistory`, `totalSizeCap`, `.gz`) — as in taskatask-backend | ✅ |
 | D.2 | Production profile: no `show-sql`, no security DEBUG, Swagger off, actuator `health`/`info` only | ⬜ |
 
 ## Deferred ⏸
