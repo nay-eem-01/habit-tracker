@@ -84,6 +84,46 @@ class AuthController {
                 .build();
     }
 
+    @Operation(summary = "Email a password reset link",
+            description = "Always 202 with the same message, whether or not the email has an account. The link is "
+                    + "<frontend>/reset-password#token=…, valid 30 minutes, single use. At most one email a minute and "
+                    + "5 an hour per account. A Google-only account gets a link to set its first password.")
+    @ApiResponse(responseCode = "202", description = "Accepted (an email is sent only if the account exists)")
+    @ApiResponse(responseCode = "400", description = "Not an email address (VALIDATION_FAILED)")
+    @PostMapping("/password/forgot")
+    ResponseEntity<HttpResponse> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
+        authService.forgotPassword(request.getEmail());
+        return HttpResponse.of(HttpStatus.ACCEPTED,
+                "If an account exists for that email, a reset link is on its way", null);
+    }
+
+    @Operation(summary = "Choose a new password with the emailed token, and sign in",
+            description = "Signs the account out on every other device and retires its other reset links.")
+    @ApiResponse(responseCode = "200", description = "Password set; signed in (access token in the body, refresh cookie set)")
+    @ApiResponse(responseCode = "400", description = "Invalid, expired or used link (AUTH_INVALID_RESET_TOKEN), "
+            + "or a password under 8 characters (VALIDATION_FAILED)")
+    @PostMapping("/password/reset")
+    ResponseEntity<HttpResponse> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
+        return withRefreshCookie(HttpStatus.OK, "Password reset", authService.resetPassword(request));
+    }
+
+    @Operation(summary = "Change my password",
+            description = "Needs the current password. Signs out every other session and retires reset links; this "
+                    + "session gets a fresh token pair. An account that only signs in with Google has no password yet: "
+                    + "409 — it sets one through \"forgot password\" (or, once Google sign-in exists, here after a "
+                    + "fresh Google sign-in).")
+    @ApiResponse(responseCode = "200", description = "Changed; new access token in the body, new refresh cookie set")
+    @ApiResponse(responseCode = "400", description = "Wrong current password (AUTH_WRONG_PASSWORD), "
+            + "or a new password under 8 characters (VALIDATION_FAILED)")
+    @ApiResponse(responseCode = "401", description = "Not signed in")
+    @ApiResponse(responseCode = "409", description = "The account has no password yet (AUTH_PASSWORD_NOT_SET)")
+    @SecurityRequirement(name = AppConstants.JWT_TOKEN)
+    @PostMapping("/password/change")
+    ResponseEntity<HttpResponse> changePassword(@AuthenticationPrincipal AuthUser user,
+                                                @Valid @RequestBody ChangePasswordRequest request) {
+        return withRefreshCookie(HttpStatus.OK, "Password changed", authService.changePassword(user.id(), request));
+    }
+
     @Operation(summary = "The signed-in user")
     @ApiResponse(responseCode = "200", description = "The user")
     @ApiResponse(responseCode = "401", description = "Missing or expired access token")

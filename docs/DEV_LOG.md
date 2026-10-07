@@ -16,6 +16,10 @@ The step-by-step plan and overall progress are in `docs/ROADMAP.md`; decisions a
   `feat/resource-file-download` — all merged to `staging` (#51–#56). R.3d (S3 storage) waits for
   the deploy steps. **M4 Levels is done** and on `staging` (#57–#59). **M5 Dashboard is done**:
   all on `staging` (#60–#63). **M6 AI insights is set aside** (Nayeem, 2026-10-07).
+- **Auth additions before deploy** (Nayeem, 2026-10-07): forgot / reset / change password, then
+  Google sign-in (ID-token flow). Base `feat/password-base`: 2.4a on `feat/password-reset`, 2.4b on
+  `feat/password-change`; 2.3 Google waits for the client id. The product will be renamed
+  (`app.display-name` holds the name users see until then).
 - **Deploy readiness** (assessed 2026-10-07): features complete, operations not. Now on the
   pre-deploy steps (base `feat/deploy-base`): **D.1 Flyway done** on `feat/flyway`; next D.2
   production profile + log retention, then packaging (Dockerfile / compose), backups, HTTPS.
@@ -24,7 +28,7 @@ The step-by-step plan and overall progress are in `docs/ROADMAP.md`; decisions a
 - Branch flow: step branch from the previous step's branch → PR into the phase's base branch →
   base PRs into `staging`. Claude commits and pushes and gives PR links (no `gh` on the machine);
   Nayeem opens and merges. Commits carry Nayeem's name only.
-- Tests need Docker running (Testcontainers). 271 tests pass (counted from the XML reports, which include nested test classes).
+- Tests need Docker running (Testcontainers). 284 tests pass (counted from the XML reports, which include nested test classes).
 - To run locally: PostgreSQL running, and a git-ignored `.env` in the project root with `DB_URL`
   (optional), `DB_USERNAME`, `DB_PASSWORD`, `JWT_SECRET` (≥ 32 bytes) — the app reads it itself
   (`spring.config.import`); real environment variables override it, and the old `db_user_name` /
@@ -51,6 +55,74 @@ The step-by-step plan and overall progress are in `docs/ROADMAP.md`; decisions a
 | Week starts on Monday for every user (`PLAN.md` §8b) — per-user week start if anyone asks | later | nothing |
 
 ---
+
+## 2026-10-07 (roadmap 2.4b — change password; a reuse-detection bug)
+
+**Done** (branch `feat/password-change` → `feat/password-base`, on top of 2.4a)
+- `POST /api/auth/password/change` (signed in): `currentPassword` must match (400
+  `AUTH_WRONG_PASSWORD` — 400, not 401, so the client doesn't think it was signed out); signs out
+  every other session, retires reset links, returns a fresh pair for this one. A Google-only account
+  gets 409 `AUTH_PASSWORD_NOT_SET` (set one via forgot password) until 2.3.
+- `ChangePasswordIntegrationTest` (5). 284 tests pass.
+
+**Found and fixed: "sign out everywhere" could sign you out here too**
+- Reuse detection treated *any* revoked refresh token presented again as stolen and revoked all of
+  the user's tokens. After a password reset or change, the other devices still hold their (now
+  revoked) cookies; the first one to refresh revoked the session the user had just changed the
+  password in. Affected 2.4a's reset as well.
+- `V4__refresh_token_rotated_at.sql`: `rotated_at`, set when a token is rotated. Only a rotated token
+  presented again counts as reuse; one revoked by logout or sign-out-everywhere is a plain 401.
+  `reusingARotatedTokenRevokesEveryTokenOfThatUser` still passes; the reset test now also checks
+  the new session survives the old cookie.
+- Tokens rotated before V4 have no `rotated_at`, so their reuse is a plain 401 (detection resumes for
+  tokens rotated from now on; they expire within 7 days anyway).
+
+**Not done**
+- No limit on wrong current-password attempts (needs a valid access token, and BCrypt is slow). Part
+  of the rate-limiting step before public sign-up.
+
+## 2026-10-07 (roadmap 2.4a — forgot and reset password)
+
+**Decided** (`PLAN.md` §4.5–4.6)
+- Google sign-in will use the ID-token flow like taskATask (verified locally, `email_verified`
+  checked), not the redirect flow. Google only.
+- Password rules: 30-minute single-use links, 1 a minute / 5 an hour, reset signs out everywhere,
+  Google-only accounts can add a password (reset, or signed in with a fresh Google sign-in).
+
+**Done** (branch `feat/password-reset` → `feat/password-base`)
+- `POST /api/auth/password/forgot` (public, always 202) and `POST /api/auth/password/reset` (public;
+  sets the password, revokes every refresh token, signs in with a new cookie). New error code
+  `AUTH_INVALID_RESET_TOKEN` (400).
+- `V3__password_reset_tokens.sql`; `PasswordResetToken` (hash only, `expiresAt`, `usedAt`),
+  repository with a row lock on use; `PasswordResetService` (limits, link, email after commit).
+- `app.display-name` (`APP_DISPLAY_NAME`, default "Habit Tracker") and `app.frontend-url`
+  (`APP_FRONTEND_URL`, default `http://localhost:5173`); `app.security.password-reset.ttl` /
+  `max-per-hour`.
+- `PasswordResetIntegrationTest` (8): full flow, unknown email (same answer, no email), sessions
+  signed out, expired / made-up / used links, other links retired, minute and hour limits, a
+  Google-only account setting its first password, validation. 279 tests pass.
+
+**Found and fixed: email never worked without an SMTP login**
+- `mail.smtp.auth` was hard-coded `true`, so a server that takes mail without a login (Mailpit, many
+  relays) failed every send with `MailAuthenticationException`. Now `MAIL_SMTP_AUTH` (default true).
+
+**Checked live** with Mailpit: register → forgot → the real email arrived (subject, link, 30-minute
+note) → its link reset the password → login with the new one; the token isn't in the app log.
+
+**Email locally (Mailpit)**
+```
+docker run -d --name mailpit -p 1025:1025 -p 8025:8025 axllent/mailpit
+# .env: APP_NOTIFICATIONS_EMAIL_ENABLED=true  SPRING_MAIL_HOST=localhost  SPRING_MAIL_PORT=1025
+#       MAIL_SMTP_AUTH=false  APP_NOTIFICATIONS_EMAIL_FROM=no-reply@habit.local
+# inbox: http://localhost:8025
+```
+In production: a real SMTP provider (`SPRING_MAIL_HOST/PORT/USERNAME/PASSWORD`, auth on).
+
+**Known limits**
+- Email on/off is the notification switch (`APP_NOTIFICATIONS_EMAIL_ENABLED`): with it off, reset
+  emails are only logged (user id) — nobody can reset. It must be on wherever real users are.
+- A known email does a little more work than an unknown one (a row + an event), so response time
+  could hint at which emails exist. Small; a fixed delay or async send would close it.
 
 ## 2026-10-07 (roadmap D.1 — Flyway; the FILE upload 500)
 

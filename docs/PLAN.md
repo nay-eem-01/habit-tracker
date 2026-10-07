@@ -300,6 +300,36 @@ Same `CustomOAuth2UserService` lookup/link logic as v1 (find-or-create-or-link b
 
 ---
 
+**Changed 2026-10-07 (Nayeem):** Google sign-in uses the **ID-token flow** (Google Identity
+Services), as in taskATask, not the redirect flow above. The browser gets a Google-signed ID token
+and posts it to the backend, which verifies it **locally** against Google's published keys (`iss`,
+`aud` = our client id, `exp`, and `email_verified` before linking by email — taskATask skips that
+check), then finds / links / creates the user and issues our own tokens. Only the client id is
+needed; no client secret, no redirect URI, no session. Why: we only need identity (no Google APIs),
+it fits a SPA + own API, and a future mobile app uses the same endpoint. The redirect flow comes
+back only if the app ever needs Google APIs. Google only.
+
+### 4.6 Passwords: forgot, reset, change (roadmap 2.4, decided 2026-10-07)
+
+- **Forgot** (`POST /api/auth/password/forgot`): always 202 with the same message, so the endpoint
+  doesn't reveal which emails have accounts. If the account exists, a link
+  `<frontend>/reset-password#token=…` is emailed (after commit, via the notification email channel).
+  The token is in the fragment so it never reaches a server log or a Referer.
+- **Token**: 32 random bytes, stored as SHA-256 only, **30 minutes**, **single use**; using one
+  retires the user's other links. At most **1 email a minute and 5 an hour** per account.
+- **Reset** (`POST /api/auth/password/reset`): sets the password, **signs out every session**
+  (revokes all refresh tokens), and signs in here.
+- **Google-only accounts can add a password**: through forgot / reset (the email proves ownership),
+  and while signed in (2.4b / 2.3 — needs a fresh Google sign-in instead of a current password).
+- **Change** (signed in, 2.4b): needs the current password; signs out the other sessions. A
+  Google-only account gets 409 `AUTH_PASSWORD_NOT_SET` until 2.3 lets a fresh Google sign-in stand
+  in for the current password.
+- **Refresh-token reuse** means a *rotated* token presented again (`rotated_at`, V4). A token revoked
+  by "sign out everywhere" is just invalid — otherwise another device's old cookie after a password
+  change would sign the user out of the session they changed it in.
+- Email locally goes to **Mailpit** (a mail catcher in Docker); in production to a real SMTP
+  provider. The link is never logged.
+
 ## 5. Build order (implement in this exact sequence)
 
 The step-by-step version of this list — split into small-PR steps, grouped into phases, with

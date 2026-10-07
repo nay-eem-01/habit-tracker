@@ -1,0 +1,43 @@
+package com.nayeem.habittracker.auth;
+
+import com.nayeem.habittracker.common.AuditModel;
+import com.nayeem.habittracker.user.User;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import lombok.Getter;
+import lombok.Setter;
+
+import java.time.Instant;
+
+/**
+ * A one-time "forgot password" link. Like a refresh token, only its SHA-256 is stored, so a leaked
+ * table doesn't hand out working links. Single use, short-lived.
+ */
+@Getter
+@Setter
+@Entity
+@Table(name = "password_reset_tokens")
+public class PasswordResetToken extends AuditModel {
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "user_id", nullable = false, updatable = false)
+    private User user;
+
+    /** Hex SHA-256 of the token sent by email; never the token itself. */
+    @Column(nullable = false, unique = true, length = 64)
+    private String tokenHash;
+
+    @Column(nullable = false)
+    private Instant expiresAt;
+
+    /** When it was used — or made useless by a newer reset; null while it still works. */
+    private Instant usedAt;
+
+    boolean isUsableAt(Instant now) {
+        return usedAt == null && now.isBefore(expiresAt);
+    }
+}
