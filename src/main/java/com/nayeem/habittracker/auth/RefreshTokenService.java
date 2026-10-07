@@ -50,6 +50,9 @@ class RefreshTokenService {
 
     /**
      * Revokes the presented token and returns its user's id; the caller issues the new pair.
+     * Presenting a token that was already rotated means it was copied: every live token of the user
+     * is revoked. One revoked by logout or "sign out everywhere" is just invalid — other devices
+     * still hold those cookies after a password change, and must not end the new session.
      * {@code noRollbackFor}: the reuse branch revokes everything and then throws — that revoke
      * must stick.
      */
@@ -59,15 +62,17 @@ class RefreshTokenService {
                 .orElseThrow(RefreshTokenService::invalid);
         Long userId = token.getUser().getId();
 
-        if (token.isRevoked()) {
+        if (token.getRotatedAt() != null) {
             int revoked = repository.revokeAllForUser(userId);
             log.warn("Refresh token reuse for user {} - revoked {} live token(s)", userId, revoked);
             throw invalid();
         }
-        if (!token.isUsableAt(Instant.now())) {
+        Instant now = Instant.now();
+        if (!token.isUsableAt(now)) {
             throw invalid();
         }
         token.setRevoked(true);
+        token.setRotatedAt(now);
         return userId;
     }
 
