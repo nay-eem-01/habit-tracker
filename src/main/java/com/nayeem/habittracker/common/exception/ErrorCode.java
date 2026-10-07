@@ -23,6 +23,7 @@ public enum ErrorCode {
 
     AUTH_INVALID_CREDENTIALS(HttpStatus.UNAUTHORIZED, "Invalid email or password"),
     AUTH_INVALID_REFRESH_TOKEN(HttpStatus.UNAUTHORIZED, "Session expired, please sign in again"),
+    AUTH_INVALID_RESET_TOKEN(HttpStatus.BAD_REQUEST, "This reset link is invalid or has expired; ask for a new one"),
 
     USER_EMAIL_TAKEN(HttpStatus.CONFLICT, "An account with this email already exists"),
     USER_NOT_FOUND(HttpStatus.NOT_FOUND, "User not found"),

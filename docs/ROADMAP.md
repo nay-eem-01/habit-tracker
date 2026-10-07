@@ -57,7 +57,9 @@ Base branch: `feat/auth-base`.
 |---|---|---|
 | 2.1 | `POST /api/auth/register`, `POST /api/auth/login`, `GET /api/auth/me` | ✅ |
 | 2.2 | `POST /api/auth/refresh` (rotate, httpOnly cookie) and `POST /api/auth/logout` (revoke); §4.4 definition of done as an integration test | ✅ |
-| 2.3 | Google OAuth2 login — find, create or link by email; success handler issues app JWT + refresh cookie (§4.5) | ⏸ later — decided 2026-09-30 |
+| 2.3 | Google sign-in — ID-token flow (Google Identity Services), verified locally; find, create or link by verified email; issues our tokens (§4.5, changed 2026-10-07) | ⬜ needs the Google client id |
+| 2.4a | Forgot / reset password: emailed one-time link (30 min), rate-limited, signs out everywhere (§4.6) — base `feat/password-base` | ✅ |
+| 2.4b | Change password while signed in; Google-only accounts add a first one | ⬜ |
 
 ## Phase 3 — Habits (plan §5 step 6) ✅
 

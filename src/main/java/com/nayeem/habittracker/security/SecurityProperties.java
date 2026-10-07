@@ -18,6 +18,7 @@ public class SecurityProperties {
 
     private final Jwt jwt = new Jwt();
     private final RefreshToken refreshToken = new RefreshToken();
+    private final PasswordReset passwordReset = new PasswordReset();
     private final Cors cors = new Cors();
 
     @Getter
@@ -34,6 +35,15 @@ public class SecurityProperties {
         private Duration ttl = Duration.ofDays(7);
         /** Secure cookie flag. Browsers accept Secure cookies on http://localhost, so keep it on. */
         private boolean cookieSecure = true;
+    }
+
+    @Getter
+    @Setter
+    public static class PasswordReset {
+        /** How long a "forgot password" link works. */
+        private Duration ttl = Duration.ofMinutes(30);
+        /** At most this many reset emails per user per hour (and one per minute). */
+        private int maxPerHour = 5;
     }
 
     @Getter
