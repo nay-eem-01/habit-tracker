@@ -59,7 +59,7 @@ Base branch: `feat/auth-base`.
 | 2.2 | `POST /api/auth/refresh` (rotate, httpOnly cookie) and `POST /api/auth/logout` (revoke); §4.4 definition of done as an integration test | ✅ |
 | 2.3 | Google sign-in — ID-token flow (Google Identity Services), verified locally; find, create or link by verified email; issues our tokens (§4.5, changed 2026-10-07) | ⬜ needs the Google client id |
 | 2.4a | Forgot / reset password: emailed one-time link (30 min), rate-limited, signs out everywhere (§4.6) — base `feat/password-base` | ✅ |
-| 2.4b | Change password while signed in; Google-only accounts add a first one | ⬜ |
+| 2.4b | Change password while signed in (Google-only accounts: via forgot password until 2.3); reuse detection only for rotated tokens | ✅ |
 
 ## Phase 3 — Habits (plan §5 step 6) ✅
 

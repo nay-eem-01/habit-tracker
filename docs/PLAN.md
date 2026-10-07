@@ -321,7 +321,12 @@ back only if the app ever needs Google APIs. Google only.
   (revokes all refresh tokens), and signs in here.
 - **Google-only accounts can add a password**: through forgot / reset (the email proves ownership),
   and while signed in (2.4b / 2.3 — needs a fresh Google sign-in instead of a current password).
-- **Change** (signed in, 2.4b): needs the current password; signs out the other sessions.
+- **Change** (signed in, 2.4b): needs the current password; signs out the other sessions. A
+  Google-only account gets 409 `AUTH_PASSWORD_NOT_SET` until 2.3 lets a fresh Google sign-in stand
+  in for the current password.
+- **Refresh-token reuse** means a *rotated* token presented again (`rotated_at`, V4). A token revoked
+  by "sign out everywhere" is just invalid — otherwise another device's old cookie after a password
+  change would sign the user out of the session they changed it in.
 - Email locally goes to **Mailpit** (a mail catcher in Docker); in production to a real SMTP
   provider. The link is never logged.
 

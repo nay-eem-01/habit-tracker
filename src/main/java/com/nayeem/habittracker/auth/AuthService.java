@@ -96,6 +96,30 @@ public class AuthService {
         return issueTokens(user);
     }
 
+    /**
+     * Changes the password of a signed-in user: the current one must match. Signs out the other
+     * sessions, retires reset links, and returns a fresh pair for this one. A Google-only account
+     * has no current password to check; until Google sign-in (2.3) can confirm it's them, it sets
+     * its first password through "forgot password".
+     */
+    @Transactional
+    public AuthResult changePassword(Long userId, ChangePasswordRequest request) {
+        User user = userService.getById(userId);
+        if (user.getPasswordHash() == null) {
+            throw new ApplicationException(ErrorCode.AUTH_PASSWORD_NOT_SET);
+        }
+        if (request.getCurrentPassword() == null
+                || !passwordEncoder.matches(request.getCurrentPassword(), user.getPasswordHash())) {
+            log.info("Password change for user {} refused: wrong current password", userId);
+            throw new ApplicationException(ErrorCode.AUTH_WRONG_PASSWORD);
+        }
+        userService.updatePasswordHash(userId, passwordEncoder.encode(request.getNewPassword()));
+        int revoked = refreshTokenService.revokeAll(userId);
+        passwordResetService.retireAll(userId);
+        log.info("Password changed for user {}; {} session(s) signed out", userId, revoked);
+        return issueTokens(user);
+    }
+
     public void logout(String refreshToken) {
         refreshTokenService.revoke(refreshToken);
     }

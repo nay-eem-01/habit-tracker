@@ -83,10 +83,13 @@ class PasswordResetIntegrationTest extends IntegrationTest {
                 .andReturn().getResponse().getCookie(REFRESH_COOKIE);
         forgot("reset.sessions@example.com");
 
-        reset(token(onlyEmail()), "new-password").andExpect(status().isOk());
+        Cookie here = reset(token(onlyEmail()), "new-password").andExpect(status().isOk())
+                .andReturn().getResponse().getCookie(REFRESH_COOKIE);
 
         mockMvc.perform(post("/api/auth/refresh").cookie(elsewhere))
                 .andExpect(status().isUnauthorized());
+        // the other device's old cookie is not "reuse": the session that reset the password lives on
+        mockMvc.perform(post("/api/auth/refresh").cookie(here)).andExpect(status().isOk());
     }
 
     @Test

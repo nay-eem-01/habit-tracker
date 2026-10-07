@@ -107,6 +107,23 @@ class AuthController {
         return withRefreshCookie(HttpStatus.OK, "Password reset", authService.resetPassword(request));
     }
 
+    @Operation(summary = "Change my password",
+            description = "Needs the current password. Signs out every other session and retires reset links; this "
+                    + "session gets a fresh token pair. An account that only signs in with Google has no password yet: "
+                    + "409 — it sets one through \"forgot password\" (or, once Google sign-in exists, here after a "
+                    + "fresh Google sign-in).")
+    @ApiResponse(responseCode = "200", description = "Changed; new access token in the body, new refresh cookie set")
+    @ApiResponse(responseCode = "400", description = "Wrong current password (AUTH_WRONG_PASSWORD), "
+            + "or a new password under 8 characters (VALIDATION_FAILED)")
+    @ApiResponse(responseCode = "401", description = "Not signed in")
+    @ApiResponse(responseCode = "409", description = "The account has no password yet (AUTH_PASSWORD_NOT_SET)")
+    @SecurityRequirement(name = AppConstants.JWT_TOKEN)
+    @PostMapping("/password/change")
+    ResponseEntity<HttpResponse> changePassword(@AuthenticationPrincipal AuthUser user,
+                                                @Valid @RequestBody ChangePasswordRequest request) {
+        return withRefreshCookie(HttpStatus.OK, "Password changed", authService.changePassword(user.id(), request));
+    }
+
     @Operation(summary = "The signed-in user")
     @ApiResponse(responseCode = "200", description = "The user")
     @ApiResponse(responseCode = "401", description = "Missing or expired access token")

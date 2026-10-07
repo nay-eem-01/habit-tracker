@@ -39,6 +39,12 @@ public class RefreshToken extends AuditModel {
     @Column(nullable = false)
     private boolean revoked;
 
+    /**
+     * When it was used for a new pair. A rotated token presented again means someone kept a copy;
+     * one revoked any other way (logout, sign out everywhere) is simply invalid.
+     */
+    private Instant rotatedAt;
+
     public boolean isUsableAt(Instant now) {
         return !revoked && now.isBefore(expiresAt);
     }

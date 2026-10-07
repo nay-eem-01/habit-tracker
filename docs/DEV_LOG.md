@@ -17,8 +17,8 @@ The step-by-step plan and overall progress are in `docs/ROADMAP.md`; decisions a
   the deploy steps. **M4 Levels is done** and on `staging` (#57–#59). **M5 Dashboard is done**:
   all on `staging` (#60–#63). **M6 AI insights is set aside** (Nayeem, 2026-10-07).
 - **Auth additions before deploy** (Nayeem, 2026-10-07): forgot / reset / change password, then
-  Google sign-in (ID-token flow). Base `feat/password-base`: 2.4a done on `feat/password-reset`,
-  next 2.4b change password; 2.3 Google waits for the client id. The product will be renamed
+  Google sign-in (ID-token flow). Base `feat/password-base`: 2.4a on `feat/password-reset`, 2.4b on
+  `feat/password-change`; 2.3 Google waits for the client id. The product will be renamed
   (`app.display-name` holds the name users see until then).
 - **Deploy readiness** (assessed 2026-10-07): features complete, operations not. Now on the
   pre-deploy steps (base `feat/deploy-base`): **D.1 Flyway done** on `feat/flyway`; next D.2
@@ -28,7 +28,7 @@ The step-by-step plan and overall progress are in `docs/ROADMAP.md`; decisions a
 - Branch flow: step branch from the previous step's branch → PR into the phase's base branch →
   base PRs into `staging`. Claude commits and pushes and gives PR links (no `gh` on the machine);
   Nayeem opens and merges. Commits carry Nayeem's name only.
-- Tests need Docker running (Testcontainers). 279 tests pass (counted from the XML reports, which include nested test classes).
+- Tests need Docker running (Testcontainers). 284 tests pass (counted from the XML reports, which include nested test classes).
 - To run locally: PostgreSQL running, and a git-ignored `.env` in the project root with `DB_URL`
   (optional), `DB_USERNAME`, `DB_PASSWORD`, `JWT_SECRET` (≥ 32 bytes) — the app reads it itself
   (`spring.config.import`); real environment variables override it, and the old `db_user_name` /
@@ -55,6 +55,31 @@ The step-by-step plan and overall progress are in `docs/ROADMAP.md`; decisions a
 | Week starts on Monday for every user (`PLAN.md` §8b) — per-user week start if anyone asks | later | nothing |
 
 ---
+
+## 2026-10-07 (roadmap 2.4b — change password; a reuse-detection bug)
+
+**Done** (branch `feat/password-change` → `feat/password-base`, on top of 2.4a)
+- `POST /api/auth/password/change` (signed in): `currentPassword` must match (400
+  `AUTH_WRONG_PASSWORD` — 400, not 401, so the client doesn't think it was signed out); signs out
+  every other session, retires reset links, returns a fresh pair for this one. A Google-only account
+  gets 409 `AUTH_PASSWORD_NOT_SET` (set one via forgot password) until 2.3.
+- `ChangePasswordIntegrationTest` (5). 284 tests pass.
+
+**Found and fixed: "sign out everywhere" could sign you out here too**
+- Reuse detection treated *any* revoked refresh token presented again as stolen and revoked all of
+  the user's tokens. After a password reset or change, the other devices still hold their (now
+  revoked) cookies; the first one to refresh revoked the session the user had just changed the
+  password in. Affected 2.4a's reset as well.
+- `V4__refresh_token_rotated_at.sql`: `rotated_at`, set when a token is rotated. Only a rotated token
+  presented again counts as reuse; one revoked by logout or sign-out-everywhere is a plain 401.
+  `reusingARotatedTokenRevokesEveryTokenOfThatUser` still passes; the reset test now also checks
+  the new session survives the old cookie.
+- Tokens rotated before V4 have no `rotated_at`, so their reuse is a plain 401 (detection resumes for
+  tokens rotated from now on; they expire within 7 days anyway).
+
+**Not done**
+- No limit on wrong current-password attempts (needs a valid access token, and BCrypt is slow). Part
+  of the rate-limiting step before public sign-up.
 
 ## 2026-10-07 (roadmap 2.4a — forgot and reset password)
 
