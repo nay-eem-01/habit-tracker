@@ -23,30 +23,9 @@
         </encoder>
     </appender>
 
-    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>${LOG_DIRECTORY}/logfile.log</file>
-        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
-            <fileNamePattern>${LOG_DIRECTORY}/%d{dd-MM-yyyy, aux}/logfile-%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
-            <maxFileSize>100MB</maxFileSize>
-            <maxHistory>30</maxHistory>
-            <totalSizeCap>5GB</totalSizeCap>
-        </rollingPolicy>
-        <encoder class="ch.qos.logback.core.encoder.LayoutWrappingEncoder">
-            <layout class="com.nayeem.habittracker.common.logging.LogbackMaskingPatternLayout">
-                <pattern>${FILE_PATTERN}</pattern>
-            </layout>
-        </encoder>
-    </appender>
-
     <!-- Writing happens off the request thread. When the queue is full the caller waits rather
          than lose a line (an ERROR in an incident is the line you need); discardingThreshold 0
          keeps INFO/DEBUG too. -->
-    <appender name="ASYNC_FILE" class="ch.qos.logback.classic.AsyncAppender">
-        <queueSize>8192</queueSize>
-        <discardingThreshold>0</discardingThreshold>
-        <appender-ref ref="FILE"/>
-    </appender>
-
     <appender name="ASYNC_STDOUT" class="ch.qos.logback.classic.AsyncAppender">
         <queueSize>8192</queueSize>
         <discardingThreshold>0</discardingThreshold>
@@ -57,8 +36,31 @@
         <appender-ref ref="ASYNC_STDOUT"/>
     </root>
 
-    <!-- The rolling file needs a lasting disk; in production (a container) logs go to stdout only. -->
+    <!-- The rolling file needs a lasting disk; in production (a container) logs go to stdout only.
+         The appenders are declared in here too: declared outside, logback opens the file even when
+         nothing uses it, and a container without a writable home fails to start. -->
     <springProfile name="!prod">
+        <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+            <file>${LOG_DIRECTORY}/logfile.log</file>
+            <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+                <fileNamePattern>${LOG_DIRECTORY}/%d{dd-MM-yyyy, aux}/logfile-%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
+                <maxFileSize>100MB</maxFileSize>
+                <maxHistory>30</maxHistory>
+                <totalSizeCap>5GB</totalSizeCap>
+            </rollingPolicy>
+            <encoder class="ch.qos.logback.core.encoder.LayoutWrappingEncoder">
+                <layout class="com.nayeem.habittracker.common.logging.LogbackMaskingPatternLayout">
+                    <pattern>${FILE_PATTERN}</pattern>
+                </layout>
+            </encoder>
+        </appender>
+
+        <appender name="ASYNC_FILE" class="ch.qos.logback.classic.AsyncAppender">
+            <queueSize>8192</queueSize>
+            <discardingThreshold>0</discardingThreshold>
+            <appender-ref ref="FILE"/>
+        </appender>
+
         <root>
             <appender-ref ref="ASYNC_FILE"/>
         </root>

@@ -25,6 +25,7 @@ class LocalDiskFileStorageTest {
     @BeforeEach
     void setUp() throws IOException {
         FileProperties properties = new FileProperties();
+        properties.setEnabled(true);
         properties.setDir(dir.resolve("files"));
         storage = new LocalDiskFileStorage(properties);
         storage.init();
