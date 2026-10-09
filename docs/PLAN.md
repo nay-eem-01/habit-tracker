@@ -157,7 +157,8 @@ Settled decisions, grouped by area. A change to one is written here first.
 | `common` | response envelope, `ErrorCode` + global handler, pagination, correlation id, log masking |
 | `configs` | app properties, clock, JPA auditing, Swagger |
 | `security` | security chain, JWT, rate limits |
-| `user`, `auth` | accounts, profile, sign-up/in, refresh tokens, one-time tokens (reset, verify) |
+| `user`, `auth` | users and profile; sign-up/in, refresh tokens, one-time tokens (reset, verify) |
+| `account` | the account as a whole: delete, export |
 | `habit`, `checkin` | habits and schedules; check-ins, streak and stats calculators |
 | `goal`, `resource`, `file` | goals and progress; notes/links/files; file storage |
 | `level`, `dashboard` | XP and levels; dashboard and patterns |

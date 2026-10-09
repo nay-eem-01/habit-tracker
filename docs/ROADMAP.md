@@ -49,7 +49,7 @@ into the base; the base PRs into `staging`.
 | 8.1a | One-time tokens: reset links become one purpose of a shared table | ✅ |
 | 8.1b | Email verification | ✅ |
 | 8.2 | Edit profile: name, timezone, promotional-email opt-in | ✅ |
-| 8.3 | Delete account (everything goes) | ⬜ |
+| 8.3 | Delete account (everything goes) | ✅ |
 | 8.4 | Export my data (JSON) | ⬜ |
 | 8.5 | Delete a habit for good | ⬜ |
 | 2.3 | Google sign-in, ID-token flow, links only to verified accounts | ⏸ client id |

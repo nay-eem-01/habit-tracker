@@ -50,6 +50,11 @@ Phase 6 → 10 in roadmap order. Then the decisions in `PLAN.md` §6 (integratio
 
 ## Log
 
+**2026-10-10** — 8.3: `DELETE /api/me` (password when the account has one; same 5-miss limit as
+change password, now shared as `AuthService.confirmPassword`). V10 puts `on delete cascade` on every
+foreign key to `users`, and on logs/notifications to `habits` (for 8.5). File bytes go after commit.
+New `account` package orchestrates (it needs user, auth and file).
+
 **2026-10-10** — 8.2: `PUT /api/me` replaces name, timezone (region names only) and
 `marketingEmails` (V9, default off). The web app detects the browser's timezone and offers to switch
 when it differs from the profile's.

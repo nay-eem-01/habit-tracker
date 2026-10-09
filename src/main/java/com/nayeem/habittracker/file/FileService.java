@@ -19,6 +19,7 @@ import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.HexFormat;
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -111,6 +112,29 @@ public class FileService {
             }
         });
         log.info("File {} deleted", file.getId());
+    }
+
+    /**
+     * For deleting an account: the user's bytes go once the transaction commits (the rows go with the
+     * account, by cascade). A rolled-back delete keeps them.
+     */
+    @Transactional(readOnly = true)
+    public void deleteAllOfUserAfterCommit(Long userId) {
+        List<String> keys = storedFileRepository.findStorageKeysByUserId(userId);
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                keys.forEach(FileService.this::deleteQuietly);
+            }
+        });
+    }
+
+    private void deleteQuietly(String key) {
+        try {
+            fileStorage.delete(key);
+        } catch (IOException | RuntimeException e) {
+            log.error("Orphaned file {} after account delete: {}", key, e.getClass().getSimpleName());
+        }
     }
 
     /**
