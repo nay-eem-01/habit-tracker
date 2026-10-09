@@ -40,7 +40,7 @@ interface HabitRepository extends JpaRepository<Habit, Long> {
                   select 1 from habit_logs l
                   where l.habit_id = h.id
                     and l.log_date = (cast(:now as timestamptz) at time zone u.timezone)::date
-                    and l.completed_count >= h.target_count)
+                    and l.completed_count >= l.target_count)
             """)
     List<Habit> findRemindableAt(@Param("now") Instant now);
 }

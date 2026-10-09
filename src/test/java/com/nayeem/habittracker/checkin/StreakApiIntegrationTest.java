@@ -16,6 +16,7 @@ import java.time.ZoneOffset;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -62,8 +63,8 @@ class StreakApiIntegrationTest extends IntegrationTest {
         // older than the 7-day check-in limit, so written straight to the table
         for (int daysAgo : new int[]{10, 20}) {
             jdbcTemplate.update("""
-                    insert into habit_logs (habit_id, log_date, completed_count, created_at)
-                    values (?, ?, 1, now())""", habitId, today.minusDays(daysAgo));
+                    insert into habit_logs (habit_id, log_date, completed_count, target_count, created_at)
+                    values (?, ?, 1, 1, now())""", habitId, today.minusDays(daysAgo));
         }
 
         mockMvc.perform(get("/api/habits/{id}/stats", habitId).header(HttpHeaders.AUTHORIZATION, token))
@@ -73,6 +74,28 @@ class StreakApiIntegrationTest extends IntegrationTest {
                 .andExpect(jsonPath("$.payload.last7Days.rate").value(0.57))
                 .andExpect(jsonPath("$.payload.last30Days.done").value(6))
                 .andExpect(jsonPath("$.payload.last30Days.rate").value(0.2));
+    }
+
+    @Test
+    void raisingTheTargetKeepsDaysDoneUnderTheOldOne() throws Exception {
+        String token = bearerFor("target.raise@example.com");
+        Integer habitId = dailyHabitCreatedDaysAgo(token, 5, 1);
+        for (int daysAgo : new int[]{2, 1}) {
+            checkIn(token, habitId, today.minusDays(daysAgo), 1);
+        }
+
+        mockMvc.perform(put("/api/habits/{id}", habitId).header(HttpHeaders.AUTHORIZATION, token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"name\":\"Run\",\"frequencyType\":\"DAILY\",\"targetCount\":8}"))
+                .andExpect(status().isOk());
+        // today, logged under the new target: 1 of 8 isn't done yet
+        checkIn(token, habitId, today, 1);
+
+        mockMvc.perform(get("/api/habits/{id}/streak", habitId).header(HttpHeaders.AUTHORIZATION, token))
+                .andExpect(jsonPath("$.payload.current").value(2));
+        mockMvc.perform(get("/api/habits/{id}/logs", habitId).header(HttpHeaders.AUTHORIZATION, token))
+                .andExpect(jsonPath("$.payload.content[0].done").value(false))
+                .andExpect(jsonPath("$.payload.content[1].done").value(true));
     }
 
     @Test

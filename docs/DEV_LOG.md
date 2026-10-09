@@ -45,6 +45,10 @@ Phase 6 → 10 in roadmap order. Then the decisions in `PLAN.md` §6 (integratio
 
 ## Log
 
+**2026-10-10** — 6.3: `habit_logs.target_count` (V5, backfilled with today's targets) is written
+with every check-in; "done" compares against it everywhere (streaks, stats, XP, goals, reminders).
+Raising a target no longer un-does past days. 290 tests.
+
 **2026-10-10** — 6.2 logging: OpenTelemetry starter, BOMs and MDC appender removed (exporters were
 off; the correlation id already ties a request's lines together), lines now show `[cid=…]`. Async
 appenders kept but block when full instead of dropping. Unused OAuth2 client starters and
