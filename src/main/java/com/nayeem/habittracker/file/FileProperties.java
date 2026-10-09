@@ -15,6 +15,12 @@ import java.nio.file.Path;
 @ConfigurationProperties(prefix = "app.files")
 public class FileProperties {
 
+    /**
+     * Off until there is storage that survives a redeploy (PLAN.md §3.5). Off, new uploads are refused;
+     * files already stored can still be downloaded and deleted.
+     */
+    private boolean enabled;
+
     /** Where local-disk storage keeps the bytes. Outside the repository. */
     private Path dir;
 

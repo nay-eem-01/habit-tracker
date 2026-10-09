@@ -50,6 +50,10 @@ Phase 6 → 10 in roadmap order. Then the decisions in `PLAN.md` §6 (integratio
 
 ## Log
 
+**2026-10-10** — 7.5: `app.files.enabled` (`APP_FILES_ENABLED`, default false). Off, `FileService.store`
+refuses with 403 `FILE_UPLOADS_DISABLED`; downloading and deleting stored files still work. The
+frontend hides its upload button behind its own flag.
+
 **2026-10-10** — 7.4: email is sent `@Async` after commit (Boot's executor; a `TaskDecorator`
 carries the MDC so the line keeps its `cid`). Reminders create the in-app notification only — no
 email; web push comes in Phase 10. Brevo free SMTP set-up written under "How to run".

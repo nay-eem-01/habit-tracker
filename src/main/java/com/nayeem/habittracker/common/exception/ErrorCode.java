@@ -44,6 +44,7 @@ public enum ErrorCode {
     RESOURCE_NOT_FOUND(HttpStatus.NOT_FOUND, "Resource not found"),
     RESOURCE_INVALID(HttpStatus.BAD_REQUEST, "The fields don't fit the resource type"),
 
+    FILE_UPLOADS_DISABLED(HttpStatus.FORBIDDEN, "File uploads are switched off for now"),
     FILE_EMPTY(HttpStatus.BAD_REQUEST, "The file is empty"),
     FILE_NOT_FOUND(HttpStatus.NOT_FOUND, "This resource has no file to download"),
     FILE_TOO_LARGE(HttpStatus.CONTENT_TOO_LARGE, "The file is too large"),
