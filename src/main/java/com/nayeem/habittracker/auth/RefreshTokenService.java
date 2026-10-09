@@ -13,6 +13,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+import java.time.Clock;
 import java.time.Instant;
 import java.util.Base64;
 import java.util.HexFormat;
@@ -32,6 +33,7 @@ class RefreshTokenService {
 
     private final RefreshTokenRepository repository;
     private final SecurityProperties properties;
+    private final Clock clock;
 
     /** Stores a new token for the user and returns its raw value — the only time it exists. */
     @Transactional
@@ -43,7 +45,7 @@ class RefreshTokenService {
         RefreshToken token = new RefreshToken();
         token.setUser(user);
         token.setTokenHash(hash(raw));
-        token.setExpiresAt(Instant.now().plus(properties.getRefreshToken().getTtl()));
+        token.setExpiresAt(clock.instant().plus(properties.getRefreshToken().getTtl()));
         repository.save(token);
         return raw;
     }
@@ -67,7 +69,7 @@ class RefreshTokenService {
             log.warn("Refresh token reuse for user {} - revoked {} live token(s)", userId, revoked);
             throw invalid();
         }
-        Instant now = Instant.now();
+        Instant now = clock.instant();
         if (!token.isUsableAt(now)) {
             throw invalid();
         }

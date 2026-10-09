@@ -11,7 +11,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.time.LocalDate;
-import java.util.List;
 import java.util.Optional;
 
 /** Every query carries the owner; package-private like the other repositories. */
@@ -25,7 +24,10 @@ interface NotificationRepository extends JpaRepository<Notification, Long> {
             order by case when n.readAt is null then 0 else 1 end, n.createdAt desc, n.id desc""")
     Page<Notification> findForUser(@Param("userId") Long userId, Pageable pageable);
 
-    List<Notification> findAllByUserIdAndReadAtIsNull(Long userId);
+    /** @return how many were unread */
+    @Modifying
+    @Query("update Notification n set n.readAt = :now, n.lastModifiedAt = :now where n.user.id = :userId and n.readAt is null")
+    int markAllRead(@Param("userId") Long userId, @Param("now") Instant now);
 
     long countByUserIdAndReadAtIsNull(Long userId);
 

@@ -9,7 +9,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Clock;
-import java.util.List;
 
 /**
  * The signed-in user's notifications. Every method takes the acting user's id and only sees that
@@ -46,9 +45,6 @@ public class NotificationService {
 
     @Transactional
     public MarkedReadResponse markAllRead(Long userId) {
-        List<Notification> unread = notificationRepository.findAllByUserIdAndReadAtIsNull(userId);
-        unread.forEach(n -> n.setReadAt(clock.instant()));
-        notificationRepository.saveAll(unread);
-        return new MarkedReadResponse(unread.size());
+        return new MarkedReadResponse(notificationRepository.markAllRead(userId, clock.instant()));
     }
 }
