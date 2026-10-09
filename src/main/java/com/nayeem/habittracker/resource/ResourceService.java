@@ -102,6 +102,12 @@ public class ResourceService {
                 ResourceResponse::from);
     }
 
+    /** Every note, link and file entry of the user (not the file bytes), oldest first — for the data export. */
+    @Transactional(readOnly = true)
+    public List<ResourceResponse> exportAll(Long userId) {
+        return resourceRepository.findAllByUserIdOrderById(userId).stream().map(ResourceResponse::from).toList();
+    }
+
     /** One goal's resources, pinned first; 404 when the goal isn't the user's. */
     @Transactional(readOnly = true)
     public PageResponse<ResourceResponse> listForGoal(Long userId, Long goalId, int page, int size) {

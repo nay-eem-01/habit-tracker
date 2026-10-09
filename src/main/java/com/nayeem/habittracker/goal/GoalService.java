@@ -49,6 +49,12 @@ public class GoalService {
         return goalRepository.findAllByUserIdAndStatusOrderById(userId, GoalStatus.ACTIVE);
     }
 
+    /** Every goal of the user, oldest first — for the data export. */
+    @Transactional(readOnly = true)
+    public List<GoalResponse> exportAll(Long userId) {
+        return goalRepository.findAllByUserIdOrderById(userId).stream().map(GoalResponse::from).toList();
+    }
+
     @Transactional(readOnly = true)
     public GoalResponse get(Long userId, Long goalId) {
         return GoalResponse.from(find(userId, goalId));

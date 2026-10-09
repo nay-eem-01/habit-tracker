@@ -35,6 +35,8 @@ interface HabitLogRepository extends JpaRepository<HabitLog, Long> {
             + " and l.completedCount >= l.targetCount")
     long countDoneDays(@Param("habitId") Long habitId, @Param("from") LocalDate from, @Param("to") LocalDate to);
 
+    List<HabitLog> findAllByHabitUserIdOrderByHabitIdAscLogDateAsc(Long userId);
+
     Page<HabitLog> findAllByHabitIdAndLogDateBetween(Long habitId, LocalDate from, LocalDate to, Pageable pageable);
 
     /**

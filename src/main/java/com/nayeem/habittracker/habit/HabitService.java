@@ -17,6 +17,7 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -111,6 +112,13 @@ public class HabitService {
             log.info("Habit {} unlinked from its goal by user {}", habitId, userId);
         }
         return HabitResponse.from(habit);
+    }
+
+    /** Every habit of the user, archived ones included, oldest first — for the data export. */
+    @Transactional(readOnly = true)
+    public List<HabitResponse> exportAll(Long userId) {
+        return habitRepository.findAllByUserId(userId).stream()
+                .sorted(Comparator.comparing(Habit::getId)).map(HabitResponse::from).toList();
     }
 
     /** Every habit of the user, archived ones included (what they earned stays — levels, M4). */

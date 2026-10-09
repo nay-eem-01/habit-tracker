@@ -50,6 +50,10 @@ Phase 6 → 10 in roadmap order. Then the decisions in `PLAN.md` §6 (integratio
 
 ## Log
 
+**2026-10-10** — 8.4: `GET /api/me/export` → `devhabit-export.json` (attachment, `no-store`): profile,
+habits incl. archived, every check-in with the target it was judged by, goals, resources (file
+entries, not bytes), in one read-only transaction. Each feature exposes an `exportAll(userId)`.
+
 **2026-10-10** — 8.3: `DELETE /api/me` (password when the account has one; same 5-miss limit as
 change password, now shared as `AuthService.confirmPassword`). V10 puts `on delete cascade` on every
 foreign key to `users`, and on logs/notifications to `habits` (for 8.5). File bytes go after commit.
