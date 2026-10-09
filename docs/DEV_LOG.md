@@ -45,6 +45,11 @@ Phase 6 → 10 in roadmap order. Then the decisions in `PLAN.md` §6 (integratio
 
 ## Log
 
+**2026-10-10** — 6.2 logging: OpenTelemetry starter, BOMs and MDC appender removed (exporters were
+off; the correlation id already ties a request's lines together), lines now show `[cid=…]`. Async
+appenders kept but block when full instead of dropping. Unused OAuth2 client starters and
+`app.backendUrlShort` removed (Google sign-in will use the JOSE module only).
+
 **2026-10-10** — Docs rewritten (6.1): plan is now overview + decisions + architecture (entity
 design removed — the code and migrations are the source); roadmap and this log compacted. Decided:
 rest days (1 free a week, then 100 / 200 XP, max 3; level from lifetime XP, a spendable balance pays),
