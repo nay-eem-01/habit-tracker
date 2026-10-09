@@ -28,7 +28,7 @@ public class HabitProgressService {
     public Streak streak(Long userId, Long habitId) {
         Context c = load(userId, habitId);
         return StreakCalculator.calculate(c.habit.getFrequencyType(), c.habit.getFrequencyConfig(), c.doneDays,
-                c.start, c.today);
+                c.start, CountedDays.streakToday(c.habit.getKind(), c.today));
     }
 
     /** Completion rate over the last 7 and 30 days. */
@@ -75,12 +75,14 @@ public class HabitProgressService {
                 c.start, c.today, days);
     }
 
-    /** The habit plus the first day of its schedule, today and done days — all in the owner's timezone. */
+    /** The habit plus the first day of its schedule, today and counted days — all in the owner's timezone. */
     private Context load(Long userId, Long habitId) {
         Habit habit = habitService.getOwnedHabit(userId, habitId);
         ZoneId zone = ZoneId.of(habit.getUser().getTimezone());
-        return new Context(habit, habit.startDay(zone), LocalDate.now(clock.withZone(zone)),
-                new HashSet<>(habitLogRepository.findDoneDays(habit.getId())));
+        LocalDate start = habit.startDay(zone);
+        LocalDate today = LocalDate.now(clock.withZone(zone));
+        Set<LocalDate> logged = new HashSet<>(habitLogRepository.findDoneDays(habit.getId()));
+        return new Context(habit, start, today, CountedDays.of(habit.getKind(), logged, start, today));
     }
 
     private record Context(Habit habit, LocalDate start, LocalDate today, Set<LocalDate> doneDays) {

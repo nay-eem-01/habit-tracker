@@ -37,6 +37,7 @@ public enum ErrorCode {
 
     HABIT_NOT_FOUND(HttpStatus.NOT_FOUND, "Habit not found"),
     HABIT_INVALID_FREQUENCY(HttpStatus.BAD_REQUEST, "The schedule doesn't match the frequency type"),
+    HABIT_QUIT_INVALID(HttpStatus.BAD_REQUEST, "That isn't possible for a quit habit"),
     HABIT_ARCHIVED(HttpStatus.CONFLICT, "This habit is archived; unarchive it first"),
 
     GOAL_NOT_FOUND(HttpStatus.NOT_FOUND, "Goal not found"),

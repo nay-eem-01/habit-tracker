@@ -1,10 +1,11 @@
 package com.nayeem.habittracker.level;
 
+import com.nayeem.habittracker.checkin.CountedDays;
 import com.nayeem.habittracker.checkin.HabitProgressService;
 import com.nayeem.habittracker.goal.GoalService;
 import com.nayeem.habittracker.habit.Habit;
-import com.nayeem.habittracker.habit.PastSchedule;
 import com.nayeem.habittracker.habit.HabitService;
+import com.nayeem.habittracker.habit.PastSchedule;
 import com.nayeem.habittracker.user.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -49,9 +50,11 @@ public class LevelService {
                                 long achievedGoals) {
         long xp = XpCalculator.goalXp(achievedGoals);
         for (Habit habit : habits) {
-            Set<LocalDate> done = doneDays.getOrDefault(habit.getId(), Set.of());
-            xp += XpCalculator.habitXp(habit.getFrequencyType(), habit.getFrequencyConfig(), done,
-                    habit.startDay(zone), today);
+            LocalDate start = habit.startDay(zone);
+            Set<LocalDate> done = CountedDays.of(habit.getKind(), doneDays.getOrDefault(habit.getId(), Set.of()),
+                    start, today);
+            xp += XpCalculator.habitXp(habit.getFrequencyType(), habit.getFrequencyConfig(), done, start,
+                    CountedDays.streakToday(habit.getKind(), today));
             for (PastSchedule past : habit.getPastSchedules()) {   // XP earned under earlier schedules stays
                 xp += XpCalculator.habitXp(past.type(), past.config(), done, past.from(), past.until());
             }
