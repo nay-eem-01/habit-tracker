@@ -12,7 +12,7 @@ import java.time.Duration;
 import java.time.Instant;
 
 /**
- * Every night, deletes refresh tokens and reset links that expired more than a day ago — one row is
+ * Every night, deletes refresh tokens and one-time links that expired more than a day ago — one row is
  * added on every sign-in and refresh, so without this the tables only grow. An expired token is
  * refused either way; deleting it changes no answer.
  */
@@ -23,7 +23,7 @@ import java.time.Instant;
 class ExpiredTokenCleanup {
 
     private final RefreshTokenRepository refreshTokenRepository;
-    private final PasswordResetTokenRepository passwordResetTokenRepository;
+    private final OneTimeTokenRepository oneTimeTokenRepository;
     private final Clock clock;
 
     @Scheduled(cron = "0 30 3 * * *", zone = "UTC")
@@ -31,7 +31,7 @@ class ExpiredTokenCleanup {
     public void run() {
         Instant before = clock.instant().minus(Duration.ofDays(1));
         int refresh = refreshTokenRepository.deleteExpiredBefore(before);
-        int reset = passwordResetTokenRepository.deleteExpiredBefore(before);
-        log.info("Deleted {} expired refresh token(s) and {} expired reset link(s)", refresh, reset);
+        int links = oneTimeTokenRepository.deleteExpiredBefore(before);
+        log.info("Deleted {} expired refresh token(s) and {} expired one-time link(s)", refresh, links);
     }
 }
