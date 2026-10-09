@@ -31,7 +31,8 @@ class AuthRateLimitFilter extends OncePerRequestFilter {
             "/api/auth/register", new Limit(10, Duration.ofHours(1)),
             "/api/auth/refresh", new Limit(30, Duration.ofMinutes(1)),
             "/api/auth/password/forgot", new Limit(5, Duration.ofHours(1)),
-            "/api/auth/password/reset", new Limit(10, Duration.ofHours(1)));
+            "/api/auth/password/reset", new Limit(10, Duration.ofHours(1)),
+            "/api/auth/email/verify", new Limit(10, Duration.ofHours(1)));
 
     private final RateLimiter rateLimiter;
     private final JsonSecurityErrorHandler errorWriter;

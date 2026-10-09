@@ -9,6 +9,8 @@ import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.time.Instant;
+
 /**
  * A person using the app, whichever way they sign in (plan §2.1).
  * The {@code habits} relation from the plan is added with the Habit entity in Phase 3.
@@ -37,6 +39,9 @@ public class User extends AuditModel {
     /** Google's {@code sub} claim; null for LOCAL accounts. */
     @Column(length = 255)
     private String providerId;
+
+    /** When the user proved they own the address (an emailed link, or a password reset); null until then. */
+    private Instant emailVerifiedAt;
 
     /** IANA zone id, e.g. {@code Asia/Dhaka}. Decides what "today" is for check-ins (PLAN.md §8 Q4). */
     @Column(nullable = false, length = 64)

@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.dao.DataIntegrityViolationException;
 
 import java.sql.SQLException;
+import java.time.Clock;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -17,7 +18,7 @@ import static org.mockito.Mockito.when;
 class UserServiceTest {
 
     private final UserRepository repository = mock(UserRepository.class);
-    private final UserService service = new UserService(repository);
+    private final UserService service = new UserService(repository, Clock.systemUTC());
 
     private static DataIntegrityViolationException violation(String sqlState) {
         return new DataIntegrityViolationException("constraint", new SQLException("failed", sqlState));

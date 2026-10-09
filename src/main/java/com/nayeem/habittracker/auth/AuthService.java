@@ -33,6 +33,7 @@ public class AuthService {
     private final JwtService jwtService;
     private final RefreshTokenService refreshTokenService;
     private final PasswordResetService passwordResetService;
+    private final EmailVerificationService emailVerificationService;
     private final RateLimiter rateLimiter;
 
     /** Hash of a random value nobody knows; only used to spend equal time on a failed lookup. */
@@ -48,6 +49,7 @@ public class AuthService {
     public AuthResult register(RegisterRequest request) {
         String hash = passwordEncoder.encode(request.getPassword());
         User user = userService.createLocalUser(request.getEmail(), hash, request.getName(), request.getTimezone());
+        emailVerificationService.sendLink(user);
         return issueTokens(user);
     }
 
@@ -106,6 +108,7 @@ public class AuthService {
     public AuthResult resetPassword(ResetPasswordRequest request) {
         User user = passwordResetService.consume(request.getToken());
         userService.updatePasswordHash(user.getId(), passwordEncoder.encode(request.getNewPassword()));
+        userService.markEmailVerified(user.getId());   // the emailed link proves they own the address
         int revoked = refreshTokenService.revokeAll(user.getId());
         log.info("Password reset for user {}; {} session(s) signed out", user.getId(), revoked);
         return issueTokens(user);
@@ -138,6 +141,15 @@ public class AuthService {
         passwordResetService.retireAll(userId);
         log.info("Password changed for user {}; {} session(s) signed out", userId, revoked);
         return issueTokens(user);
+    }
+
+    /** Sends a new confirmation link to the signed-in user. */
+    public void resendVerification(Long userId) {
+        emailVerificationService.sendLink(userService.getById(userId));
+    }
+
+    public void verifyEmail(String token) {
+        emailVerificationService.verify(token);
     }
 
     public void logout(String refreshToken) {

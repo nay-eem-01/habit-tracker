@@ -50,6 +50,13 @@ Phase 6 → 10 in roadmap order. Then the decisions in `PLAN.md` §6 (integratio
 
 ## Log
 
+**2026-10-10** — 8.1b: `users.email_verified_at` (V8). Sign-up emails a 24-hour link
+(`<frontend>/verify-email#token=…`); `POST /api/auth/email/verify` (public) confirms it,
+`POST /api/auth/email/verification` (signed in) sends another (409 when already confirmed). A password
+reset also confirms the address. `emailVerified` on the user. Nothing is blocked for unverified users
+yet; Google linking (2.3) and promotional email will require it. Found: a used one-time token stayed
+usable within the same persistence context (bulk update only) — the token is now marked used itself.
+
 **2026-10-10** — 8.1a: `password_reset_tokens` → `one_time_tokens` with a `purpose`
 (`PASSWORD_RESET`, `EMAIL_VERIFICATION`; V7). `OneTimeTokenService` issues (1 a minute, N an hour),
 consumes (purpose must match) and retires; `PasswordResetService` keeps only the reset email.
