@@ -12,6 +12,7 @@ public record HabitResponse(
         FrequencyType frequencyType,
         FrequencyConfig frequencyConfig,
         int targetCount,
+        String unit,
         @JsonFormat(pattern = "HH:mm") LocalTime reminderTime,
         boolean archived,
         Long goalId,
@@ -20,7 +21,7 @@ public record HabitResponse(
 
     static HabitResponse from(Habit habit) {
         return new HabitResponse(habit.getId(), habit.getName(), habit.getCategory(), habit.getFrequencyType(),
-                habit.getFrequencyConfig(), habit.getTargetCount(), habit.getReminderTime(),
+                habit.getFrequencyConfig(), habit.getTargetCount(), habit.getUnit(), habit.getReminderTime(),
                 habit.isArchived(), habit.getGoal() == null ? null : habit.getGoal().getId(),
                 habit.getGoalTargetDays(), habit.getCreatedAt());
     }

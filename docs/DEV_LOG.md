@@ -50,6 +50,9 @@ Phase 6 → 10 in roadmap order. Then the decisions in `PLAN.md` §6 (integratio
 
 ## Log
 
+**2026-10-10** — 9.1: optional `unit` (≤ 20, V11) on habits, in habit responses and on the
+dashboard's today list.
+
 **2026-10-10** — 8.5: `DELETE /api/habits/{id}` → 204; its logs and notifications go by cascade, and
 with them the XP and goal progress they earned (archive keeps them). A JPQL bulk delete, so no loaded
 log can still reference the habit at flush. Phase 8 done except 2.3 (waits for the client id).

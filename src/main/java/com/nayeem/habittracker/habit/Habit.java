@@ -73,6 +73,10 @@ public class Habit extends AuditModel {
     @Column(nullable = false)
     private int targetCount = 1;
 
+    /** What a counted habit counts ("glasses"); null = no unit. */
+    @Column(length = 20)
+    private String unit;
+
     /** Local time of day, in the owner's timezone, to remind about the habit; null = no reminder. */
     private LocalTime reminderTime;
 

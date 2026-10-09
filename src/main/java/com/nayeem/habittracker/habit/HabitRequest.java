@@ -39,6 +39,10 @@ public class HabitRequest {
     @Schema(description = "Completions a day needs to count as done. Defaults to 1.", example = "1")
     private Integer targetCount;
 
+    @Size(max = 20)
+    @Schema(description = "What is counted, shown with the target: \"8 glasses\". Optional.", example = "glasses")
+    private String unit;
+
     @JsonFormat(pattern = "HH:mm")
     @Schema(type = "string", example = "07:30",
             description = "Reminder time of day (HH:mm) in your timezone. Omit for no reminder.")

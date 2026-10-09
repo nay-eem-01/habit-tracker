@@ -73,12 +73,12 @@ class HighlightCalculatorTest {
     }
 
     private static TodayHabit daily(Long id, int streak, boolean due, boolean done) {
-        return new TodayHabit(id, "h" + id, null, FrequencyType.DAILY, 1, done ? 1 : 0, done, due, null, null,
+        return new TodayHabit(id, "h" + id, null, FrequencyType.DAILY, 1, null, done ? 1 : 0, done, due, null, null,
                 streak, StreakUnit.DAYS);
     }
 
     private static TodayHabit weekly(Long id, int doneThisWeek, boolean doneToday) {
-        return new TodayHabit(id, "h" + id, null, FrequencyType.X_TIMES_PER_WEEK, 1, doneToday ? 1 : 0, doneToday,
+        return new TodayHabit(id, "h" + id, null, FrequencyType.X_TIMES_PER_WEEK, 1, null, doneToday ? 1 : 0, doneToday,
                 true, doneThisWeek, 3, 5, StreakUnit.WEEKS);
     }
 

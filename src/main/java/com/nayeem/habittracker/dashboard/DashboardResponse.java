@@ -56,6 +56,7 @@ public record DashboardResponse(
             String category,
             FrequencyType frequencyType,
             int targetCount,
+            String unit,
             @Schema(description = "Today's count so far") int completedCount,
             @Schema(description = "Today's count reached the target") boolean done,
             @Schema(description = "Daily: always. Chosen weekdays: on them. N-a-week: until this week's N is met "
