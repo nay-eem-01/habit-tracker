@@ -31,6 +31,7 @@ public class GoalService {
     public GoalResponse create(Long userId, GoalRequest request) {
         Goal goal = new Goal();
         goal.setUser(userService.getById(userId));
+        goal.getUser().getPlan().checkRoomForGoal(goalRepository.countByUserIdAndStatus(userId, GoalStatus.ACTIVE));
         apply(goal, request);
         goal = goalRepository.save(goal);
         log.info("Goal {} created by user {}", goal.getId(), userId);

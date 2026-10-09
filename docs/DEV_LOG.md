@@ -50,6 +50,10 @@ Phase 6 → 10 in roadmap order. Then the decisions in `PLAN.md` §6 (integratio
 
 ## Log
 
+**2026-10-10** — 9.4: `users.plan` `FREE`/`PRO` (V15, everyone FREE; no billing). The `Plan` enum holds
+the limits — FREE 7 active habits, 2 active goals — checked on create and unarchive; 403
+`PLAN_LIMIT_REACHED`. `plan` on the user. Phase 9 done.
+
 **2026-10-10** — 9.3d: `habit_logs.rest_cost_xp` (V14). Per habit and week: 1st rest free, 2nd 100 XP,
 3rd 200, no 4th (409 `REST_LIMIT_REACHED`); 409 `XP_NOT_ENOUGH` when the balance is short. Level
 gains `spentXp` and `xpBalance` (= lifetime XP − spent); the level itself never drops. Ending a rest
