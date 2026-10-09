@@ -68,6 +68,7 @@ public class DashboardService {
                 .sorted(Comparator.comparing(Habit::getName, String.CASE_INSENSITIVE_ORDER).thenComparing(Habit::getId))
                 .toList();
         Map<Long, Set<LocalDate>> doneDays = habitProgressService.doneDaysByHabit(userId);
+        Map<Long, Set<LocalDate>> restDays = habitProgressService.restDaysByHabit(userId);
         Map<Long, Integer> counts = habitProgressService.countsOn(userId, today);
 
         List<TodayHabit> todayHabits = new ArrayList<>();
@@ -78,14 +79,15 @@ public class DashboardService {
             LocalDate start = habit.startDay(zone);
             Set<LocalDate> done = CountedDays.of(habit.getKind(), doneDays.getOrDefault(habit.getId(), Set.of()),
                     start, today);
-            todayHabits.add(todayHabit(habit, done, start, today, counts.getOrDefault(habit.getId(), 0)));
+            Set<LocalDate> rest = restDays.getOrDefault(habit.getId(), Set.of());
+            todayHabits.add(todayHabit(habit, done, rest, start, today, counts.getOrDefault(habit.getId(), 0)));
 
             var periods = new DashboardResponse.Period[WINDOWS.length];
             for (int i = 0; i < WINDOWS.length; i++) {
                 WindowStats now = StatsCalculator.window(habit.getFrequencyType(), habit.getFrequencyConfig(), done,
-                        start, today, WINDOWS[i]);
+                        rest, start, today, WINDOWS[i]);
                 WindowStats before = StatsCalculator.previousWindow(habit.getFrequencyType(),
-                        habit.getFrequencyConfig(), done, start, today, WINDOWS[i]);
+                        habit.getFrequencyConfig(), done, rest, start, today, WINDOWS[i]);
                 current.get(i).add(now);
                 previous.get(i).add(before);
                 periods[i] = CompletionCalculator.period(now, before);
@@ -112,7 +114,7 @@ public class DashboardService {
                 HighlightCalculator.best(completions),
                 HighlightCalculator.slipping(completions),
                 goals,
-                LevelService.levelOf(allHabits, doneDays, zone, today, goalService.countAchieved(userId)));
+                LevelService.levelOf(allHabits, doneDays, restDays, zone, today, goalService.countAchieved(userId)));
     }
 
     /**
@@ -124,12 +126,14 @@ public class DashboardService {
         ZoneId zone = ZoneId.of(userService.getById(userId).getTimezone());
         LocalDate today = LocalDate.now(clock.withZone(zone));
         Map<Long, Set<LocalDate>> doneDays = habitProgressService.doneDaysByHabit(userId);
+        Map<Long, Set<LocalDate>> restDays = habitProgressService.restDaysByHabit(userId);
         // quit habits have no schedule to keep; their clean days would only flatter the patterns
         List<Habit> active = habitService.findAllOwned(userId).stream()
                 .filter(habit -> !habit.isArchived() && habit.getKind() == HabitKind.BUILD).toList();
         List<HabitDays> habits = active.stream()
                 .map(habit -> new HabitDays(habit.getFrequencyType(), habit.getFrequencyConfig(),
-                        habit.getCreatedAt().atZone(zone).toLocalDate(), doneDays.getOrDefault(habit.getId(), Set.of())))
+                        habit.getCreatedAt().atZone(zone).toLocalDate(), doneDays.getOrDefault(habit.getId(), Set.of()),
+                        restDays.getOrDefault(habit.getId(), Set.of())))
                 .toList();
         Set<Long> activeIds = active.stream().map(Habit::getId).collect(Collectors.toSet());
         List<CheckInTime> checkIns = habitProgressService
@@ -144,8 +148,8 @@ public class DashboardService {
                 PatternCalculator.asList(hours), PatternCalculator.peakHour(hours));
     }
 
-    private static TodayHabit todayHabit(Habit habit, Set<LocalDate> done, LocalDate start, LocalDate today,
-                                         int completedCount) {
+    private static TodayHabit todayHabit(Habit habit, Set<LocalDate> done, Set<LocalDate> rest, LocalDate start,
+                                         LocalDate today, int completedCount) {
         boolean doneToday = done.contains(today);
         Integer doneThisWeek = null;
         Integer timesPerWeek = null;
@@ -156,13 +160,14 @@ public class DashboardService {
             doneThisWeek = (int) doneBeforeToday + (doneToday ? 1 : 0);
             timesPerWeek = habit.getFrequencyConfig().timesPerWeek();
         }
-        // a quit habit is never "to do"; done = clean so far today
-        boolean due = habit.getKind() == HabitKind.BUILD
+        boolean resting = rest.contains(today);
+        // a quit habit is never "to do" (done = clean so far today); a rested one isn't today
+        boolean due = habit.getKind() == HabitKind.BUILD && !resting
                 && DueRules.isDue(habit.getFrequencyType(), habit.getFrequencyConfig(), today, doneBeforeToday);
-        Streak streak = StreakCalculator.calculate(habit.getFrequencyType(), habit.getFrequencyConfig(), done, start,
-                CountedDays.streakToday(habit.getKind(), today));
+        Streak streak = StreakCalculator.calculate(habit.getFrequencyType(), habit.getFrequencyConfig(), done, rest,
+                start, CountedDays.streakToday(habit.getKind(), today));
         return new TodayHabit(habit.getId(), habit.getName(), habit.getCategory(), habit.getKind(),
-                habit.getFrequencyType(), habit.getTargetCount(), habit.getUnit(), completedCount, doneToday, due,
-                doneThisWeek, timesPerWeek, streak.current(), streak.unit());
+                habit.getFrequencyType(), habit.getTargetCount(), habit.getUnit(), completedCount, doneToday, resting,
+                due, doneThisWeek, timesPerWeek, streak.current(), streak.unit());
     }
 }

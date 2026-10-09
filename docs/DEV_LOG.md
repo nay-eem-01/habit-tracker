@@ -50,6 +50,12 @@ Phase 6 → 10 in roadmap order. Then the decisions in `PLAN.md` §6 (integratio
 
 ## Log
 
+**2026-10-10** — 9.3a–c (split in three PRs to stay small): `habit_logs.rest` (V13). `POST /api/habits/{id}/rest` (date, default today;
+check-in date rules) and `DELETE …/rest?date=`. Daily and chosen-weekday build habits, on a due day
+not yet done, one a week (Mon–Sun). The calculators take the rest days and skip them like an
+unscheduled day (overloads keep the old signatures); reminders skip a rested habit; dashboard shows
+`resting`. A check-in on the day ends the rest.
+
 **2026-10-10** — 9.2: `habits.kind` `BUILD`/`QUIT` (V12, fixed at creation). A quit habit is daily,
 target 1, no reminder, no goal (400 `HABIT_QUIT_INVALID`); a check-in records a slip.
 `CountedDays` turns slips into clean days (today included while clean) and hands the streak walk

@@ -61,6 +61,7 @@ public record DashboardResponse(
             String unit,
             @Schema(description = "Today's count so far") int completedCount,
             @Schema(description = "Today's count reached the target") boolean done,
+            @Schema(description = "Today is a rest day for this habit") boolean resting,
             @Schema(description = "Daily: always. Chosen weekdays: on them. N-a-week: until this week's N is met "
                     + "(and on a day it was done)") boolean due,
             @Schema(description = "N-a-week only: done days this week (Mon–Sun), today included") Integer doneThisWeek,
