@@ -1,191 +1,79 @@
-# DevHabit — Feature Roadmap
+# DevHabit — Roadmap
 
-What gets built, in order, and how far we are. The reasoning behind each item is in
-`docs/PLAN.md` (the original build order is its §5). Update this file in the same PR that finishes
-a step.
+The steps, in order. Each step is one small PR. Decisions behind them are in `docs/PLAN.md`.
 
-Each step is sized to be **one small PR** (see `PLAN.md` §7a). A step that grows past that gets
-split here first.
+**Legend:** ✅ done · 🔄 in progress · ⬜ not started · ⏸ waiting
 
-**Branch flow:** each phase has a base branch. Each step branch is taken from the previous step's
-branch and PRs into the phase base, in order; the base PRs into `staging` when the phase is done.
+**Branch flow:** each phase has a base branch; each step branches from the previous step and PRs
+into the base; the base PRs into `staging`.
 
-**Legend:** ✅ done · 🔄 in progress · ⬜ not started · ⏸ deferred
+## Done
 
-**Progress:** Phase 5 of 5 · 25 of 26 steps done (plus 2 pre-deploy steps) · M2 Goals ✅ 4 of 4 · M3 Resources ✅ (files too; R.3d S3 with D.1/D.2) · M4 Levels ✅ · M5 Dashboard ✅ · Frontend: Phase F, own repo (another agent)
+| Milestone | What it gave | PRs |
+|---|---|---|
+| Phases 0–2 | foundation, JWT auth, register/login/refresh/logout, forgot/reset/change password | #1–#14, #66–#68 |
+| Phases 3–5 (M1) | habits, check-ins, strict streaks, 7/30-day stats, reminders, in-app notifications | #17–#32 |
+| M2 Goals | goals, habit links, progress, achieved/abandoned | #41–#45 |
+| M3 Resources | notes, links, file uploads on local disk | #46–#56 |
+| M4 Levels | XP, levels, tiers | #57–#59 |
+| M5 Dashboard | today, completion trends, highlights, patterns | #60–#63 |
+| D.1, D.1b | Flyway; logging with masking and retention | #64–#65, #69 |
+| Frontend F.1–F.6 | in `habit-tracker-web` | that repo |
 
-## Where we are (2026-10-01)
-
-- **Phases 0–2 merged to `staging`** (PRs #3–#14); Phases 3–4 merged (#23–#27); **Phase 5 done** on step branches.
-- **The core habit loop works:** habits (daily, chosen weekdays, N times a week) → check-ins →
-  strict streaks → 7/30-day stats, in each user's timezone. 110 tests pass.
-- **M1 is feature-complete:** reminders (per-habit time in the user's timezone, minute scheduler, in-app notifications, optional email). 132 tests pass.
-- **Phases 0–5 are all on `staging`.** **Next: the frontend** — Phase F below, in its own repo (`habit-tracker-web`, React + TypeScript + Vite — agreed 2026-10-01); before any shared deploy D.1/D.2.
-- 2.3 Google sign-in is deferred. After M1: goals, resources, levels, dashboard, AI (`PLAN.md` §11).
-
----
-
-## Phase 0 — Foundation ✅
-
-Base branch: `feat/foundation-base` (0.1–0.3 predate the flow and went straight to `staging`).
+## Phase 6 — Clean-up and fixes (base `feat/cleanup-base`)
 
 | # | Step | Status |
 |---|---|---|
-| 0.1 | Project set-up with dependencies | ✅ |
-| 0.2 | Swagger + log configuration — PR #1 | ✅ |
-| 0.3 | Project hygiene: logs out of the repo, logback actually loads, `open-in-view=false`, jjwt added, `AppConstants` plain holder — PR #2 | ✅ |
-| 0.4 | Exception handling: `HttpResponse` envelope, one `@RestControllerAdvice`, `ApplicationException` + `ErrorCode`, correlation id, no exception text in 500 bodies | ✅ |
-| 0.5 | Testcontainers PostgreSQL test base; re-enable `contextLoads` | ✅ |
-| 0.6 | Common base: `AuditModel` (`@Getter/@Setter`, auditor type matches), JPA auditing, auditor is the signed-in email or `SYSTEM` | ✅ |
-| 0.7 | Leave the old starter's baggage behind (`ErrorCode` ~180 constants, `AppTables`, `CommonUtils`, `ModelMapper`, `CustomResponseException`) — done by not lifting it | ✅ |
+| 6.1 | Docs: plan rewritten (overview, decisions, architecture), roadmap and dev log compacted | 🔄 |
+| 6.2 | Logging: OpenTelemetry out (`[cid=…]` stays), async appenders block instead of drop; unused deps and config out | ⬜ |
+| 6.3 | A done day keeps the target it was logged with (review C1) | ⬜ |
+| 6.4 | A schedule change starts a new streak and keeps the XP earned (review C1) | ⬜ |
+| 6.5 | Reminders: one failing habit doesn't stop the others; injected clock for refresh tokens; one-query mark-all-read (C2–C4) | ⬜ |
 
-## Phase 1 — Entities and JWT (plan §5 steps 2–3) ✅
-
-Base branch: `feat/security-base`.
+## Phase 7 — Security and launch (base `feat/launch-base`)
 
 | # | Step | Status |
 |---|---|---|
-| 1.1 | `User` + `AuthProvider` + `UserRepository` + `UserService` (`passwordHash`, `providerId`, `timezone`) per `PLAN.md` §2.1 | ✅ |
-| 1.2 | `RefreshToken` entity + repository, hash stored, never the raw value (§2.4) | ✅ |
-| 1.3 | JWT infrastructure: `JwtService` (`sub` = email), `JwtAuthenticationFilter`, stateless `SecurityConfig` covering every path, secret from env (fail fast), 401 entry point, actuator `health` open, `GET /api/ping` behind `authenticated()` | ✅ |
+| 7.1 | Production profile; forwarded headers; daily clean-up of expired tokens | ⬜ |
+| 7.2 | Rate limits on public auth endpoints (per IP) and failed logins (per email) | ⬜ |
+| 7.3 | Passwords limited to 72 bytes (BCrypt) | ⬜ |
+| 7.4 | Email: sent off the request thread; reminders no longer emailed; free SMTP set-up documented | ⬜ |
+| 7.5 | File uploads behind `app.files.enabled` (off) | ⬜ |
+| 7.6 | Dockerfile and CI (tests on every PR) | ⬜ |
+| D.3 | Deploy: host, TLS, managed Postgres + backups, same-site domains | ⏸ host not chosen |
 
-## Phase 2 — Authentication (plan §5 steps 4–5) ✅ (2.3 deferred)
-
-Base branch: `feat/auth-base`.
-
-| # | Step | Status |
-|---|---|---|
-| 2.1 | `POST /api/auth/register`, `POST /api/auth/login`, `GET /api/auth/me` | ✅ |
-| 2.2 | `POST /api/auth/refresh` (rotate, httpOnly cookie) and `POST /api/auth/logout` (revoke); §4.4 definition of done as an integration test | ✅ |
-| 2.3 | Google sign-in — ID-token flow (Google Identity Services), verified locally; find, create or link by verified email; issues our tokens (§4.5, changed 2026-10-07) | ⬜ needs the Google client id |
-| 2.4a | Forgot / reset password: emailed one-time link (30 min), rate-limited, signs out everywhere (§4.6) — base `feat/password-base` | ✅ |
-| 2.4b | Change password while signed in (Google-only accounts: via forgot password until 2.3); reuse detection only for rotated tokens | ✅ |
-
-## Phase 3 — Habits (plan §5 step 6) ✅
-
-Base branch: `feat/habits-base`.
+## Phase 8 — Accounts (base `feat/accounts-base`)
 
 | # | Step | Status |
 |---|---|---|
-| 3.1 | `Habit` entity + `FrequencyType` (`DAILY`, `SPECIFIC_DAYS`, `X_TIMES_PER_WEEK` — `PLAN.md` §8b), `frequencyConfig` as `jsonb` (Hibernate's native JSON mapping), repository scoped by `user_id` | ✅ |
-| 3.2 | Create / get / list (paginated) habits | ✅ |
-| 3.3 | Update, archive (soft delete), unarchive; user A cannot see or edit user B's habits (integration test) | ✅ |
+| 8.1 | Email verification (one-time tokens shared with password reset) | ⬜ |
+| 8.2 | Edit profile: name, timezone, promotional-email opt-in | ⬜ |
+| 8.3 | Delete account (everything goes) | ⬜ |
+| 8.4 | Export my data (JSON) | ⬜ |
+| 8.5 | Delete a habit for good | ⬜ |
+| 2.3 | Google sign-in, ID-token flow, links only to verified accounts | ⏸ client id |
 
-## Phase 4 — Check-ins, streaks, stats (plan §5 steps 7–8) ✅
-
-Base branch: `feat/checkins-base`. "Today" is in the user's timezone (`PLAN.md` §8 Q4); streak rules in §8b; check-in rules in §12.1.
-
-| # | Step | Status |
-|---|---|---|
-| 4.0 | Record the check-in rules and the reminders plan (`PLAN.md` §12) | ✅ |
-| 4.1 | `HabitLog` entity, unique `(habit_id, log_date)`; `POST /api/habits/{id}/checkin` as an upsert | ✅ |
-| 4.2 | `GET /api/habits/{id}/logs` (date range, paginated) | ✅ |
-| 4.3 | Streak calculator — current and longest, strict, computed on read; days for `DAILY`/`SPECIFIC_DAYS`, Mon–Sun weeks for `X_TIMES_PER_WEEK`; unit-tested per frequency type | ✅ |
-| 4.4 | `GET /api/habits/{id}/streak` | ✅ |
-| 4.5 | `GET /api/habits/{id}/stats` — completion rate over 7 / 30 days | ✅ |
-
-## Phase 5 — Reminders and notifications (M1, added 2026-09-30) ✅
-
-Base branch: `feat/reminders-base`. Design in `PLAN.md` §12.2; Q11 (channels) answered with the recommended default (in-app + SMTP email, off until configured).
+## Phase 9 — Habits (base `feat/habits-plus-base`)
 
 | # | Step | Status |
 |---|---|---|
-| 5.1 | `reminderTime` on habits (set / clear, in the user's timezone) | ✅ |
-| 5.2 | `notifications` table + `GET /api/notifications`, mark read, read all | ✅ |
-| 5.3 | Reminder scheduler — every minute, per-user timezone, due today and not done, no duplicates | ✅ |
-| 5.4 | Email channel behind `NotificationSender` (console in dev, SMTP when configured) | ✅ |
+| 9.1 | Units on counted habits ("8 glasses") | ⬜ |
+| 9.2 | Quit habits (clean days, a check-in is a slip) | ⬜ |
+| 9.3 | Rest days with weekly limit and XP cost; spendable XP balance | ⬜ |
+| 9.4 | Free plan limits: 7 active habits, 2 active goals | ⬜ |
 
-## Phase F — Frontend (own repo: `habit-tracker-web`, started 2026-10-01)
-
-React + TypeScript + Vite SPA, TanStack Query for server state, Tailwind. Talks to this API through
-the Vite dev proxy (`/api`), so the SameSite=Strict refresh cookie works; API types are generated
-from the OpenAPI spec (`/v3/api-docs`). Tracked here so the whole product is in one plan; the code,
-branches and PRs live in the frontend repo, same flow (phase base → step branches → `staging`).
+## Phase 10 — Web push (base `feat/push-base`)
 
 | # | Step | Status |
 |---|---|---|
-| F.1 | Scaffold: Vite + TS + Tailwind + router + TanStack Query, dev proxy, API client with silent token refresh | ✅ |
-| F.2 | Sign in / register pages, protected routes, sign out | ✅ |
-| F.3 | Habit list, create / edit (schedule, target, reminder time), archive | ✅ |
-| F.4 | Today view — one-tap check-in, streak next to each habit | ✅ |
-| F.5 | Habit detail — streak, 7/30-day stats, log history | ✅ |
-| F.6 | Notification bell (unread count polling), list, mark read; reminder-time field | ✅ |
+| 10.1 | Push subscriptions + VAPID; reminders sent as web push | ⬜ |
 
-## Before any shared deploy
+## Later
 
-Base branch: `feat/deploy-base`.
-
-| # | Step | Status |
-|---|---|---|
-| D.1 | Flyway back in: `ddl-auto=validate` + `V1__init_schema.sql` from the entities at that point (`PLAN.md` §3, R1); V2 heals stale enum checks; enum drift test | ✅ |
-| D.1b | Logging: OpenTelemetry trace / span ids in every line (`opentelemetry-spring-boot-starter` + logback MDC appender, exporters off), masking layout for passwords / tokens / cookies, async appenders, retention (`maxHistory`, `totalSizeCap`, `.gz`) — as in taskatask-backend | ✅ |
-| D.2 | Production profile: no `show-sql`, no security DEBUG, Swagger off, actuator `health`/`info` only | ⬜ |
-
-## Deferred ⏸
-
-| Item | Returns when |
+| Item | Waits for |
 |---|---|
-| 2.3 Google sign-in | when Nayeem picks it up; needs a Google OAuth client id + secret |
-
-## After M1 — goals, resources, levels, dashboard, AI
-
-Designed in `PLAN.md` §11. **Nothing here starts before Phase 4 is merged** — the core habit tracker
-comes first. Open questions Q6–Q10 (`PLAN.md` §11.6) are answered before each milestone starts.
-Steps get split further if one grows past a small PR.
-
-### M2 — Goals ✅
-
-Base branch: `feat/goals-base`. G.1 merged; G.2–G.4 are stacked step branches (`feat/habit-goal-link` → `feat/goal-progress` → `feat/goal-status`) — all merged.
-
-| # | Step | Status |
-|---|---|---|
-| G.1 | `Goal` entity + `/api/goals` create / get / list / update (paginated, `?status=`); no hard delete — abandoning is G.4 | ✅ |
-| G.2 | Link / unlink a habit to a goal with `goalTargetDays` | ✅ |
-| G.3 | Goal progress — calculator (unit-tested) + `GET /api/goals/{id}/progress` | ✅ |
-| G.4 | Mark achieved / abandoned | ✅ |
-
-### M3 — Resources ✅ (notes, links, files)
-
-Base branch: `feat/resources-base`. Q9 answered 2026-10-03: notes and links first; **file uploads come right after M3** (own steps, to be designed — storage, size and type limits).
-
-| # | Step | Status |
-|---|---|---|
-| R.1 | `Resource` entity (`NOTE` / `LINK`) + `/api/resources` CRUD, `?goalId=`, `?type=`, `?q=`, pin / unpin | ✅ |
-| R.2 | `GET /api/goals/{id}/resources`, pinned first | ✅ |
-| R.3 | File uploads — designed in `PLAN.md` §13 (Q12–Q14 answered 2026-10-05); base branch `feat/files-base`; R.3d waits for the deploy steps | ✅ |
-| R.3a | `StoredFile` + `FileStorage` (local disk) + type detection and allowlist + limits and quota | ✅ |
-| R.3b | `ResourceType.FILE`; `POST /api/resources/files` (multipart); `file` in responses | ✅ |
-| R.3c | `GET /api/resources/{id}/file` download; delete removes the bytes after commit | ✅ |
-| R.3d | S3-compatible `FileStorage` (MinIO in tests) — with D.1/D.2 | ⬜ |
-
-### M4 — Levels ✅
-
-Base branch: `feat/levels-base`. Q8 answered 2026-10-06: XP is never lost.
-
-| # | Step | Status |
-|---|---|---|
-| X.1 | XP + level + tier calculator, unit-tested (`PLAN.md` §11.3) | ✅ |
-| X.2 | `GET /api/me/level` | ✅ |
-
-### M5 — Dashboard ✅
-
-Base branch: `feat/dashboard-base` (A.1, A.2; merged #62). A.3 went straight to `staging` — the base was deleted after its merge. `GET /api/dashboard` + `GET /api/dashboard/patterns`.
-
-| # | Step | Status |
-|---|---|---|
-| A.1 | Today + completion rates (7/30/90, change vs previous period) | ✅ |
-| A.2 | Heatmap, weekday and time-of-day patterns (`GET /api/dashboard/patterns`) | ✅ |
-| A.3 | Streaks at risk, best / slipping habits, goals and level on the dashboard | ✅ |
-
-### M6 — AI insights
-
-| # | Step | Status |
-|---|---|---|
-| I.1 | `aiInsightsEnabled` opt-in, aggregates builder, `InsightGenerator` interface with a fake | ⬜ |
-| I.2 | Claude API implementation, `insights` table, `GET /latest`, `POST` (once a day) | ⬜ |
-
-## Not planned yet
-
-| # | Feature |
-|---|---|
-| L6 | Frontend — separate repo; next up after Phase 5 |
+| Phase 11 — auto check-ins from integrations (GitHub first) | decision (PLAN §6 Q15) |
+| File uploads back on, on S3-compatible storage (R2) | host (Q16) |
+| Pro plan and billing | users asking for it |
+| M6 AI insights (opt-in, aggregates only) | after Phase 11 |
+| Frontend: PWA, push, new screens | `habit-tracker-web` |
