@@ -13,6 +13,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -32,6 +33,7 @@ class CheckInController {
 
     private final CheckInService checkInService;
     private final HabitProgressService habitProgressService;
+    private final RestDayService restDayService;
 
     @Operation(summary = "Check in: set a day's count for a habit (today by default); repeating it is safe")
     @ApiResponse(responseCode = "200", description = "The day's log")
@@ -43,6 +45,31 @@ class CheckInController {
                                          @Valid @RequestBody(required = false) CheckInRequest request) {
         CheckInRequest body = request == null ? new CheckInRequest() : request;
         return HttpResponse.ok("Checked in", checkInService.checkIn(user.id(), habitId, body));
+    }
+
+    @Operation(summary = "Rest the habit on a day (today by default)",
+            description = "A rest day neither breaks nor extends the streak and isn't expected in completion rates. "
+                    + "Daily and chosen-weekday habits, on a day they're due, not yet done; one a week per habit. "
+                    + "Same dates as a check-in. A check-in on the day ends the rest.")
+    @ApiResponse(responseCode = "200", description = "The day's log, with rest = true; resting twice is fine")
+    @ApiResponse(responseCode = "400", description = "Not this habit or day (REST_NOT_ALLOWED), or a date out of range")
+    @ApiResponse(responseCode = "409", description = "Already done (REST_DAY_DONE), this week's rest day used "
+            + "(REST_LIMIT_REACHED), or archived")
+    @PostMapping("/rest")
+    ResponseEntity<HttpResponse> rest(@AuthenticationPrincipal AuthUser user, @PathVariable Long habitId,
+                                      @RequestBody(required = false) RestRequest request) {
+        return HttpResponse.ok("Rest day set",
+                restDayService.rest(user.id(), habitId, request == null ? null : request.getDate()));
+    }
+
+    @Operation(summary = "Take a rest day back")
+    @ApiResponse(responseCode = "204", description = "Done; also when the day wasn't a rest day")
+    @ApiResponse(responseCode = "404", description = "No such habit, or not yours (HABIT_NOT_FOUND)")
+    @DeleteMapping("/rest")
+    ResponseEntity<Void> cancelRest(@AuthenticationPrincipal AuthUser user, @PathVariable Long habitId,
+                                    @RequestParam LocalDate date) {
+        restDayService.cancel(user.id(), habitId, date);
+        return ResponseEntity.noContent().build();
     }
 
     @Operation(summary = "A habit's check-ins between two days, newest first (default: the last 30 days)")

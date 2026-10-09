@@ -33,8 +33,8 @@ interface HabitRepository extends JpaRepository<Habit, Long> {
 
     /**
      * Active habits whose reminder time is this minute <em>in their owner's timezone</em> and that
-     * aren't done yet on the owner's today (plan §12.2). The zone conversion is Postgres's, so one
-     * query serves every user. Whether the habit is due today is the caller's rule.
+     * aren't done (or rested) yet on the owner's today (plan §12.2). The zone conversion is
+     * Postgres's, so one query serves every user. Whether the habit is due today is the caller's rule.
      */
     @Query(nativeQuery = true, value = """
             select h.id from habits h
@@ -46,7 +46,7 @@ interface HabitRepository extends JpaRepository<Habit, Long> {
                   select 1 from habit_logs l
                   where l.habit_id = h.id
                     and l.log_date = (cast(:now as timestamptz) at time zone u.timezone)::date
-                    and l.completed_count >= l.target_count)
+                    and (l.completed_count >= l.target_count or l.rest))
             """)
     List<Long> findRemindableAt(@Param("now") Instant now);
 }
