@@ -50,6 +50,13 @@ Phase 6 → 10 in roadmap order. Then the decisions in `PLAN.md` §6 (integratio
 
 ## Log
 
+**2026-10-10** — 10.1a–b (two PRs): `push_subscriptions` (V16). `GET /api/push/public-key`,
+`POST/DELETE /api/push/subscriptions` (the browser's `toJSON()`). Endpoints must be https on the
+browsers' push services (FCM, Mozilla, Apple, Windows) — the server POSTs to them, so anything else
+would be SSRF. Encryption is RFC 8291 / `aes128gcm` on JDK crypto only, tested byte-for-byte against
+the RFC's worked example; the VAPID JWT (ES256, `aud` = endpoint origin) by jjwt. A 404/410 from the
+push service deletes the subscription. `APP_PUSH_ENABLED` + `VAPID_*`; off, nothing is sent.
+
 **2026-10-10** — 9.4: `users.plan` `FREE`/`PRO` (V15, everyone FREE; no billing). The `Plan` enum holds
 the limits — FREE 7 active habits, 2 active goals — checked on create and unarchive; 403
 `PLAN_LIMIT_REACHED`. `plan` on the user. Phase 9 done.

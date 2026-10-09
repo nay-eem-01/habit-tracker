@@ -63,7 +63,9 @@ public enum ErrorCode {
 
     LOG_DATE_OUT_OF_RANGE(HttpStatus.BAD_REQUEST, "You can't check in for that date"),
 
-    NOTIFICATION_NOT_FOUND(HttpStatus.NOT_FOUND, "Notification not found");
+    NOTIFICATION_NOT_FOUND(HttpStatus.NOT_FOUND, "Notification not found"),
+
+    PUSH_SUBSCRIPTION_INVALID(HttpStatus.BAD_REQUEST, "That isn't a browser push subscription");
 
     private final HttpStatus status;
     private final String defaultMessage;

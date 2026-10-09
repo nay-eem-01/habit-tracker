@@ -162,7 +162,8 @@ Settled decisions, grouped by area. A change to one is written here first.
 | `habit`, `checkin` | habits and schedules; check-ins, streak and stats calculators |
 | `goal`, `resource`, `file` | goals and progress; notes/links/files; file storage |
 | `level`, `dashboard` | XP and levels; dashboard and patterns |
-| `notification` | in-app notifications, reminder scheduler, email and push senders |
+| `notification` | in-app notifications, reminder scheduler, email sender |
+| `push` | web push subscriptions, RFC 8291 encryption, VAPID-signed sending |
 
 **Request path:** the correlation id goes into the MDC first, so every line of a request — even a
 401 — carries it. The JWT filter puts an `AuthUser` (ids only) in the security context; controllers
