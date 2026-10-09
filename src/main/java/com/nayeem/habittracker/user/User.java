@@ -43,6 +43,10 @@ public class User extends AuditModel {
     /** When the user proved they own the address (an emailed link, or a password reset); null until then. */
     private Instant emailVerifiedAt;
 
+    /** Consent to promotional email; off until the user opts in. */
+    @Column(nullable = false)
+    private boolean marketingEmails;
+
     /** IANA zone id, e.g. {@code Asia/Dhaka}. Decides what "today" is for check-ins (PLAN.md §8 Q4). */
     @Column(nullable = false, length = 64)
     private String timezone = UserService.DEFAULT_TIMEZONE;
