@@ -6,12 +6,15 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -26,6 +29,8 @@ class HabitUpdateArchiveIntegrationTest extends IntegrationTest {
 
     @Autowired
     private MockMvc mockMvc;
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
 
     @Test
     void updateReplacesEverything() throws Exception {
@@ -97,6 +102,26 @@ class HabitUpdateArchiveIntegrationTest extends IntegrationTest {
         mockMvc.perform(get("/api/habits/{id}", id).header(HttpHeaders.AUTHORIZATION, alice))
                 .andExpect(jsonPath("$.payload.name").value("Read"))
                 .andExpect(jsonPath("$.payload.archived").value(false));
+    }
+
+    @Test
+    void deletingAHabitTakesItsCheckInsWithIt() throws Exception {
+        String token = bearerFor("habit.delete@example.com");
+        Integer id = createHabit(token, DAILY_READ);
+        mockMvc.perform(post("/api/habits/{id}/checkin", id).header(HttpHeaders.AUTHORIZATION, token))
+                .andExpect(status().isOk());
+
+        String other = bearerFor("habit.delete.other@example.com");
+        mockMvc.perform(delete("/api/habits/{id}", id).header(HttpHeaders.AUTHORIZATION, other))
+                .andExpect(status().isNotFound());
+        mockMvc.perform(delete("/api/habits/{id}", id).header(HttpHeaders.AUTHORIZATION, token))
+                .andExpect(status().isNoContent());
+
+        mockMvc.perform(get("/api/habits/{id}", id).header(HttpHeaders.AUTHORIZATION, token))
+                .andExpect(status().isNotFound());
+        listCount(token, false, 0);
+        assertThat(jdbcTemplate.queryForObject(
+                "select count(*) from habit_logs where habit_id = ?", Long.class, id)).isZero();
     }
 
     private Integer createHabit(String token, String json) throws Exception {
