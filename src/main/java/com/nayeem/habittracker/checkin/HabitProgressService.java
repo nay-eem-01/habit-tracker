@@ -75,11 +75,11 @@ public class HabitProgressService {
                 c.start, c.today, days);
     }
 
-    /** The habit plus its first day, today and done days — all in the owner's timezone. */
+    /** The habit plus the first day of its schedule, today and done days — all in the owner's timezone. */
     private Context load(Long userId, Long habitId) {
         Habit habit = habitService.getOwnedHabit(userId, habitId);
         ZoneId zone = ZoneId.of(habit.getUser().getTimezone());
-        return new Context(habit, habit.getCreatedAt().atZone(zone).toLocalDate(), LocalDate.now(clock.withZone(zone)),
+        return new Context(habit, habit.startDay(zone), LocalDate.now(clock.withZone(zone)),
                 new HashSet<>(habitLogRepository.findDoneDays(habit.getId())));
     }
 

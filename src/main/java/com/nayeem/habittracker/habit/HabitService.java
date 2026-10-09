@@ -54,10 +54,13 @@ public class HabitService {
                 HabitResponse::from);
     }
 
-    /** Full replace: every field of the request, as on create. */
+    /** Full replace: every field of the request, as on create. A new schedule starts a new streak. */
     @Transactional
     public HabitResponse update(Long userId, Long habitId, HabitRequest request) {
         Habit habit = find(userId, habitId);
+        ZoneId zone = ZoneId.of(habit.getUser().getTimezone());
+        habit.startNewScheduleIfChanged(request.getFrequencyType(), request.getFrequencyConfig(),
+                LocalDate.now(clock.withZone(zone)), zone);
         apply(habit, request);
         return HabitResponse.from(habitRepository.saveAndFlush(habit));
     }

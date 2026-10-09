@@ -20,6 +20,10 @@ import org.hibernate.type.SqlTypes;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.ZoneId;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
 
 /**
  * Something a user wants to do regularly (plan §2.2). Soft-deleted by archiving; the logs and
@@ -55,6 +59,16 @@ public class Habit extends AuditModel {
     @Column(columnDefinition = "jsonb")
     private FrequencyConfig frequencyConfig;
 
+    /** The owner's day the current schedule started; null = the day the habit was created. */
+    @Setter(AccessLevel.NONE)
+    private LocalDate scheduleSince;
+
+    /** Schedules before the current one, oldest first — the XP earned under them is kept. */
+    @Setter(AccessLevel.NONE)
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(columnDefinition = "jsonb", nullable = false)
+    private List<PastSchedule> pastSchedules = new ArrayList<>();
+
     /** Completions a day needs to count as done, e.g. 8 for "drink water 8×". */
     @Column(nullable = false)
     private int targetCount = 1;
@@ -83,6 +97,29 @@ public class Habit extends AuditModel {
     public void schedule(FrequencyType type, FrequencyConfig config) {
         this.frequencyConfig = FrequencyConfig.normalize(type, config);
         this.frequencyType = type;
+    }
+
+    /**
+     * Call before {@link #schedule} on an update: if the schedule is really changing, the current one
+     * is kept as a {@link PastSchedule} and the new one starts {@code today} — with a new streak, so
+     * the past isn't re-judged by rules it wasn't kept under.
+     */
+    public void startNewScheduleIfChanged(FrequencyType type, FrequencyConfig config, LocalDate today, ZoneId zone) {
+        if (type == frequencyType && Objects.equals(FrequencyConfig.normalize(type, config), frequencyConfig)) {
+            return;
+        }
+        LocalDate start = startDay(zone);
+        if (start.isBefore(today)) {
+            List<PastSchedule> past = new ArrayList<>(pastSchedules);
+            past.add(new PastSchedule(frequencyType, frequencyConfig, start, today.minusDays(1)));
+            pastSchedules = past;
+        }
+        scheduleSince = today;
+    }
+
+    /** The owner's first day of the current schedule: where streaks, stats and current XP start. */
+    public LocalDate startDay(ZoneId zone) {
+        return scheduleSince != null ? scheduleSince : getCreatedAt().atZone(zone).toLocalDate();
     }
 
     /**

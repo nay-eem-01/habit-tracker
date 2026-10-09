@@ -3,6 +3,7 @@ package com.nayeem.habittracker.level;
 import com.nayeem.habittracker.checkin.HabitProgressService;
 import com.nayeem.habittracker.goal.GoalService;
 import com.nayeem.habittracker.habit.Habit;
+import com.nayeem.habittracker.habit.PastSchedule;
 import com.nayeem.habittracker.habit.HabitService;
 import com.nayeem.habittracker.user.UserService;
 import lombok.RequiredArgsConstructor;
@@ -48,9 +49,12 @@ public class LevelService {
                                 long achievedGoals) {
         long xp = XpCalculator.goalXp(achievedGoals);
         for (Habit habit : habits) {
-            xp += XpCalculator.habitXp(habit.getFrequencyType(), habit.getFrequencyConfig(),
-                    doneDays.getOrDefault(habit.getId(), Set.of()), habit.getCreatedAt().atZone(zone).toLocalDate(),
-                    today);
+            Set<LocalDate> done = doneDays.getOrDefault(habit.getId(), Set.of());
+            xp += XpCalculator.habitXp(habit.getFrequencyType(), habit.getFrequencyConfig(), done,
+                    habit.startDay(zone), today);
+            for (PastSchedule past : habit.getPastSchedules()) {   // XP earned under earlier schedules stays
+                xp += XpCalculator.habitXp(past.type(), past.config(), done, past.from(), past.until());
+            }
         }
         return Level.of(xp);
     }

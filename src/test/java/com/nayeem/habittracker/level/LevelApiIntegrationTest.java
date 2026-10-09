@@ -11,11 +11,15 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
+import java.util.Arrays;
+import java.util.stream.Collectors;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -78,6 +82,31 @@ class LevelApiIntegrationTest extends IntegrationTest {
     }
 
     @Test
+    void aNewScheduleStartsANewStreakAndKeepsTheXp() throws Exception {
+        String token = bearerFor("level.reschedule@example.com");
+        Integer habit = dailyHabitCreatedDaysAgo(token, 10);
+        for (int daysAgo = 3; daysAgo >= 1; daysAgo--) {
+            checkIn(token, habit, today.minusDays(daysAgo));
+        }
+        putSchedule(token, habit, "{\"name\":\"Run\",\"frequencyType\":\"DAILY\"}");   // unchanged: no new streak
+        mockMvc.perform(get("/api/habits/{id}/streak", habit).header(HttpHeaders.AUTHORIZATION, token))
+                .andExpect(jsonPath("$.payload.current").value(3));
+
+        // every weekday but today's: past days would now be judged by it — they aren't
+        String days = Arrays.stream(DayOfWeek.values())
+                .filter(d -> d != today.getDayOfWeek()).map(d -> "\"" + d + "\"")
+                .collect(Collectors.joining(","));
+        putSchedule(token, habit, "{\"name\":\"Run\",\"frequencyType\":\"SPECIFIC_DAYS\",\"frequencyConfig\":{\"days\":["
+                + days + "]}}");
+
+        mockMvc.perform(get("/api/habits/{id}/streak", habit).header(HttpHeaders.AUTHORIZATION, token))
+                .andExpect(jsonPath("$.payload.current").value(0))
+                .andExpect(jsonPath("$.payload.longest").value(0));
+        mockMvc.perform(get("/api/me/level").header(HttpHeaders.AUTHORIZATION, token))
+                .andExpect(jsonPath("$.payload.xp").value(30));
+    }
+
+    @Test
     void needsAToken() throws Exception {
         mockMvc.perform(get("/api/me/level")).andExpect(status().isUnauthorized());
     }
@@ -91,6 +120,13 @@ class LevelApiIntegrationTest extends IntegrationTest {
         jdbcTemplate.update("update habits set created_at = created_at - make_interval(days => ?) where id = ?", daysAgo, id);
         entityManager.clear();   // drop the cached habit so the backdated created_at is read
         return id;
+    }
+
+    private void putSchedule(String token, Integer habitId, String json) throws Exception {
+        mockMvc.perform(put("/api/habits/{id}", habitId).header(HttpHeaders.AUTHORIZATION, token)
+                        .contentType(MediaType.APPLICATION_JSON).content(json))
+                .andExpect(status().isOk());
+        entityManager.clear();
     }
 
     private void checkIn(String token, Integer habitId, LocalDate date) throws Exception {

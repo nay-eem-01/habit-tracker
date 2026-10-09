@@ -74,7 +74,7 @@ public class DashboardService {
         List<List<WindowStats>> previous = List.of(new ArrayList<>(), new ArrayList<>(), new ArrayList<>());
         for (Habit habit : habits) {
             Set<LocalDate> done = doneDays.getOrDefault(habit.getId(), Set.of());
-            LocalDate start = habit.getCreatedAt().atZone(zone).toLocalDate();
+            LocalDate start = habit.startDay(zone);
             todayHabits.add(todayHabit(habit, done, start, today, counts.getOrDefault(habit.getId(), 0)));
 
             var periods = new DashboardResponse.Period[WINDOWS.length];
