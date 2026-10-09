@@ -1,27 +1,68 @@
-<?xml version="1.0" encoding="UTF-8" ?>
+<?xml version="1.0" encoding="UTF-8"?>
 <configuration>
+
+    <conversionRule conversionWord="clr" converterClass="org.springframework.boot.logging.logback.ColorConverter"/>
+    <conversionRule conversionWord="wEx"
+                    converterClass="org.springframework.boot.logging.logback.ExtendedWhitespaceThrowableProxyConverter"/>
+
+    <!-- Outside the repo; pass -DLOG_PATH=/absolute/dir to move it. -->
     <property scope="context" name="LOG_DIRECTORY" value="${LOG_PATH:-${user.home}/logfiles/habit-tracker}"/>
 
+    <!-- trace_id / span_id come from OpenTelemetry (the OTEL_MDC appender below); cid is the
+         X-Correlation-Id that error bodies return (CorrelationIdFilter). -->
+    <property name="CONSOLE_PATTERN"
+              value="%clr(%d{yyyy-MM-dd HH:mm:ss.SSS}){faint} %clr([trace=%X{trace_id}, span=%X{span_id}, cid=%X{correlationId}]){blue} %clr(${LOG_LEVEL_PATTERN:-%5p}) %clr(${PID:- }){magenta} %clr(---){faint} %clr([%15.15t]){faint} %clr(%-40.40logger{39}){cyan} %clr(:){faint} %m%n${LOG_EXCEPTION_CONVERSION_WORD:-%wEx}"/>
+    <!-- Same, without colour codes. -->
+    <property name="FILE_PATTERN"
+              value="%d{yyyy-MM-dd HH:mm:ss.SSS} [trace=%X{trace_id}, span=%X{span_id}, cid=%X{correlationId}] ${LOG_LEVEL_PATTERN:-%5p} ${PID:- } --- [%15.15t] %-40.40logger{39} : %m%n${LOG_EXCEPTION_CONVERSION_WORD:-%wEx}"/>
+
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
-        <encoder>
-            <pattern>[%d{yyyy-MM-dd HH:mm:ss.SSS}][%-5p][%X{correlationId}][%C][%t][%L]%m%n</pattern>
+        <encoder class="ch.qos.logback.core.encoder.LayoutWrappingEncoder">
+            <layout class="com.nayeem.habittracker.common.logging.LogbackMaskingPatternLayout">
+                <pattern>${CONSOLE_PATTERN}</pattern>
+            </layout>
         </encoder>
     </appender>
 
     <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <file>${LOG_DIRECTORY}/logfile.log</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
-            <fileNamePattern>${LOG_DIRECTORY}/%d{dd-MM-yyyy, aux}/logfile-%d{yyyy-MM-dd}.%i.log</fileNamePattern>
-            <maxFileSize>2GB</maxFileSize>
+            <fileNamePattern>${LOG_DIRECTORY}/%d{dd-MM-yyyy, aux}/logfile-%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
+            <maxFileSize>100MB</maxFileSize>
+            <maxHistory>30</maxHistory>
+            <totalSizeCap>5GB</totalSizeCap>
         </rollingPolicy>
-        <encoder>
-            <pattern>[%d{yyyy-MM-dd HH:mm:ss.SSS}][%-5p][%X{correlationId}][%C][%t][%L]%m%n
-            </pattern>
+        <encoder class="ch.qos.logback.core.encoder.LayoutWrappingEncoder">
+            <layout class="com.nayeem.habittracker.common.logging.LogbackMaskingPatternLayout">
+                <pattern>${FILE_PATTERN}</pattern>
+            </layout>
         </encoder>
     </appender>
 
-    <root level="INFO">
+    <!-- Writing happens off the request thread. neverBlock drops events rather than stall a
+         request when the queue is full; discardingThreshold 0 keeps INFO/DEBUG until then. -->
+    <appender name="ASYNC_FILE" class="ch.qos.logback.classic.AsyncAppender">
+        <queueSize>8192</queueSize>
+        <discardingThreshold>0</discardingThreshold>
+        <neverBlock>true</neverBlock>
         <appender-ref ref="FILE"/>
+    </appender>
+
+    <appender name="ASYNC_STDOUT" class="ch.qos.logback.classic.AsyncAppender">
+        <queueSize>8192</queueSize>
+        <discardingThreshold>0</discardingThreshold>
+        <neverBlock>true</neverBlock>
         <appender-ref ref="STDOUT"/>
+    </appender>
+
+    <!-- Copies the current span's trace_id / span_id into the event's MDC on the calling thread,
+         before the async hand-off - so the ids survive it. Keep it outermost. -->
+    <appender name="OTEL_MDC" class="io.opentelemetry.instrumentation.logback.mdc.v1_0.OpenTelemetryAppender">
+        <appender-ref ref="ASYNC_FILE"/>
+        <appender-ref ref="ASYNC_STDOUT"/>
+    </appender>
+
+    <root level="INFO">
+        <appender-ref ref="OTEL_MDC"/>
     </root>
 </configuration>
