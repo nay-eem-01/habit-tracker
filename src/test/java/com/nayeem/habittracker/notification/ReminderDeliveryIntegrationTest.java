@@ -5,6 +5,7 @@ import com.nayeem.habittracker.habit.FrequencyConfig;
 import com.nayeem.habittracker.habit.FrequencyType;
 import com.nayeem.habittracker.habit.HabitRequest;
 import com.nayeem.habittracker.habit.HabitService;
+import com.nayeem.habittracker.push.PushService;
 import com.nayeem.habittracker.support.IntegrationTest;
 import com.nayeem.habittracker.user.User;
 import com.nayeem.habittracker.user.UserService;
@@ -21,6 +22,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.after;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.timeout;
 import static org.mockito.Mockito.verify;
 
 /**
@@ -36,6 +38,8 @@ class ReminderDeliveryIntegrationTest extends IntegrationTest {
     private NotificationSender sender;
     @MockitoSpyBean
     private HabitProgressService habitProgressService;
+    @MockitoBean
+    private PushService pushService;
     @Autowired
     private ReminderService reminderService;
     @Autowired
@@ -44,7 +48,7 @@ class ReminderDeliveryIntegrationTest extends IntegrationTest {
     private UserService userService;
 
     @Test
-    void remindersAreNeverEmailed() {
+    void aNewReminderIsPushedOnceAndNeverEmailed() {
         User user = userService.createLocalUser("deliver@example.com", "not-a-real-hash", "Test", "Asia/Dhaka");
         HabitRequest request = new HabitRequest();
         request.setName("Read");
@@ -53,8 +57,10 @@ class ReminderDeliveryIntegrationTest extends IntegrationTest {
         habitService.create(user.getId(), request);
 
         assertEquals(1, reminderService.sendDue(DHAKA_0730));
+        assertEquals(0, reminderService.sendDue(DHAKA_0730));   // same minute again: nothing new
 
-        // email is for account mail only (PLAN.md §3.6); sending is async, so give it a moment
+        // pushed after commit, on another thread (PLAN.md §3.6); email is for account mail only
+        verify(pushService, timeout(2000).times(1)).sendToUser(eq(user.getId()), eq("Reminder: Read"), any(), eq("/"));
         verify(sender, after(500).never()).send(any());
     }
 
