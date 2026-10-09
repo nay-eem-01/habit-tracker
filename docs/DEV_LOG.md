@@ -45,6 +45,9 @@ Phase 6 → 10 in roadmap order. Then the decisions in `PLAN.md` §6 (integratio
 
 ## Log
 
+**2026-10-10** — 7.3: confirmed a password over 72 bytes answered 500 (Spring Security's BCrypt
+throws). `@MaxBytes(72)` on every password field → 400 `VALIDATION_FAILED`; min stays 8 characters.
+
 **2026-10-10** — 7.2: in-memory fixed-window `RateLimiter` (one instance; Redis if we ever run
 several). `AuthRateLimitFilter` per IP: login 10/min, register 10/h, refresh 30/min, forgot 5/h,
 reset 10/h → 429 `RATE_LIMITED` + `Retry-After`. Five wrong passwords lock that email (or a wrong

@@ -1,5 +1,6 @@
 package com.nayeem.habittracker.auth;
 
+import com.nayeem.habittracker.common.validation.MaxBytes;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -10,12 +11,13 @@ import lombok.Setter;
 @Setter
 public class ChangePasswordRequest {
 
-    @Size(max = 100)
+    @MaxBytes(72)
     @Schema(description = "Required when the account has a password")
     private String currentPassword;
 
     @NotBlank
-    @Size(min = 8, max = 100)
+    @Size(min = 8)
+    @MaxBytes(72)
     private String newPassword;
 
     /** Hand-written so no password reaches a log line. */

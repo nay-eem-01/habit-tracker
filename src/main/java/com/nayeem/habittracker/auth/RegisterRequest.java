@@ -1,5 +1,6 @@
 package com.nayeem.habittracker.auth;
 
+import com.nayeem.habittracker.common.validation.MaxBytes;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -18,7 +19,8 @@ public class RegisterRequest {
     private String email;
 
     @NotBlank
-    @Size(min = 8, max = 100)
+    @Size(min = 8)
+    @MaxBytes(72)
     private String password;
 
     @NotBlank

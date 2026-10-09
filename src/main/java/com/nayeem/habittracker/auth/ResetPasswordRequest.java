@@ -1,5 +1,6 @@
 package com.nayeem.habittracker.auth;
 
+import com.nayeem.habittracker.common.validation.MaxBytes;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -16,7 +17,8 @@ public class ResetPasswordRequest {
     private String token;
 
     @NotBlank
-    @Size(min = 8, max = 100)
+    @Size(min = 8)
+    @MaxBytes(72)
     private String newPassword;
 
     /** Hand-written so neither the token nor the password reaches a log line. */
