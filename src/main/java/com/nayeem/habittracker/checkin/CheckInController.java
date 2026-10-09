@@ -49,12 +49,13 @@ class CheckInController {
 
     @Operation(summary = "Rest the habit on a day (today by default)",
             description = "A rest day neither breaks nor extends the streak and isn't expected in completion rates. "
-                    + "Daily and chosen-weekday habits, on a day they're due, not yet done; one a week per habit. "
+                    + "Daily and chosen-weekday habits, on a day they're due, not yet done. Per habit and Mon–Sun week: "
+                    + "the 1st is free, the 2nd costs 100 XP, the 3rd 200 (from the level's xpBalance), no 4th. "
                     + "Same dates as a check-in. A check-in on the day ends the rest.")
     @ApiResponse(responseCode = "200", description = "The day's log, with rest = true; resting twice is fine")
     @ApiResponse(responseCode = "400", description = "Not this habit or day (REST_NOT_ALLOWED), or a date out of range")
-    @ApiResponse(responseCode = "409", description = "Already done (REST_DAY_DONE), this week's rest day used "
-            + "(REST_LIMIT_REACHED), or archived")
+    @ApiResponse(responseCode = "409", description = "Already done (REST_DAY_DONE), 3 used this week "
+            + "(REST_LIMIT_REACHED), not enough XP (XP_NOT_ENOUGH), or archived")
     @PostMapping("/rest")
     ResponseEntity<HttpResponse> rest(@AuthenticationPrincipal AuthUser user, @PathVariable Long habitId,
                                       @RequestBody(required = false) RestRequest request) {
@@ -62,7 +63,7 @@ class CheckInController {
                 restDayService.rest(user.id(), habitId, request == null ? null : request.getDate()));
     }
 
-    @Operation(summary = "Take a rest day back")
+    @Operation(summary = "Take a rest day back; its XP is refunded")
     @ApiResponse(responseCode = "204", description = "Done; also when the day wasn't a rest day")
     @ApiResponse(responseCode = "404", description = "No such habit, or not yours (HABIT_NOT_FOUND)")
     @DeleteMapping("/rest")

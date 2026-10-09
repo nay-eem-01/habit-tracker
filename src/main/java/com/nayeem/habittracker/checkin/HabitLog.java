@@ -48,6 +48,10 @@ public class HabitLog extends AuditModel {
     @Column(nullable = false)
     private boolean rest;
 
+    /** XP this rest day cost (0 for the week's free one); refunded — set back to 0 — when the rest ends. */
+    @Column(nullable = false)
+    private int restCostXp;
+
     public boolean isDone() {
         return completedCount >= targetCount;
     }

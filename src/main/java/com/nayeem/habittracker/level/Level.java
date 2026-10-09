@@ -15,9 +15,16 @@ public record Level(
         @Schema(description = "BRONZE 1–4, SILVER 5–9, GOLD 10–19, PLATINUM 20–34, DIAMOND 35+") Tier tier,
         @Schema(description = "Total XP at which the next level starts", example = "600") long xpForNextLevel,
         @Schema(description = "How far through the current level, 0–1, rounded down", example = "0.4")
-        double progressToNextLevel) {
+        double progressToNextLevel,
+        @Schema(description = "XP spent on rest days; the level doesn't drop for it", example = "100") long spentXp,
+        @Schema(description = "XP left to spend: xp − spentXp", example = "320") long xpBalance) {
 
     public static Level of(long xp) {
+        return of(xp, 0);
+    }
+
+    /** @param spentXp XP spent on rest days — it lowers the balance, never the level (PLAN.md §3.4) */
+    public static Level of(long xp, long spentXp) {
         if (xp < 0) {
             throw new IllegalArgumentException("XP can't be negative");
         }
@@ -25,7 +32,7 @@ public record Level(
         long from = startOf(level);
         long next = startOf(level + 1);
         double progress = Math.floor((double) (xp - from) / (next - from) * 100) / 100;
-        return new Level(xp, level, Tier.of(level), next, progress);
+        return new Level(xp, level, Tier.of(level), next, progress, spentXp, xp - spentXp);
     }
 
     /** Total XP at which {@code level} starts. */

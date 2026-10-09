@@ -114,7 +114,8 @@ public class DashboardService {
                 HighlightCalculator.best(completions),
                 HighlightCalculator.slipping(completions),
                 goals,
-                LevelService.levelOf(allHabits, doneDays, restDays, zone, today, goalService.countAchieved(userId)));
+                LevelService.levelOf(allHabits, doneDays, restDays, zone, today, goalService.countAchieved(userId),
+                        habitProgressService.restXpSpent(userId)));
     }
 
     /**

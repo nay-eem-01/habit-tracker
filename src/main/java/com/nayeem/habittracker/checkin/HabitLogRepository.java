@@ -50,24 +50,30 @@ interface HabitLogRepository extends JpaRepository<HabitLog, Long> {
             + " and l.logDate between :from and :to")
     long countRestDays(@Param("habitId") Long habitId, @Param("from") LocalDate from, @Param("to") LocalDate to);
 
+    @Query("select coalesce(sum(l.restCostXp), 0) from HabitLog l where l.habit.user.id = :userId")
+    long sumRestCostOfUser(@Param("userId") Long userId);
+
     Optional<HabitLog> findByHabitIdAndLogDate(Long habitId, LocalDate logDate);
 
     /** Marks the day rested, keeping any partial count; audit columns passed in as for {@link #upsert}. */
     @Modifying
     @Query(nativeQuery = true, value = """
-            insert into habit_logs (habit_id, log_date, completed_count, target_count, rest,
+            insert into habit_logs (habit_id, log_date, completed_count, target_count, rest, rest_cost_xp,
                                     created_at, created_by, last_modified_at, last_modified_by)
-            values (:habitId, :logDate, 0, :targetCount, true, :now, :actor, :now, :actor)
+            values (:habitId, :logDate, 0, :targetCount, true, :cost, :now, :actor, :now, :actor)
             on conflict (habit_id, log_date) do update set
                 rest             = true,
+                rest_cost_xp     = excluded.rest_cost_xp,
                 last_modified_at = excluded.last_modified_at,
                 last_modified_by = excluded.last_modified_by
             """)
     void markRest(@Param("habitId") Long habitId, @Param("logDate") LocalDate logDate,
-                  @Param("targetCount") int targetCount, @Param("now") Instant now, @Param("actor") String actor);
+                  @Param("targetCount") int targetCount, @Param("cost") int cost, @Param("now") Instant now,
+                  @Param("actor") String actor);
 
     @Modifying(clearAutomatically = true, flushAutomatically = true)
-    @Query("update HabitLog l set l.rest = false where l.habit.id = :habitId and l.logDate = :day and l.rest = true")
+    @Query("update HabitLog l set l.rest = false, l.restCostXp = 0"
+            + " where l.habit.id = :habitId and l.logDate = :day and l.rest = true")
     int clearRest(@Param("habitId") Long habitId, @Param("day") LocalDate day);
 
     Page<HabitLog> findAllByHabitIdAndLogDateBetween(Long habitId, LocalDate from, LocalDate to, Pageable pageable);
@@ -88,6 +94,7 @@ interface HabitLogRepository extends JpaRepository<HabitLog, Long> {
                 completed_count  = excluded.completed_count,
                 target_count     = excluded.target_count,
                 rest             = false,
+                rest_cost_xp     = 0,
                 note             = case when :note is null then habit_logs.note else nullif(:note, '') end,
                 last_modified_at = excluded.last_modified_at,
                 last_modified_by = excluded.last_modified_by

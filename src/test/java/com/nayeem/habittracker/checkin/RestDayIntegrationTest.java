@@ -15,6 +15,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
+import java.time.temporal.ChronoUnit;
+import java.time.temporal.TemporalAdjusters;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -53,20 +55,6 @@ class RestDayIntegrationTest extends IntegrationTest {
     }
 
     @Test
-    void oneRestDayAWeek() throws Exception {
-        String token = bearerFor("rest.limit@example.com");
-        Integer habit = habitCreatedDaysAgo(token, "{\"name\":\"Run\",\"frequencyType\":\"DAILY\"}", 7);
-        // two days of the same Monday–Sunday week, neither in the future
-        LocalDate first = today.getDayOfWeek() == DayOfWeek.MONDAY ? today.minusDays(1) : today;
-        LocalDate second = first.minusDays(1);
-
-        rest(token, habit, first).andExpect(status().isOk());
-        rest(token, habit, first).andExpect(status().isOk());   // again: fine
-        rest(token, habit, second).andExpect(status().isConflict())
-                .andExpect(jsonPath("$.errorCode").value("REST_LIMIT_REACHED"));
-    }
-
-    @Test
     void notOnADoneDayAndACheckInEndsTheRest() throws Exception {
         String token = bearerFor("rest.done@example.com");
         Integer habit = habitCreatedDaysAgo(token, "{\"name\":\"Run\",\"frequencyType\":\"DAILY\"}", 3);
@@ -95,6 +83,59 @@ class RestDayIntegrationTest extends IntegrationTest {
         rest(token, notToday, today).andExpect(jsonPath("$.errorCode").value("REST_NOT_ALLOWED"));
         Integer quit = habitCreatedDaysAgo(token, "{\"name\":\"No sugar\",\"kind\":\"QUIT\",\"frequencyType\":\"DAILY\"}", 0);
         rest(token, quit, today).andExpect(jsonPath("$.errorCode").value("REST_NOT_ALLOWED"));
+    }
+
+    @Test
+    void theWeeksFirstRestIsFreeThenTheyCostXpAndTakingOneBackRefundsIt() throws Exception {
+        String token = bearerFor("rest.xp@example.com");
+        achieveAGoal(token);   // +500 XP
+        Integer habit = habitCreatedDaysAgo(token, "{\"name\":\"Run\",\"frequencyType\":\"DAILY\"}", 8);
+        LocalDate first = firstOfFourDaysInOneWeek();
+
+        rest(token, habit, first).andExpect(jsonPath("$.payload.restCostXp").value(0));
+        rest(token, habit, first.plusDays(1)).andExpect(jsonPath("$.payload.restCostXp").value(100));
+        rest(token, habit, first.plusDays(2)).andExpect(jsonPath("$.payload.restCostXp").value(200));
+        rest(token, habit, first.plusDays(3)).andExpect(status().isConflict())
+                .andExpect(jsonPath("$.errorCode").value("REST_LIMIT_REACHED"));
+        level(token)
+                .andExpect(jsonPath("$.payload.xp").value(500))   // the level never drops for it
+                .andExpect(jsonPath("$.payload.spentXp").value(300))
+                .andExpect(jsonPath("$.payload.xpBalance").value(200));
+
+        mockMvc.perform(delete("/api/habits/{id}/rest", habit).param("date", first.plusDays(2).toString())
+                .header(HttpHeaders.AUTHORIZATION, token)).andExpect(status().isNoContent());
+        level(token).andExpect(jsonPath("$.payload.xpBalance").value(400));
+    }
+
+    @Test
+    void aPaidRestNeedsTheXp() throws Exception {
+        String token = bearerFor("rest.poor@example.com");
+        Integer habit = habitCreatedDaysAgo(token, "{\"name\":\"Run\",\"frequencyType\":\"DAILY\"}", 8);
+        LocalDate first = firstOfFourDaysInOneWeek();
+
+        rest(token, habit, first).andExpect(status().isOk());
+        rest(token, habit, first.plusDays(1)).andExpect(status().isConflict())
+                .andExpect(jsonPath("$.errorCode").value("XP_NOT_ENOUGH"));
+    }
+
+    /** Four days of one Monday–Sunday week, all within the 7 days back a rest may be set. */
+    private LocalDate firstOfFourDaysInOneWeek() {
+        LocalDate earliest = today.minusDays(7);
+        LocalDate itsSunday = earliest.with(TemporalAdjusters.nextOrSame(DayOfWeek.SUNDAY));
+        long leftInItsWeek = ChronoUnit.DAYS.between(earliest, itsSunday) + 1;
+        return leftInItsWeek >= 4 ? earliest : today.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
+    }
+
+    private void achieveAGoal(String token) throws Exception {
+        String body = mockMvc.perform(post("/api/goals").header(HttpHeaders.AUTHORIZATION, token)
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"title\":\"5K\"}"))
+                .andReturn().getResponse().getContentAsString();
+        mockMvc.perform(post("/api/goals/{id}/achieve", JsonPath.<Integer>read(body, "$.payload.id"))
+                .header(HttpHeaders.AUTHORIZATION, token)).andExpect(status().isOk());
+    }
+
+    private ResultActions level(String token) throws Exception {
+        return mockMvc.perform(get("/api/me/level").header(HttpHeaders.AUTHORIZATION, token));
     }
 
     private Integer habitCreatedDaysAgo(String token, String json, int daysAgo) throws Exception {

@@ -50,6 +50,12 @@ Phase 6 → 10 in roadmap order. Then the decisions in `PLAN.md` §6 (integratio
 
 ## Log
 
+**2026-10-10** — 9.3d: `habit_logs.rest_cost_xp` (V14). Per habit and week: 1st rest free, 2nd 100 XP,
+3rd 200, no 4th (409 `REST_LIMIT_REACHED`); 409 `XP_NOT_ENOUGH` when the balance is short. Level
+gains `spentXp` and `xpBalance` (= lifetime XP − spent); the level itself never drops. Ending a rest
+(cancel, or a check-in that day) refunds it. `checkin.XpBalance` is implemented by `LevelService`, so
+checkin needn't depend on level. The habit row is locked while a rest is priced.
+
 **2026-10-10** — 9.3a–c (split in three PRs to stay small): `habit_logs.rest` (V13). `POST /api/habits/{id}/rest` (date, default today;
 check-in date rules) and `DELETE …/rest?date=`. Daily and chosen-weekday build habits, on a due day
 not yet done, one a week (Mon–Sun). The calculators take the rest days and skip them like an
