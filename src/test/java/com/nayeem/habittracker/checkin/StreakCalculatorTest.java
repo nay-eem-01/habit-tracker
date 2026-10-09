@@ -41,6 +41,14 @@ class StreakCalculatorTest {
         }
 
         @Test
+        void aRestDayNeitherBreaksNorExtendsTheRun() {
+            // done 3 and 1 days ago, rested 2 days ago
+            Streak streak = StreakCalculator.calculate(FrequencyType.DAILY, null, days(WED, -3, -1), days(WED, -2),
+                    WED.minusDays(3), WED);
+            assertThat(streak.current()).isEqualTo(2);
+        }
+
+        @Test
         void aMissedDayResetsItToZero() {
             // done 5 and 4 days ago, missed 3 days ago, done the last two
             Streak streak = daily(days(WED, -5, -4, -2, -1), WED.minusDays(10), WED);

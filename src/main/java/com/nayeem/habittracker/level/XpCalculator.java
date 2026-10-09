@@ -43,13 +43,19 @@ public final class XpCalculator {
      */
     public static long habitXp(FrequencyType type, FrequencyConfig config, Set<LocalDate> doneDays,
                                LocalDate start, LocalDate today) {
+        return habitXp(type, config, doneDays, Set.of(), start, today);
+    }
+
+    /** @param restDays days the user rested: they earn nothing and break nothing (PLAN.md §3.4) */
+    public static long habitXp(FrequencyType type, FrequencyConfig config, Set<LocalDate> doneDays,
+                               Set<LocalDate> restDays, LocalDate start, LocalDate today) {
         boolean weeks = StreakCalculator.unitOf(type) == StreakUnit.WEEKS;
         int bonusFrom = weeks ? BONUS_FROM_WEEKS : BONUS_FROM_DAYS;
         Map<Integer, Integer> milestones = weeks ? WEEK_MILESTONES : DAY_MILESTONES;
 
         long[] xp = {0};
         int[] previousRun = {0};
-        StreakCalculator.walk(type, config, doneDays, start, today, (countedDays, run) -> {
+        StreakCalculator.walk(type, config, doneDays, restDays, start, today, (countedDays, run) -> {
             xp[0] += (long) countedDays * PER_DONE_DAY;
             if (run >= bonusFrom) {
                 xp[0] += (long) countedDays * CONSISTENCY_BONUS;
