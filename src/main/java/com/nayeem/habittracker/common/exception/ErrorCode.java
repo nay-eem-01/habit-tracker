@@ -20,6 +20,7 @@ public enum ErrorCode {
     NOT_FOUND(HttpStatus.NOT_FOUND, "Not found"),
     METHOD_NOT_ALLOWED(HttpStatus.METHOD_NOT_ALLOWED, "Method not allowed"),
     INTERNAL_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "Something went wrong"),
+    RATE_LIMITED(HttpStatus.TOO_MANY_REQUESTS, "Too many attempts; wait a little and try again"),
 
     AUTH_INVALID_CREDENTIALS(HttpStatus.UNAUTHORIZED, "Invalid email or password"),
     AUTH_INVALID_REFRESH_TOKEN(HttpStatus.UNAUTHORIZED, "Session expired, please sign in again"),

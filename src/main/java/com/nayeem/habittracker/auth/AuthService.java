@@ -3,6 +3,7 @@ package com.nayeem.habittracker.auth;
 import com.nayeem.habittracker.common.exception.ApplicationException;
 import com.nayeem.habittracker.common.exception.ErrorCode;
 import com.nayeem.habittracker.security.JwtService;
+import com.nayeem.habittracker.security.RateLimiter;
 import com.nayeem.habittracker.user.User;
 import com.nayeem.habittracker.user.UserResponse;
 import com.nayeem.habittracker.user.UserService;
@@ -13,6 +14,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Duration;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -21,11 +24,16 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class AuthService {
 
+    /** Wrong passwords allowed per account (or per unknown email) in {@link #FAILURE_WINDOW}. */
+    static final int MAX_FAILURES = 5;
+    static final Duration FAILURE_WINDOW = Duration.ofMinutes(15);
+
     private final UserService userService;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final RefreshTokenService refreshTokenService;
     private final PasswordResetService passwordResetService;
+    private final RateLimiter rateLimiter;
 
     /** Hash of a random value nobody knows; only used to spend equal time on a failed lookup. */
     private String dummyHash;
@@ -49,17 +57,24 @@ public class AuthService {
      */
     @Transactional
     public AuthResult login(LoginRequest request) {
+        String failures = "login-fail:" + request.getEmail().trim().toLowerCase(Locale.ROOT);
+        if (rateLimiter.isExhausted(failures, MAX_FAILURES)) {
+            log.info("Login refused: too many failures for this email");
+            throw new ApplicationException(ErrorCode.RATE_LIMITED);
+        }
         Optional<User> found = userService.findByEmail(request.getEmail());
         String hash = found.map(User::getPasswordHash).orElse(null);
         if (hash == null) {
             // Spend the same BCrypt time as a real check, so timing doesn't tell either.
             passwordEncoder.matches(request.getPassword(), dummyHash);
             log.info("Login failed: {}", found.isPresent() ? "account has no password (Google)" : "no such account");
+            rateLimiter.tryAcquire(failures, MAX_FAILURES, FAILURE_WINDOW);
             throw new ApplicationException(ErrorCode.AUTH_INVALID_CREDENTIALS);
         }
         User user = found.get();
         if (!passwordEncoder.matches(request.getPassword(), hash)) {
             log.info("Login failed for user {}: wrong password", user.getId());
+            rateLimiter.tryAcquire(failures, MAX_FAILURES, FAILURE_WINDOW);
             throw new ApplicationException(ErrorCode.AUTH_INVALID_CREDENTIALS);
         }
         log.info("User {} logged in", user.getId());
@@ -108,9 +123,14 @@ public class AuthService {
         if (user.getPasswordHash() == null) {
             throw new ApplicationException(ErrorCode.AUTH_PASSWORD_NOT_SET);
         }
+        String failures = "password-change-fail:" + userId;
+        if (rateLimiter.isExhausted(failures, MAX_FAILURES)) {
+            throw new ApplicationException(ErrorCode.RATE_LIMITED);
+        }
         if (request.getCurrentPassword() == null
                 || !passwordEncoder.matches(request.getCurrentPassword(), user.getPasswordHash())) {
             log.info("Password change for user {} refused: wrong current password", userId);
+            rateLimiter.tryAcquire(failures, MAX_FAILURES, FAILURE_WINDOW);
             throw new ApplicationException(ErrorCode.AUTH_WRONG_PASSWORD);
         }
         userService.updatePasswordHash(userId, passwordEncoder.encode(request.getNewPassword()));

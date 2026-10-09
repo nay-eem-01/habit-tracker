@@ -45,6 +45,12 @@ Phase 6 → 10 in roadmap order. Then the decisions in `PLAN.md` §6 (integratio
 
 ## Log
 
+**2026-10-10** — 7.2: in-memory fixed-window `RateLimiter` (one instance; Redis if we ever run
+several). `AuthRateLimitFilter` per IP: login 10/min, register 10/h, refresh 30/min, forgot 5/h,
+reset 10/h → 429 `RATE_LIMITED` + `Retry-After`. Five wrong passwords lock that email (or a wrong
+current password, that account's change) for 15 minutes. Tests switch the IP filter off (one shared
+client IP) and unit-test it instead.
+
 **2026-10-10** — 7.1: `application-prod.properties` (`SPRING_PROFILES_ACTIVE=prod`): INFO logs, no SQL,
 no Swagger or API docs, actuator health/info only, forwarded headers trusted, `CORS_ALLOWED_ORIGINS`
 and `APP_FRONTEND_URL` required; logs to stdout only under `prod`. Nightly job deletes refresh tokens
