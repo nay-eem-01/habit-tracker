@@ -30,6 +30,11 @@ Phase 6 → 10 in roadmap order. Then the decisions in `PLAN.md` §6 (integratio
   `JWT_SECRET` (≥ 32 bytes), optional `DB_URL`. Real environment variables override it.
 - Tests need Docker (Testcontainers). After switching between far-apart branches: `./mvnw clean test`.
 - Local email: Mailpit in Docker with `MAIL_SMTP_AUTH=false`.
+- Real email, free (Brevo, 300/day): sign up at brevo.com → add and verify the sender address →
+  SMTP & API → create an SMTP key. Then set `APP_NOTIFICATIONS_EMAIL_ENABLED=true`,
+  `SPRING_MAIL_HOST=smtp-relay.brevo.com`, `SPRING_MAIL_PORT=587`, `SPRING_MAIL_USERNAME=<Brevo SMTP
+  login>`, `SPRING_MAIL_PASSWORD=<SMTP key>`, `APP_NOTIFICATIONS_EMAIL_FROM=<verified sender>`. Once
+  there is a domain, authenticate it in Brevo (SPF, DKIM, DMARC) so mail doesn't land in spam.
 
 ## Gotchas worth remembering
 
@@ -44,6 +49,10 @@ Phase 6 → 10 in roadmap order. Then the decisions in `PLAN.md` §6 (integratio
 ---
 
 ## Log
+
+**2026-10-10** — 7.4: email is sent `@Async` after commit (Boot's executor; a `TaskDecorator`
+carries the MDC so the line keeps its `cid`). Reminders create the in-app notification only — no
+email; web push comes in Phase 10. Brevo free SMTP set-up written under "How to run".
 
 **2026-10-10** — 7.3: confirmed a password over 72 bytes answered 500 (Spring Security's BCrypt
 throws). `@MaxBytes(72)` on every password field → 400 `VALIDATION_FAILED`; min stays 8 characters.

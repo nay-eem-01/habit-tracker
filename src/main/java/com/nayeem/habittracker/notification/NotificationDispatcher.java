@@ -2,14 +2,15 @@ package com.nayeem.habittracker.notification;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
 
 /**
- * Hands a notification to the channel once its row is committed — so a slow mail server never
- * holds a transaction open, and a rolled-back run sends nothing. A failing channel is logged and
- * dropped: the in-app notification is already there, and a late reminder is worse than none.
+ * Hands an email to the channel once the transaction that asked for it has committed — a rolled-back
+ * request sends nothing — and on another thread, so a slow mail server never delays the response.
+ * A failing channel is logged and dropped.
  */
 @Slf4j
 @Component
@@ -18,6 +19,7 @@ class NotificationDispatcher {
 
     private final NotificationSender sender;
 
+    @Async
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     void onCommitted(OutgoingNotification notification) {
         try {

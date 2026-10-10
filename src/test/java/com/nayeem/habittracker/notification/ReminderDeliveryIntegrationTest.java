@@ -18,16 +18,14 @@ import java.time.LocalTime;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.after;
 import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 /**
- * Not {@code @Transactional}: the event is sent after commit, so the run has to really commit.
- * (The rows it leaves behind are harmless — the other tests only look at their own users.)
+ * Not {@code @Transactional}: each habit runs in its own transaction, which has to really commit.
+ * (The rows it leaves behind are harmless — each test uses its own minute.)
  */
 class ReminderDeliveryIntegrationTest extends IntegrationTest {
 
@@ -46,7 +44,7 @@ class ReminderDeliveryIntegrationTest extends IntegrationTest {
     private UserService userService;
 
     @Test
-    void aNewReminderIsSentOnceAfterItIsCommitted() {
+    void remindersAreNeverEmailed() {
         User user = userService.createLocalUser("deliver@example.com", "not-a-real-hash", "Test", "Asia/Dhaka");
         HabitRequest request = new HabitRequest();
         request.setName("Read");
@@ -54,12 +52,10 @@ class ReminderDeliveryIntegrationTest extends IntegrationTest {
         request.setReminderTime(LocalTime.of(7, 30));
         habitService.create(user.getId(), request);
 
-        reminderService.sendDue(DHAKA_0730);
-        reminderService.sendDue(DHAKA_0730); // same minute again: already there, nothing more to send
+        assertEquals(1, reminderService.sendDue(DHAKA_0730));
 
-        verify(sender, times(1)).send(argThat(n -> n.userId().equals(user.getId())
-                && n.title().equals("Reminder: Read") && n.email().equals("deliver@example.com")));
-        verify(sender, never()).send(argThat(n -> !n.userId().equals(user.getId())));
+        // email is for account mail only (PLAN.md §3.6); sending is async, so give it a moment
+        verify(sender, after(500).never()).send(any());
     }
 
     @Test
@@ -76,6 +72,5 @@ class ReminderDeliveryIntegrationTest extends IntegrationTest {
         doThrow(new IllegalStateException("boom")).when(habitProgressService).doneDays(eq(broken), any(), any());
 
         assertEquals(1, reminderService.sendDue(now));
-        verify(sender, times(1)).send(argThat(n -> n.userId().equals(user.getId())));
     }
 }
