@@ -35,7 +35,7 @@ into the base; the base PRs into `staging`.
 | # | Step | Status |
 |---|---|---|
 | 7.1 | Production profile; forwarded headers; daily clean-up of expired tokens | ✅ |
-| 7.2 | Rate limits on public auth endpoints (per IP) and failed logins (per email) | ⬜ |
+| 7.2 | Rate limits on public auth endpoints (per IP) and failed logins (per email) | ✅ |
 | 7.3 | Passwords limited to 72 bytes (BCrypt) | ⬜ |
 | 7.4 | Email: sent off the request thread; reminders no longer emailed; free SMTP set-up documented | ⬜ |
 | 7.5 | File uploads behind `app.files.enabled` (off) | ⬜ |

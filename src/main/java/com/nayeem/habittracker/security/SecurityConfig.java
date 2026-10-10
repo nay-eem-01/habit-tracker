@@ -45,6 +45,7 @@ public class SecurityConfig {
     private final AuthUserDetailsService userDetailsService;
     private final JsonSecurityErrorHandler errorHandler;
     private final SecurityProperties properties;
+    private final RateLimiter rateLimiter;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -67,6 +68,9 @@ public class SecurityConfig {
                         .accessDeniedHandler(errorHandler))
                 .addFilterBefore(new JwtAuthenticationFilter(jwtService, userDetailsService),
                         UsernamePasswordAuthenticationFilter.class);
+        if (properties.getRateLimits().isEnabled()) {
+            http.addFilterBefore(new AuthRateLimitFilter(rateLimiter, errorHandler), JwtAuthenticationFilter.class);
+        }
         return http.build();
     }
 

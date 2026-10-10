@@ -85,6 +85,17 @@ class AuthIntegrationTest extends IntegrationTest {
                 .andExpect(jsonPath("$.errorCode").value("AUTH_INVALID_CREDENTIALS"));
     }
 
+    @Test
+    void fiveWrongPasswordsLockTheEmailForAWhile() throws Exception {
+        register("locked@example.com", "password123", null);
+        for (int i = 0; i < 5; i++) {
+            login("locked@example.com", "wrong-password").andExpect(status().isUnauthorized());
+        }
+        login("LOCKED@example.com", "password123")
+                .andExpect(status().isTooManyRequests())
+                .andExpect(jsonPath("$.errorCode").value("RATE_LIMITED"));
+    }
+
     private ResultActions register(String email, String password, String timezone) throws Exception {
         String tz = timezone == null ? "null" : "\"" + timezone + "\"";
         return mockMvc.perform(post("/api/auth/register").contentType(MediaType.APPLICATION_JSON).content("""
