@@ -75,6 +75,9 @@ class RestDayIntegrationTest extends IntegrationTest {
                 .andExpect(jsonPath("$.errorCode").value("REST_DAY_DONE"));
 
         rest(token, habit, today).andExpect(status().isOk());
+        mockMvc.perform(get("/api/dashboard").header(HttpHeaders.AUTHORIZATION, token))
+                .andExpect(jsonPath("$.payload.today.habits[0].resting").value(true))
+                .andExpect(jsonPath("$.payload.today.habits[0].due").value(false));
         checkIn(token, habit, today);
         mockMvc.perform(get("/api/habits/{id}/logs", habit).header(HttpHeaders.AUTHORIZATION, token))
                 .andExpect(jsonPath("$.payload.content[0].rest").value(false))
