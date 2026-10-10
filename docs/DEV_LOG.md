@@ -50,6 +50,10 @@ Phase 6 → 10 in roadmap order. Then the decisions in `PLAN.md` §6 (integratio
 
 ## Log
 
+**2026-10-10** — 8.2: `PUT /api/me` replaces name, timezone (region names only) and
+`marketingEmails` (V9, default off). The web app detects the browser's timezone and offers to switch
+when it differs from the profile's.
+
 **2026-10-10** — 8.1b: `users.email_verified_at` (V8). Sign-up emails a 24-hour link
 (`<frontend>/verify-email#token=…`); `POST /api/auth/email/verify` (public) confirms it,
 `POST /api/auth/email/verification` (signed in) sends another (409 when already confirmed). A password

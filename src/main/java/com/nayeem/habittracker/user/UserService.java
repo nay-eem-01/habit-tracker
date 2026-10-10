@@ -73,6 +73,16 @@ public class UserService {
         getById(userId).setPasswordHash(passwordHash);
     }
 
+    @Transactional
+    public UserResponse updateProfile(Long userId, UpdateProfileRequest request) {
+        User user = getById(userId);
+        user.setName(request.getName().trim());
+        user.setTimezone(normalizeTimezone(request.getTimezone()));
+        user.setMarketingEmails(request.getMarketingEmails());
+        log.info("Profile of user {} updated", userId);
+        return UserResponse.from(userRepository.saveAndFlush(user));
+    }
+
     /** Records that the user owns their address; the first time counts. */
     @Transactional
     public void markEmailVerified(Long userId) {
