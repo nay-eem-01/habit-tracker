@@ -28,6 +28,10 @@ public class HabitRequest {
     @Schema(example = "Learning")
     private String category;
 
+    @Schema(description = "BUILD (default): check in when done. QUIT: check in when you slip; daily, no reminder, "
+            + "target 1, no goal. Set at creation; it can't change.")
+    private HabitKind kind;
+
     @NotNull
     @Schema(example = "SPECIFIC_DAYS")
     private FrequencyType frequencyType;

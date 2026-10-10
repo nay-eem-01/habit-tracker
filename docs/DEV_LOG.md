@@ -50,6 +50,12 @@ Phase 6 → 10 in roadmap order. Then the decisions in `PLAN.md` §6 (integratio
 
 ## Log
 
+**2026-10-10** — 9.2: `habits.kind` `BUILD`/`QUIT` (V12, fixed at creation). A quit habit is daily,
+target 1, no reminder, no goal (400 `HABIT_QUIT_INVALID`); a check-in records a slip.
+`CountedDays` turns slips into clean days (today included while clean) and hands the streak walk
+tomorrow as "today", so a slip today breaks the run at once — one rule for streak, stats, dashboard
+and XP. Quit habits are never due and stay out of the patterns.
+
 **2026-10-10** — 9.1: optional `unit` (≤ 20, V11) on habits, in habit responses and on the
 dashboard's today list.
 

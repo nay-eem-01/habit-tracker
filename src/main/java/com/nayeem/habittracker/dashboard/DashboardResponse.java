@@ -2,6 +2,7 @@ package com.nayeem.habittracker.dashboard;
 
 import com.nayeem.habittracker.checkin.StreakUnit;
 import com.nayeem.habittracker.habit.FrequencyType;
+import com.nayeem.habittracker.habit.HabitKind;
 import com.nayeem.habittracker.level.Level;
 import io.swagger.v3.oas.annotations.media.Schema;
 
@@ -54,6 +55,7 @@ public record DashboardResponse(
             Long habitId,
             String name,
             String category,
+            @Schema(description = "QUIT: done = no slip today, never due") HabitKind kind,
             FrequencyType frequencyType,
             int targetCount,
             String unit,
