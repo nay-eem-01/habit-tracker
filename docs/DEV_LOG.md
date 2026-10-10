@@ -38,7 +38,7 @@ on), Google client id (2.3). 3. Frontend work below.
 |---|---|---|
 | Google OAuth client id | Nayeem | 2.3 |
 | Choose a host | Nayeem | D.3, file uploads back on |
-| Brevo account + SMTP key (free) | Nayeem | real email in production |
+| Gmail app account + app password (`docs/LAUNCH_GUIDE.md` §2; Brevo's SMS didn't arrive) | Nayeem | real email in production |
 | Which integrations first | Nayeem | Phase 11 |
 
 ## How to run
@@ -66,6 +66,10 @@ on), Google client id (2.3). 3. Frontend work below.
 ---
 
 ## Log
+
+**2026-10-10** — `docs/LAUNCH_GUIDE.md`: the $0 launch checklist — app Gmail account, Gmail SMTP
+instead of Brevo, hosting (Oracle Always Free VM with Docker Compose + Caddy + DuckDNS; or Vercel +
+Render + Supabase without a card), Google client id, VAPID keys, env vars, post-deploy checks.
 
 **2026-10-10** — 10.1c: a new reminder publishes a `PushMessage`; `PushDispatcher` sends it after
 commit, async, to every browser of the user. Phases 6–10 done (2.3, D.3 and Phase 11 wait).
