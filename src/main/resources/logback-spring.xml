@@ -8,13 +8,12 @@
     <!-- Outside the repo; pass -DLOG_PATH=/absolute/dir to move it. -->
     <property scope="context" name="LOG_DIRECTORY" value="${LOG_PATH:-${user.home}/logfiles/habit-tracker}"/>
 
-    <!-- trace_id / span_id come from OpenTelemetry (the OTEL_MDC appender below); cid is the
-         X-Correlation-Id that error bodies return (CorrelationIdFilter). -->
+    <!-- cid is the X-Correlation-Id that error bodies return (CorrelationIdFilter). -->
     <property name="CONSOLE_PATTERN"
-              value="%clr(%d{yyyy-MM-dd HH:mm:ss.SSS}){faint} %clr([trace=%X{trace_id}, span=%X{span_id}, cid=%X{correlationId}]){blue} %clr(${LOG_LEVEL_PATTERN:-%5p}) %clr(${PID:- }){magenta} %clr(---){faint} %clr([%15.15t]){faint} %clr(%-40.40logger{39}){cyan} %clr(:){faint} %m%n${LOG_EXCEPTION_CONVERSION_WORD:-%wEx}"/>
+              value="%clr(%d{yyyy-MM-dd HH:mm:ss.SSS}){faint} %clr([cid=%X{correlationId}]){blue} %clr(${LOG_LEVEL_PATTERN:-%5p}) %clr(${PID:- }){magenta} %clr(---){faint} %clr([%15.15t]){faint} %clr(%-40.40logger{39}){cyan} %clr(:){faint} %m%n${LOG_EXCEPTION_CONVERSION_WORD:-%wEx}"/>
     <!-- Same, without colour codes. -->
     <property name="FILE_PATTERN"
-              value="%d{yyyy-MM-dd HH:mm:ss.SSS} [trace=%X{trace_id}, span=%X{span_id}, cid=%X{correlationId}] ${LOG_LEVEL_PATTERN:-%5p} ${PID:- } --- [%15.15t] %-40.40logger{39} : %m%n${LOG_EXCEPTION_CONVERSION_WORD:-%wEx}"/>
+              value="%d{yyyy-MM-dd HH:mm:ss.SSS} [cid=%X{correlationId}] ${LOG_LEVEL_PATTERN:-%5p} ${PID:- } --- [%15.15t] %-40.40logger{39} : %m%n${LOG_EXCEPTION_CONVERSION_WORD:-%wEx}"/>
 
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
         <encoder class="ch.qos.logback.core.encoder.LayoutWrappingEncoder">
@@ -39,30 +38,23 @@
         </encoder>
     </appender>
 
-    <!-- Writing happens off the request thread. neverBlock drops events rather than stall a
-         request when the queue is full; discardingThreshold 0 keeps INFO/DEBUG until then. -->
+    <!-- Writing happens off the request thread. When the queue is full the caller waits rather
+         than lose a line (an ERROR in an incident is the line you need); discardingThreshold 0
+         keeps INFO/DEBUG too. -->
     <appender name="ASYNC_FILE" class="ch.qos.logback.classic.AsyncAppender">
         <queueSize>8192</queueSize>
         <discardingThreshold>0</discardingThreshold>
-        <neverBlock>true</neverBlock>
         <appender-ref ref="FILE"/>
     </appender>
 
     <appender name="ASYNC_STDOUT" class="ch.qos.logback.classic.AsyncAppender">
         <queueSize>8192</queueSize>
         <discardingThreshold>0</discardingThreshold>
-        <neverBlock>true</neverBlock>
         <appender-ref ref="STDOUT"/>
     </appender>
 
-    <!-- Copies the current span's trace_id / span_id into the event's MDC on the calling thread,
-         before the async hand-off - so the ids survive it. Keep it outermost. -->
-    <appender name="OTEL_MDC" class="io.opentelemetry.instrumentation.logback.mdc.v1_0.OpenTelemetryAppender">
+    <root level="INFO">
         <appender-ref ref="ASYNC_FILE"/>
         <appender-ref ref="ASYNC_STDOUT"/>
-    </appender>
-
-    <root level="INFO">
-        <appender-ref ref="OTEL_MDC"/>
     </root>
 </configuration>

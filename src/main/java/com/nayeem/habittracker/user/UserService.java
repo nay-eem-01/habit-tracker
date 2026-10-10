@@ -10,7 +10,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.sql.SQLException;
-import java.time.DateTimeException;
 import java.time.ZoneId;
 import java.util.Locale;
 import java.util.Optional;
@@ -98,10 +97,12 @@ public class UserService {
         if (!StringUtils.hasText(timezone)) {
             return DEFAULT_TIMEZONE;
         }
-        try {
-            return ZoneId.of(timezone.trim()).getId();
-        } catch (DateTimeException e) {
+        // Region names only (Asia/Dhaka, UTC, Etc/GMT-6): PostgreSQL reads an offset like "+06:00" with
+        // the sign flipped, so the reminder query would fire at the wrong hour.
+        String id = timezone.trim();
+        if (!ZoneId.getAvailableZoneIds().contains(id)) {
             throw new ApplicationException(ErrorCode.USER_INVALID_TIMEZONE);
         }
+        return id;
     }
 }

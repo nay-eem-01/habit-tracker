@@ -1,5 +1,7 @@
 package com.nayeem.habittracker.notification;
 
+import com.nayeem.habittracker.checkin.HabitProgressService;
+import com.nayeem.habittracker.habit.FrequencyConfig;
 import com.nayeem.habittracker.habit.FrequencyType;
 import com.nayeem.habittracker.habit.HabitRequest;
 import com.nayeem.habittracker.habit.HabitService;
@@ -9,11 +11,16 @@ import com.nayeem.habittracker.user.UserService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 
 import java.time.Instant;
 import java.time.LocalTime;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -29,6 +36,8 @@ class ReminderDeliveryIntegrationTest extends IntegrationTest {
 
     @MockitoBean
     private NotificationSender sender;
+    @MockitoSpyBean
+    private HabitProgressService habitProgressService;
     @Autowired
     private ReminderService reminderService;
     @Autowired
@@ -51,5 +60,22 @@ class ReminderDeliveryIntegrationTest extends IntegrationTest {
         verify(sender, times(1)).send(argThat(n -> n.userId().equals(user.getId())
                 && n.title().equals("Reminder: Read") && n.email().equals("deliver@example.com")));
         verify(sender, never()).send(argThat(n -> !n.userId().equals(user.getId())));
+    }
+
+    @Test
+    void oneFailingHabitDoesNotStopTheOthers() {
+        Instant now = Instant.parse("2032-01-06T02:15:00Z");   // 08:15 in Dhaka: no other test's minute
+        User user = userService.createLocalUser("deliver.fail@example.com", "not-a-real-hash", "Test", "Asia/Dhaka");
+        HabitRequest request = new HabitRequest();
+        request.setName("Read");
+        request.setFrequencyType(FrequencyType.X_TIMES_PER_WEEK);
+        request.setFrequencyConfig(new FrequencyConfig(null, 3));
+        request.setReminderTime(LocalTime.of(8, 15));
+        Long broken = habitService.create(user.getId(), request).id();
+        habitService.create(user.getId(), request);
+        doThrow(new IllegalStateException("boom")).when(habitProgressService).doneDays(eq(broken), any(), any());
+
+        assertEquals(1, reminderService.sendDue(now));
+        verify(sender, times(1)).send(argThat(n -> n.userId().equals(user.getId())));
     }
 }

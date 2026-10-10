@@ -43,6 +43,14 @@ class UserServiceIntegrationTest extends IntegrationTest {
     }
 
     @Test
+    void anOffsetIsNotATimezone() {
+        // PostgreSQL would read "+06:00" as UTC-6 and fire reminders at the wrong hour
+        assertThatThrownBy(() -> userService.createLocalUser("offset@example.com", "hash", "Tz", "+06:00"))
+                .isInstanceOf(ApplicationException.class)
+                .extracting("errorCode").isEqualTo(ErrorCode.USER_INVALID_TIMEZONE);
+    }
+
+    @Test
     void sameEmailInAnotherCaseIsTaken() {
         userService.createLocalUser("dup@example.com", "hash", "First", null);
 

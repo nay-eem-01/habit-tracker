@@ -31,7 +31,7 @@ interface HabitRepository extends JpaRepository<Habit, Long> {
      * query serves every user. Whether the habit is due today is the caller's rule.
      */
     @Query(nativeQuery = true, value = """
-            select h.* from habits h
+            select h.id from habits h
             join users u on u.id = h.user_id
             where h.archived = false
               and h.reminder_time is not null
@@ -40,7 +40,7 @@ interface HabitRepository extends JpaRepository<Habit, Long> {
                   select 1 from habit_logs l
                   where l.habit_id = h.id
                     and l.log_date = (cast(:now as timestamptz) at time zone u.timezone)::date
-                    and l.completed_count >= h.target_count)
+                    and l.completed_count >= l.target_count)
             """)
-    List<Habit> findRemindableAt(@Param("now") Instant now);
+    List<Long> findRemindableAt(@Param("now") Instant now);
 }

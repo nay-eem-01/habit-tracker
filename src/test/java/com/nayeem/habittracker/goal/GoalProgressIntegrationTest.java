@@ -128,9 +128,9 @@ class GoalProgressIntegrationTest extends IntegrationTest {
     /** A back-dated log: the API refuses days before the habit existed, so tests write it directly. */
     private void insertLog(Integer habit, LocalDate day, int count) {
         entityManager.createNativeQuery("""
-                        insert into habit_logs (habit_id, log_date, completed_count,
+                        insert into habit_logs (habit_id, log_date, completed_count, target_count,
                                                 created_at, created_by, last_modified_at, last_modified_by)
-                        values (:h, :d, :c, now(), 'SYSTEM', now(), 'SYSTEM')""")
+                        select :h, :d, :c, target_count, now(), 'SYSTEM', now(), 'SYSTEM' from habits where id = :h""")
                 .setParameter("h", habit).setParameter("d", day).setParameter("c", count).executeUpdate();
     }
 

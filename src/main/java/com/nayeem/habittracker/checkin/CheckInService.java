@@ -44,8 +44,8 @@ public class CheckInService {
         checkDateAllowed(date, today, habit.getCreatedAt().atZone(zone).toLocalDate());
 
         int count = request.getCompletedCount() == null ? habit.getTargetCount() : request.getCompletedCount();
-        Long id = habitLogRepository.upsert(habit.getId(), date, count, request.getNote(), clock.instant(),
-                habit.getUser().getEmail());
+        Long id = habitLogRepository.upsert(habit.getId(), date, count, habit.getTargetCount(), request.getNote(),
+                clock.instant(), habit.getUser().getEmail());
 
         HabitLog saved = habitLogRepository.findById(id).orElseThrow();
         entityManager.refresh(saved); // the row may already be in this persistence context, stale
