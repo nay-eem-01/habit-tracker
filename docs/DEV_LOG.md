@@ -50,6 +50,13 @@ Phase 6 → 10 in roadmap order. Then the decisions in `PLAN.md` §6 (integratio
 
 ## Log
 
+**2026-10-10** — 7.6: `Dockerfile` (JDK build → JRE run, non-root, `prod` profile), `.dockerignore`,
+`.env.example` with every variable, GitHub Actions CI (`./mvnw -B verify` on PRs and on pushes to
+`staging`/`main`). Smoke-ran the image against Postgres; it found two start-up crashes the tests
+couldn't (they run with a writable home): logback opened the log file even when the prod profile
+didn't use it, and local file storage created its folder even with uploads off. Both fixed. Phase 7
+done.
+
 **2026-10-10** — 7.5: `app.files.enabled` (`APP_FILES_ENABLED`, default false). Off, `FileService.store`
 refuses with 403 `FILE_UPLOADS_DISABLED`; downloading and deleting stored files still work. The
 frontend hides its upload button behind its own flag.
