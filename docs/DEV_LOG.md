@@ -45,6 +45,11 @@ Phase 6 → 10 in roadmap order. Then the decisions in `PLAN.md` §6 (integratio
 
 ## Log
 
+**2026-10-10** — 6.5: reminders run one transaction per habit (a failure is logged, the rest still
+go out); `RefreshTokenService` uses the injected clock; mark-all-read is one `update`. Found while
+there: PostgreSQL reads an offset like `+06:00` as UTC−6 in `at time zone`, so sign-up now accepts
+region names only (`ZoneId.getAvailableZoneIds()`). 293 tests. Phase 6 done.
+
 **2026-10-10** — 6.4: changing frequency type or days keeps the old schedule in
 `habits.past_schedules` (jsonb, V6) and starts the new one today (`schedule_since`). Streaks, stats
 and the dashboard start at `Habit.startDay`; XP adds each past schedule's own walk, so nothing earned

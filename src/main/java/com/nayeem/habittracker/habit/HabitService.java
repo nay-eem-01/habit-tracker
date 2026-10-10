@@ -125,12 +125,15 @@ public class HabitService {
         return habitRepository.findAllByGoalIdAndUserIdOrderById(goalId, userId);
     }
 
-    /**
-     * Habits to remind about at this minute (their owner's local time), not yet done today. Call
-     * inside a transaction: the lazy {@code user} is needed to tell the owner's day.
-     */
-    public List<Habit> findRemindableAt(Instant now) {
+    /** Ids of habits to remind about at this minute (their owner's local time), not yet done today. */
+    @Transactional(readOnly = true)
+    public List<Long> findRemindableAt(Instant now) {
         return habitRepository.findRemindableAt(now);
+    }
+
+    /** Any user's habit — for system jobs like reminders, never for a request. Lazy {@code user}: call in a transaction. */
+    public Habit getForSystem(Long habitId) {
+        return habitRepository.findById(habitId).orElseThrow(() -> new ApplicationException(ErrorCode.HABIT_NOT_FOUND));
     }
 
     /**

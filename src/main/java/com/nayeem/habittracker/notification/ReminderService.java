@@ -9,7 +9,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import java.time.DayOfWeek;
 import java.time.Instant;
@@ -29,28 +29,46 @@ public class ReminderService {
     private final HabitProgressService habitProgressService;
     private final NotificationRepository notificationRepository;
     private final ApplicationEventPublisher events;
+    private final TransactionTemplate transactionTemplate;
 
-    /** @return how many reminders were created for the minute containing {@code now} */
-    @Transactional
+    /**
+     * Each habit in its own transaction: one that fails is logged and skipped, the others still get
+     * their reminder.
+     *
+     * @return how many reminders were created for the minute containing {@code now}
+     */
     public int sendDue(Instant now) {
         int created = 0;
-        for (Habit habit : habitService.findRemindableAt(now)) {
-            LocalDate today = LocalDate.ofInstant(now, ZoneId.of(habit.getUser().getTimezone()));
-            if (!isDue(habit, today)) {
-                continue;
-            }
-            String title = "Reminder: " + habit.getName();
-            String body = "Time to do it. Check in to keep your streak going.";
-            int inserted = notificationRepository.insertIfAbsent(habit.getUser().getId(), habit.getId(),
-                    NotificationType.HABIT_REMINDER.name(), title, body, today, now);
-            if (inserted == 1) {
-                created++;
-                events.publishEvent(new OutgoingNotification(habit.getUser().getId(), habit.getUser().getEmail(),
-                        title, body)); // sent after commit, only for a new reminder
-                log.info("Reminder created for habit {} (user {}) on {}", habit.getId(), habit.getUser().getId(), today);
+        for (Long habitId : habitService.findRemindableAt(now)) {
+            try {
+                if (Boolean.TRUE.equals(transactionTemplate.execute(status -> remind(habitId, now)))) {
+                    created++;
+                }
+            } catch (RuntimeException e) {
+                log.error("Reminder for habit {} failed", habitId, e);
             }
         }
         return created;
+    }
+
+    /** @return true if a new reminder was created */
+    private boolean remind(Long habitId, Instant now) {
+        Habit habit = habitService.getForSystem(habitId);
+        LocalDate today = LocalDate.ofInstant(now, ZoneId.of(habit.getUser().getTimezone()));
+        if (!isDue(habit, today)) {
+            return false;
+        }
+        String title = "Reminder: " + habit.getName();
+        String body = "Time to do it. Check in to keep your streak going.";
+        int inserted = notificationRepository.insertIfAbsent(habit.getUser().getId(), habit.getId(),
+                NotificationType.HABIT_REMINDER.name(), title, body, today, now);
+        if (inserted == 0) {
+            return false;
+        }
+        events.publishEvent(new OutgoingNotification(habit.getUser().getId(), habit.getUser().getEmail(),
+                title, body)); // sent after commit, only for a new reminder
+        log.info("Reminder created for habit {} (user {}) on {}", habit.getId(), habit.getUser().getId(), today);
+        return true;
     }
 
     private boolean isDue(Habit habit, LocalDate today) {
