@@ -45,6 +45,11 @@ Phase 6 → 10 in roadmap order. Then the decisions in `PLAN.md` §6 (integratio
 
 ## Log
 
+**2026-10-10** — 6.4: changing frequency type or days keeps the old schedule in
+`habits.past_schedules` (jsonb, V6) and starts the new one today (`schedule_since`). Streaks, stats
+and the dashboard start at `Habit.startDay`; XP adds each past schedule's own walk, so nothing earned
+is lost. Patterns (heatmap, weekdays) and the check-in date rule still use the creation day.
+
 **2026-10-10** — 6.3: `habit_logs.target_count` (V5, backfilled with today's targets) is written
 with every check-in; "done" compares against it everywhere (streaks, stats, XP, goals, reminders).
 Raising a target no longer un-does past days. 290 tests.
