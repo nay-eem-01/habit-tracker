@@ -83,6 +83,14 @@ public class UserService {
         return UserResponse.from(userRepository.saveAndFlush(user));
     }
 
+    /** Deletes the user; the database cascades to everything they own (V10). */
+    @Transactional
+    public void delete(Long userId) {
+        userRepository.delete(getById(userId));
+        userRepository.flush();
+        log.info("User {} deleted", userId);
+    }
+
     /** Records that the user owns their address; the first time counts. */
     @Transactional
     public void markEmailVerified(Long userId) {

@@ -126,21 +126,32 @@ public class AuthService {
         if (user.getPasswordHash() == null) {
             throw new ApplicationException(ErrorCode.AUTH_PASSWORD_NOT_SET);
         }
-        String failures = "password-change-fail:" + userId;
-        if (rateLimiter.isExhausted(failures, MAX_FAILURES)) {
-            throw new ApplicationException(ErrorCode.RATE_LIMITED);
-        }
-        if (request.getCurrentPassword() == null
-                || !passwordEncoder.matches(request.getCurrentPassword(), user.getPasswordHash())) {
-            log.info("Password change for user {} refused: wrong current password", userId);
-            rateLimiter.tryAcquire(failures, MAX_FAILURES, FAILURE_WINDOW);
-            throw new ApplicationException(ErrorCode.AUTH_WRONG_PASSWORD);
-        }
+        confirmPassword(user, request.getCurrentPassword());
         userService.updatePasswordHash(userId, passwordEncoder.encode(request.getNewPassword()));
         int revoked = refreshTokenService.revokeAll(userId);
         passwordResetService.retireAll(userId);
         log.info("Password changed for user {}; {} session(s) signed out", userId, revoked);
         return issueTokens(user);
+    }
+
+    /**
+     * For a sensitive change by a signed-in user (new password, deleting the account): the password
+     * must match — 400 {@code AUTH_WRONG_PASSWORD}, and after 5 misses 429 for 15 minutes. An account
+     * without a password has nothing to check.
+     */
+    public void confirmPassword(User user, String password) {
+        if (user.getPasswordHash() == null) {
+            return;
+        }
+        String failures = "password-confirm-fail:" + user.getId();
+        if (rateLimiter.isExhausted(failures, MAX_FAILURES)) {
+            throw new ApplicationException(ErrorCode.RATE_LIMITED);
+        }
+        if (password == null || !passwordEncoder.matches(password, user.getPasswordHash())) {
+            log.info("Password check for user {} failed", user.getId());
+            rateLimiter.tryAcquire(failures, MAX_FAILURES, FAILURE_WINDOW);
+            throw new ApplicationException(ErrorCode.AUTH_WRONG_PASSWORD);
+        }
     }
 
     /** Sends a new confirmation link to the signed-in user. */
