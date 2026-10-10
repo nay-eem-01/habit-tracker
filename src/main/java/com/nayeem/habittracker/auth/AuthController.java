@@ -61,6 +61,18 @@ class AuthController {
         return withRefreshCookie(HttpStatus.OK, "Signed in", authService.login(request));
     }
 
+    @Operation(summary = "Sign in (or up) with Google",
+            description = "Send the ID token Google Identity Services gives the page. Finds the account by Google id, "
+                    + "then by email (linking it), else creates one. Linking an account whose email was never "
+                    + "confirmed removes its password and signs it out everywhere first.")
+    @ApiResponse(responseCode = "200", description = "Signed in; access token in the body, refresh token cookie set")
+    @ApiResponse(responseCode = "401", description = "Invalid token (AUTH_INVALID_GOOGLE_TOKEN) or unverified Google "
+            + "email (AUTH_GOOGLE_EMAIL_UNVERIFIED)")
+    @PostMapping("/google")
+    ResponseEntity<HttpResponse> google(@Valid @RequestBody GoogleSignInRequest request) {
+        return withRefreshCookie(HttpStatus.OK, "Signed in with Google", authService.googleSignIn(request));
+    }
+
     @Operation(summary = "Get a new access token using the refresh token cookie; the cookie is rotated")
     @ApiResponse(responseCode = "200", description = "New access token; new refresh token cookie set")
     @ApiResponse(responseCode = "401", description = "Missing, expired, revoked or reused refresh token (AUTH_INVALID_REFRESH_TOKEN)")

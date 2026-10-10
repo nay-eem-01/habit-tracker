@@ -64,15 +64,17 @@ Settled decisions, grouped by area. A change to one is written here first.
   is **404**, never 403.
 - **Passwords:** BCrypt, 8–72 bytes. Forgot → a 30-minute single-use link (1 a minute, 5 an hour per
   account); reset and change sign out every other session.
-- **Email must be verified** before a Google sign-in can be linked to the account (prevents account
-  pre-hijacking, review B2).
+- **Google sign-in and existing accounts:** found by Google id first, then by email (and linked).
+  Linking an account whose email was never verified first removes its password and sessions — whoever
+  set them may not own the address (account pre-hijacking, review B2). Google must say the email is
+  verified.
 - **Rate limits** on the public auth endpoints, per IP, plus failed logins per email.
 - **Never logged:** passwords, tokens, cookies, `Authorization`, email addresses, note text, file
   names. Logs carry ids. A masking layout is the backstop.
 - **Secrets only from the environment**; the app refuses to start without `JWT_SECRET` (≥ 32 bytes).
 - **Google sign-in (2.3):** ID-token flow — the browser gets a Google ID token, the API verifies it
-  against Google's keys (`iss`, `aud` = our client id, `exp`, `email_verified`), then finds, links or
-  creates the user and issues our tokens. Waits for the client id.
+  locally against Google's keys (`iss`, `aud` = our client id, `exp`, `email_verified`), then finds,
+  links or creates the user and issues our tokens. `POST /api/auth/google`.
 
 ### 3.3 Habits, check-ins and streaks
 - **Frequency:** `DAILY`, `SPECIFIC_DAYS` (chosen weekdays), `X_TIMES_PER_WEEK` (1–6, Mon–Sun weeks).
@@ -200,4 +202,3 @@ app and the API must be on the same site (`app.example.com` + `api.example.com`,
 |---|---|---|
 | 15 | Which integrations first for auto check-ins (recommended: GitHub by username, no OAuth)? | Phase 11 |
 | 16 | Where to host (decides file storage and the deploy steps)? | D.3, file uploads back on |
-| 17 | Google OAuth client id | 2.3 |

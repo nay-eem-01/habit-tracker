@@ -28,6 +28,7 @@ class AuthRateLimitFilter extends OncePerRequestFilter {
 
     static final Map<String, Limit> LIMITS = Map.of(
             "/api/auth/login", new Limit(10, Duration.ofMinutes(1)),
+            "/api/auth/google", new Limit(10, Duration.ofMinutes(1)),
             "/api/auth/register", new Limit(10, Duration.ofHours(1)),
             "/api/auth/refresh", new Limit(30, Duration.ofMinutes(1)),
             "/api/auth/password/forgot", new Limit(5, Duration.ofHours(1)),

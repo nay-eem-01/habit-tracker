@@ -34,6 +34,7 @@ public class AuthService {
     private final RefreshTokenService refreshTokenService;
     private final PasswordResetService passwordResetService;
     private final EmailVerificationService emailVerificationService;
+    private final GoogleIdTokenVerifier googleIdTokenVerifier;
     private final RateLimiter rateLimiter;
 
     /** Hash of a random value nobody knows; only used to spend equal time on a failed lookup. */
@@ -81,6 +82,35 @@ public class AuthService {
         }
         log.info("User {} logged in", user.getId());
         return issueTokens(user);
+    }
+
+    /**
+     * Sign in with Google (PLAN.md §3.2): the account with this Google id; else the account with this
+     * email, now linked; else a new account. An account whose email was never verified loses its
+     * password and sessions when linked — its owner may not be the one who set them.
+     */
+    @Transactional
+    public AuthResult googleSignIn(GoogleSignInRequest request) {
+        GoogleIdentity google = googleIdTokenVerifier.verify(request.getIdToken());
+        if (!google.emailVerified() || google.email() == null) {
+            throw new ApplicationException(ErrorCode.AUTH_GOOGLE_EMAIL_UNVERIFIED);
+        }
+        User user = userService.findByGoogleSubject(google.subject())
+                .or(() -> userService.findByEmail(google.email()).map(existing -> linkGoogle(existing, google)))
+                .orElseGet(() -> userService.createGoogleUser(google.email(), google.name(), google.subject(),
+                        request.getTimezone()));
+        log.info("User {} signed in with Google", user.getId());
+        return issueTokens(user);
+    }
+
+    private User linkGoogle(User existing, GoogleIdentity google) {
+        boolean unverified = existing.getEmailVerifiedAt() == null;
+        if (unverified) {
+            refreshTokenService.revokeAll(existing.getId());
+            passwordResetService.retireAll(existing.getId());
+        }
+        return userService.linkGoogle(existing.getId(), google.subject(),
+                unverified && existing.getPasswordHash() != null);
     }
 
     /** Rotates the refresh token: the presented one dies, a new pair is issued. */
