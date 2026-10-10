@@ -38,7 +38,7 @@ into the base; the base PRs into `staging`.
 | 7.2 | Rate limits on public auth endpoints (per IP) and failed logins (per email) | ✅ |
 | 7.3 | Passwords limited to 72 bytes (BCrypt) | ✅ |
 | 7.4 | Email: sent off the request thread; reminders no longer emailed; free SMTP set-up documented | ✅ |
-| 7.5 | File uploads behind `app.files.enabled` (off) | ⬜ |
+| 7.5 | File uploads behind `app.files.enabled` (off) | ✅ |
 | 7.6 | Dockerfile and CI (tests on every PR) | ⬜ |
 | D.3 | Deploy: host, TLS, managed Postgres + backups, same-site domains | ⏸ host not chosen |
 

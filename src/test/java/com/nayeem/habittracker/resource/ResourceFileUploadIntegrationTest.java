@@ -70,6 +70,18 @@ class ResourceFileUploadIntegrationTest extends IntegrationTest {
     }
 
     @Test
+    void switchedOffUploadsAreRefused() throws Exception {
+        fileProperties.setEnabled(false);
+        try {
+            mockMvc.perform(upload(bearerFor("files.off@example.com"), pdf("plan.pdf")).param("title", "Plan"))
+                    .andExpect(status().isForbidden())
+                    .andExpect(jsonPath("$.errorCode").value("FILE_UPLOADS_DISABLED"));
+        } finally {
+            fileProperties.setEnabled(true);
+        }
+    }
+
+    @Test
     void notesAndLinksHaveNoFile() throws Exception {
         String token = bearerFor("upload.note@example.com");
 
