@@ -50,6 +50,10 @@ Phase 6 → 10 in roadmap order. Then the decisions in `PLAN.md` §6 (integratio
 
 ## Log
 
+**2026-10-10** — 8.1a: `password_reset_tokens` → `one_time_tokens` with a `purpose`
+(`PASSWORD_RESET`, `EMAIL_VERIFICATION`; V7). `OneTimeTokenService` issues (1 a minute, N an hour),
+consumes (purpose must match) and retires; `PasswordResetService` keeps only the reset email.
+
 **2026-10-10** — 7.6: `Dockerfile` (JDK build → JRE run, non-root, `prod` profile), `.dockerignore`,
 `.env.example` with every variable, GitHub Actions CI (`./mvnw -B verify` on PRs and on pushes to
 `staging`/`main`). Smoke-ran the image against Postgres; it found two start-up crashes the tests

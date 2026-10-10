@@ -20,7 +20,7 @@ class ExpiredTokenCleanupIntegrationTest extends IntegrationTest {
     @Autowired
     private RefreshTokenRepository refreshTokenRepository;
     @Autowired
-    private PasswordResetTokenRepository passwordResetTokenRepository;
+    private OneTimeTokenRepository oneTimeTokenRepository;
     @Autowired
     private UserService userService;
 
@@ -31,16 +31,16 @@ class ExpiredTokenCleanupIntegrationTest extends IntegrationTest {
         RefreshToken old = refreshToken(user, "a", now.minus(2, ChronoUnit.DAYS));
         RefreshToken recent = refreshToken(user, "b", now.minus(1, ChronoUnit.HOURS));
         RefreshToken live = refreshToken(user, "c", now.plus(7, ChronoUnit.DAYS));
-        PasswordResetToken oldLink = resetLink(user, "d", now.minus(2, ChronoUnit.DAYS));
-        PasswordResetToken liveLink = resetLink(user, "e", now.plus(30, ChronoUnit.MINUTES));
+        OneTimeToken oldLink = resetLink(user, "d", now.minus(2, ChronoUnit.DAYS));
+        OneTimeToken liveLink = resetLink(user, "e", now.plus(30, ChronoUnit.MINUTES));
 
         cleanup.run();
 
         assertThat(refreshTokenRepository.findById(old.getId())).isEmpty();
         assertThat(refreshTokenRepository.findById(recent.getId())).isPresent();
         assertThat(refreshTokenRepository.findById(live.getId())).isPresent();
-        assertThat(passwordResetTokenRepository.findById(oldLink.getId())).isEmpty();
-        assertThat(passwordResetTokenRepository.findById(liveLink.getId())).isPresent();
+        assertThat(oneTimeTokenRepository.findById(oldLink.getId())).isEmpty();
+        assertThat(oneTimeTokenRepository.findById(liveLink.getId())).isPresent();
     }
 
     private RefreshToken refreshToken(User user, String c, Instant expiresAt) {
@@ -51,11 +51,12 @@ class ExpiredTokenCleanupIntegrationTest extends IntegrationTest {
         return refreshTokenRepository.save(token);
     }
 
-    private PasswordResetToken resetLink(User user, String c, Instant expiresAt) {
-        PasswordResetToken token = new PasswordResetToken();
+    private OneTimeToken resetLink(User user, String c, Instant expiresAt) {
+        OneTimeToken token = new OneTimeToken();
         token.setUser(user);
+        token.setPurpose(TokenPurpose.PASSWORD_RESET);
         token.setTokenHash(c.repeat(64));
         token.setExpiresAt(expiresAt);
-        return passwordResetTokenRepository.save(token);
+        return oneTimeTokenRepository.save(token);
     }
 }

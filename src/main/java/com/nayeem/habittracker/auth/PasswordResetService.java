@@ -12,72 +12,44 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.security.SecureRandom;
-import java.time.Clock;
-import java.time.Duration;
-import java.time.Instant;
-import java.util.Base64;
 
 /**
- * "Forgot password" links: 32 random bytes, stored hashed, single use, valid for
- * {@code app.security.password-reset.ttl}. The email goes out after the transaction commits, through
- * the notification email channel. Logs the user id only — never the link or the address.
+ * "Forgot password" links ({@link OneTimeTokenService}), valid for {@code app.security.password-reset.ttl}.
+ * The email goes out after the transaction commits. Logs the user id only — never the link or the address.
  */
 @Slf4j
 @Service
 @RequiredArgsConstructor
 class PasswordResetService {
 
-    private static final int TOKEN_BYTES = 32;
-    private static final SecureRandom RANDOM = new SecureRandom();
-
-    private final PasswordResetTokenRepository repository;
+    private final OneTimeTokenService tokens;
     private final SecurityProperties securityProperties;
     private final AppProperties appProperties;
     private final ApplicationEventPublisher events;
-    private final Clock clock;
 
     /** Creates a link and queues its email — unless the user asked within the last minute or too often this hour. */
     @Transactional
     public void sendLink(User user) {
-        Instant now = clock.instant();
         SecurityProperties.PasswordReset settings = securityProperties.getPasswordReset();
-        if (repository.countByUserIdAndCreatedAtAfter(user.getId(), now.minus(Duration.ofMinutes(1))) > 0
-                || repository.countByUserIdAndCreatedAtAfter(user.getId(), now.minus(Duration.ofHours(1)))
-                >= settings.getMaxPerHour()) {
-            log.info("Password reset for user {} not sent: too many requests", user.getId());
-            return;
-        }
-
-        byte[] bytes = new byte[TOKEN_BYTES];
-        RANDOM.nextBytes(bytes);
-        String raw = Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
-        PasswordResetToken token = new PasswordResetToken();
-        token.setUser(user);
-        token.setTokenHash(RefreshTokenService.hash(raw));
-        token.setExpiresAt(now.plus(settings.getTtl()));
-        repository.save(token);
-
-        events.publishEvent(new OutgoingNotification(user.getId(), user.getEmail(), subject(user), body(user, raw)));
-        log.info("Password reset link sent to user {}", user.getId());
+        tokens.issue(user, TokenPurpose.PASSWORD_RESET, settings.getTtl(), settings.getMaxPerHour())
+                .ifPresentOrElse(raw -> {
+                    events.publishEvent(new OutgoingNotification(user.getId(), user.getEmail(), subject(user),
+                            body(user, raw)));
+                    log.info("Password reset link sent to user {}", user.getId());
+                }, () -> log.info("Password reset for user {} not sent: too many requests", user.getId()));
     }
 
     /** Uses a link: returns its user and retires every link the user still has. */
     @Transactional
     public User consume(String raw) {
-        Instant now = clock.instant();
-        PasswordResetToken token = repository.findByTokenHashForUpdate(RefreshTokenService.hash(raw))
-                .filter(t -> t.isUsableAt(now))
+        return tokens.consume(raw, TokenPurpose.PASSWORD_RESET)
                 .orElseThrow(() -> new ApplicationException(ErrorCode.AUTH_INVALID_RESET_TOKEN));
-        User user = token.getUser();
-        repository.retireAllForUser(user.getId(), now);
-        return user;
     }
 
     /** After a password change: links sent before it stop working. */
     @Transactional
     public void retireAll(Long userId) {
-        repository.retireAllForUser(userId, clock.instant());
+        tokens.retireAll(userId, TokenPurpose.PASSWORD_RESET);
     }
 
     private String subject(User user) {

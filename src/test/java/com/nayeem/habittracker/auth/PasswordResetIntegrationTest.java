@@ -96,7 +96,7 @@ class PasswordResetIntegrationTest extends IntegrationTest {
     void anExpiredOrMadeUpLinkIsRefused() throws Exception {
         register("reset.expired@example.com", "old-password");
         forgot("reset.expired@example.com");
-        jdbcTemplate.update("update password_reset_tokens set expires_at = now() - interval '1 minute'"
+        jdbcTemplate.update("update one_time_tokens set expires_at = now() - interval '1 minute'"
                 + " where user_id = (select id from users where email = ?)", "reset.expired@example.com");
         entityManager.clear();   // drop the cached token so the expired row is read
 
@@ -131,8 +131,8 @@ class PasswordResetIntegrationTest extends IntegrationTest {
         backdateRequests("reset.limit@example.com", "10 minutes");
         for (int i = 0; i < 4; i++) {
             jdbcTemplate.update("""
-                    insert into password_reset_tokens (user_id, token_hash, expires_at, created_at)
-                    select id, md5(random()::text) || md5(random()::text), now(), now() - interval '20 minutes'
+                    insert into one_time_tokens (user_id, purpose, token_hash, expires_at, created_at)
+                    select id, 'PASSWORD_RESET', md5(random()::text) || md5(random()::text), now(), now() - interval '20 minutes'
                     from users where email = ?""", "reset.limit@example.com");
         }
         forgot("reset.limit@example.com").andExpect(status().isAccepted());
@@ -202,7 +202,7 @@ class PasswordResetIntegrationTest extends IntegrationTest {
     }
 
     private void backdateRequests(String email, String interval) {
-        jdbcTemplate.update("update password_reset_tokens set created_at = created_at - cast(? as interval)"
+        jdbcTemplate.update("update one_time_tokens set created_at = created_at - cast(? as interval)"
                 + " where user_id = (select id from users where email = ?)", interval, email);
     }
 }

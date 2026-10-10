@@ -46,7 +46,8 @@ into the base; the base PRs into `staging`.
 
 | # | Step | Status |
 |---|---|---|
-| 8.1 | Email verification (one-time tokens shared with password reset) | ⬜ |
+| 8.1a | One-time tokens: reset links become one purpose of a shared table | ✅ |
+| 8.1b | Email verification | ⬜ |
 | 8.2 | Edit profile: name, timezone, promotional-email opt-in | ⬜ |
 | 8.3 | Delete account (everything goes) | ⬜ |
 | 8.4 | Export my data (JSON) | ⬜ |
