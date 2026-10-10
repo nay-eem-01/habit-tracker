@@ -52,7 +52,7 @@ into the base; the base PRs into `staging`.
 | 8.3 | Delete account (everything goes) | ✅ |
 | 8.4 | Export my data (JSON) | ✅ |
 | 8.5 | Delete a habit for good | ✅ |
-| 2.3 | Google sign-in, ID-token flow, links only to verified accounts | ⏸ client id |
+| 2.3 | Google sign-in, ID-token flow; linking an unverified account drops its password | ✅ |
 
 ## Phase 9 — Habits (base `feat/habits-plus-base`)
 

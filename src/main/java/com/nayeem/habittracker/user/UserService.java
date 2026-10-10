@@ -62,6 +62,53 @@ public class UserService {
         return user;
     }
 
+    /** A new account from a verified Google identity: no password, email already verified. */
+    @Transactional
+    public User createGoogleUser(String email, String name, String googleSubject, String timezone) {
+        User user = new User();
+        user.setEmail(normalizeEmail(email));
+        String display = name == null || name.isBlank() ? email.substring(0, email.indexOf('@')) : name.trim();
+        user.setName(display.length() > 100 ? display.substring(0, 100) : display);
+        user.setAuthProvider(AuthProvider.GOOGLE);
+        user.setProviderId(googleSubject);
+        user.setTimezone(normalizeTimezone(timezone));
+        user.setEmailVerifiedAt(clock.instant());
+        try {
+            user = userRepository.saveAndFlush(user);
+        } catch (DataIntegrityViolationException e) {
+            if (!isUniqueViolation(e)) {
+                throw e;
+            }
+            throw new ApplicationException(ErrorCode.USER_EMAIL_TAKEN);
+        }
+        log.info("User {} registered ({})", user.getId(), AuthProvider.GOOGLE);
+        return user;
+    }
+
+    /**
+     * Links a Google identity to an existing account and marks its email verified (Google vouches for
+     * it). {@code dropPassword}: the account's email was never verified, so whoever set its password
+     * may not own the address — the password goes (PLAN.md §3.2).
+     */
+    @Transactional
+    public User linkGoogle(Long userId, String googleSubject, boolean dropPassword) {
+        User user = getById(userId);
+        user.setProviderId(googleSubject);
+        if (dropPassword) {
+            user.setPasswordHash(null);
+        }
+        if (user.getEmailVerifiedAt() == null) {
+            user.setEmailVerifiedAt(clock.instant());
+        }
+        log.info("User {} linked to Google{}", userId, dropPassword ? "; unverified password removed" : "");
+        return userRepository.saveAndFlush(user);
+    }
+
+    @Transactional(readOnly = true)
+    public Optional<User> findByGoogleSubject(String googleSubject) {
+        return userRepository.findByProviderId(googleSubject);
+    }
+
     @Transactional(readOnly = true)
     public Optional<User> findByEmail(String email) {
         return userRepository.findByEmail(normalizeEmail(email));

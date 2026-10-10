@@ -26,6 +26,8 @@ on), Google client id (2.3). 3. Frontend work below.
 - Settings: `PUT /api/me` (name, timezone, `marketingEmails`); offer to switch when the browser's
   timezone differs; "export my data" (`GET /api/me/export`); "delete account" (`DELETE /api/me` with
   password).
+- Google button: Google Identity Services with `VITE_GOOGLE_CLIENT_ID`; its callback posts the
+  `credential` to `POST /api/auth/google` with the browser timezone; same response as login.
 - Habits: `unit` field; `kind` QUIT on create (daily, no reminder; check-in = "I slipped"); delete
   (`DELETE /api/habits/{id}`); rest day (`POST/DELETE /api/habits/{id}/rest`) showing `restCostXp` and the
   level's `xpBalance`; today list has `resting` and `kind`.
@@ -36,7 +38,6 @@ on), Google client id (2.3). 3. Frontend work below.
 
 | Item | Who | Blocks |
 |---|---|---|
-| Google OAuth client id | Nayeem | 2.3 |
 | Choose a host | Nayeem | D.3, file uploads back on |
 | Gmail app account + app password (`docs/LAUNCH_GUIDE.md` §2; Brevo's SMS didn't arrive) | Nayeem | real email in production |
 | Which integrations first | Nayeem | Phase 11 |
@@ -66,6 +67,15 @@ on), Google client id (2.3). 3. Frontend work below.
 ---
 
 ## Log
+
+**2026-10-10** — 2.3 Google sign-in: `POST /api/auth/google {idToken, timezone?}`. Verified locally with
+`spring-security-oauth2-jose` (Google's JWKS, `iss`, `aud` = client id, `exp`); unverified Google email
+→ 401. Finds by Google id (unique, V17), then by email (link), else creates a GOOGLE user (verified).
+Linking an unverified account drops its password and sessions (pre-hijacking). Client id in
+`GOOGLE_CLIENT_ID`, defaulting to ours (not a secret). Found while setting up email: `SPRING_MAIL_*`
+keys in `.env` were never read (Spring maps those names only from real environment variables) — now
+mapped explicitly; tests no longer read the developer's `.env` (`APP_ENV_FILE`); the mail health
+check is off so an SMTP outage can't mark the API down.
 
 **2026-10-10** — `docs/LAUNCH_GUIDE.md`: the $0 launch checklist — app Gmail account, Gmail SMTP
 instead of Brevo, hosting (Oracle Always Free VM with Docker Compose + Caddy + DuckDNS; or Vercel +
