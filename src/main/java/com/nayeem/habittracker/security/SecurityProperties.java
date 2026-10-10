@@ -21,6 +21,7 @@ public class SecurityProperties {
     private final PasswordReset passwordReset = new PasswordReset();
     private final Cors cors = new Cors();
     private final RateLimits rateLimits = new RateLimits();
+    private final Google google = new Google();
 
     @Getter
     @Setter
@@ -59,5 +60,12 @@ public class SecurityProperties {
     public static class RateLimits {
         /** Per-IP limits on the public auth endpoints ({@link AuthRateLimitFilter}). Tests switch them off. */
         private boolean enabled = true;
+    }
+
+    @Getter
+    @Setter
+    public static class Google {
+        /** The OAuth client id (not a secret); blank switches Google sign-in off. */
+        private String clientId;
     }
 }
