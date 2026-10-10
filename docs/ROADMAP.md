@@ -70,7 +70,9 @@ into the base; the base PRs into `staging`.
 
 | # | Step | Status |
 |---|---|---|
-| 10.1 | Push subscriptions + VAPID; reminders sent as web push | ⬜ |
+| 10.1a | RFC 8291 encryption and VAPID-signed sender | ✅ |
+| 10.1b | Push subscriptions API | ✅ |
+| 10.1c | Reminders sent as web push | ✅ |
 
 ## Later
 
@@ -80,4 +82,4 @@ into the base; the base PRs into `staging`.
 | File uploads back on, on S3-compatible storage (R2) | host (Q16) |
 | Pro plan and billing | users asking for it |
 | M6 AI insights (opt-in, aggregates only) | after Phase 11 |
-| Frontend: PWA, push, new screens | `habit-tracker-web` |
+| Frontend: PWA, push, new screens (list in DEV_LOG) | `habit-tracker-web` |

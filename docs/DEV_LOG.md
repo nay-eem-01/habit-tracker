@@ -5,15 +5,32 @@ Entries are short: what changed, what was decided, what bit us. Details live in 
 
 ## Where we are
 
-- M1–M5 done and on `staging`: auth (incl. password reset/change), habits, check-ins, streaks,
-  stats, reminders, notifications, goals, resources, levels, dashboard; Flyway; logging.
-- The 2026-10-09 review (`docs/REVIEW-2026-10-09.md`) set the next phases: 6 clean-up and fixes,
-  7 security and launch, 8 accounts, 9 habits, 10 web push.
-- Frontend: `habit-tracker-web`, its own plan and log; built by another agent.
+- M1–M5 on `staging`. Phases 6–10 (from the 2026-10-09 review) built on stacked step branches,
+  waiting for review and merge in roadmap order: fixes, security and launch, accounts, habits (units,
+  quit habits, rest days, free plan), web push.
+- Frontend: `habit-tracker-web`, its own plan and log; built by another agent. What it needs from
+  these phases is listed below.
 
 ## Next up
 
-Phase 6 → 10 in roadmap order. Then the decisions in `PLAN.md` §6 (integrations, host, Google id).
+1. Merge Phases 6–10. 2. Decisions in `PLAN.md` §6: integrations (Phase 11), host (D.3, files back
+on), Google client id (2.3). 3. Frontend work below.
+
+## Frontend needs (from Phases 6–10)
+
+- PWA: manifest, service worker (shows a push: `{title, body, url}`; click opens `url`), install.
+- Push: `GET /api/push/public-key` → if `enabled`, ask permission, `pushManager.subscribe` with
+  `publicKey`, `POST /api/push/subscriptions` with `toJSON()`; `DELETE` it on sign-out.
+- `/verify-email#token=…` page → `POST /api/auth/email/verify`; banner while `user.emailVerified` is
+  false with "resend" (`POST /api/auth/email/verification`).
+- Settings: `PUT /api/me` (name, timezone, `marketingEmails`); offer to switch when the browser's
+  timezone differs; "export my data" (`GET /api/me/export`); "delete account" (`DELETE /api/me` with
+  password).
+- Habits: `unit` field; `kind` QUIT on create (daily, no reminder; check-in = "I slipped"); delete
+  (`DELETE /api/habits/{id}`); rest day (`POST/DELETE /api/habits/{id}/rest`) showing `restCostXp` and the
+  level's `xpBalance`; today list has `resting` and `kind`.
+- Errors to handle: `RATE_LIMITED` (429, `Retry-After`), `PLAN_LIMIT_REACHED` (403),
+  `FILE_UPLOADS_DISABLED` (hide uploads), `XP_NOT_ENOUGH`, `REST_LIMIT_REACHED`.
 
 ## Open items
 
@@ -49,6 +66,16 @@ Phase 6 → 10 in roadmap order. Then the decisions in `PLAN.md` §6 (integratio
 ---
 
 ## Log
+
+**2026-10-10** — 10.1c: a new reminder publishes a `PushMessage`; `PushDispatcher` sends it after
+commit, async, to every browser of the user. Phases 6–10 done (2.3, D.3 and Phase 11 wait).
+
+**2026-10-10** — 10.1a–b (two PRs): `push_subscriptions` (V16). `GET /api/push/public-key`,
+`POST/DELETE /api/push/subscriptions` (the browser's `toJSON()`). Endpoints must be https on the
+browsers' push services (FCM, Mozilla, Apple, Windows) — the server POSTs to them, so anything else
+would be SSRF. Encryption is RFC 8291 / `aes128gcm` on JDK crypto only, tested byte-for-byte against
+the RFC's worked example; the VAPID JWT (ES256, `aud` = endpoint origin) by jjwt. A 404/410 from the
+push service deletes the subscription. `APP_PUSH_ENABLED` + `VAPID_*`; off, nothing is sent.
 
 **2026-10-10** — 9.4: `users.plan` `FREE`/`PRO` (V15, everyone FREE; no billing). The `Plan` enum holds
 the limits — FREE 7 active habits, 2 active goals — checked on create and unarchive; 403
