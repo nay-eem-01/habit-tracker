@@ -1,5 +1,6 @@
 package com.nayeem.habittracker.auth;
 
+import com.nayeem.habittracker.common.validation.MaxBytes;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
@@ -14,6 +15,7 @@ public class LoginRequest {
     private String email;
 
     @NotBlank
+    @MaxBytes(72)
     private String password;
 
     /** Hand-written so the password never reaches a log line. */

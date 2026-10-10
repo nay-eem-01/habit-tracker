@@ -86,6 +86,16 @@ class AuthIntegrationTest extends IntegrationTest {
     }
 
     @Test
+    void aPasswordOver72BytesIsAValidationErrorNotA500() throws Exception {
+        register("long@example.com", "a".repeat(73), null)
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.fields.password").exists());
+        // 36 two-byte characters are 72 bytes: still fine
+        register("long.ok@example.com", "é".repeat(36), null).andExpect(status().isCreated());
+        register("long.multi@example.com", "é".repeat(37), null).andExpect(status().isBadRequest());
+    }
+
+    @Test
     void fiveWrongPasswordsLockTheEmailForAWhile() throws Exception {
         register("locked@example.com", "password123", null);
         for (int i = 0; i < 5; i++) {
