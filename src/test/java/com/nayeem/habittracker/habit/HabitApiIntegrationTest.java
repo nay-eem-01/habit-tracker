@@ -55,6 +55,20 @@ class HabitApiIntegrationTest extends IntegrationTest {
     }
 
     @Test
+    void aCountedHabitCanHaveAUnit() throws Exception {
+        create(bearerFor("unit@example.com"), """
+                {"name":"Water","frequencyType":"DAILY","targetCount":8,"unit":" glasses "}""")
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.payload.unit").value("glasses"));
+        create(bearerFor("unit.blank@example.com"), """
+                {"name":"Water","frequencyType":"DAILY","unit":" "}""")
+                .andExpect(jsonPath("$.payload.unit").doesNotExist());
+        create(bearerFor("unit.long@example.com"), """
+                {"name":"Water","frequencyType":"DAILY","unit":"%s"}""".formatted("u".repeat(21)))
+                .andExpect(jsonPath("$.fields.unit").exists());
+    }
+
+    @Test
     void scheduleThatDoesNotFitTheTypeIs400() throws Exception {
         create(bearerFor("badfreq@example.com"), """
                 {"name":"Gym","frequencyType":"SPECIFIC_DAYS"}""")

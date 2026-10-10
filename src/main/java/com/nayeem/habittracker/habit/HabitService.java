@@ -170,6 +170,7 @@ public class HabitService {
                 ? null : request.getCategory().trim());
         habit.schedule(request.getFrequencyType(), request.getFrequencyConfig());
         habit.setTargetCount(request.getTargetCount() == null ? 1 : request.getTargetCount());
+        habit.setUnit(request.getUnit() == null || request.getUnit().isBlank() ? null : request.getUnit().trim());
         habit.setReminderTime(request.getReminderTime());
     }
 }

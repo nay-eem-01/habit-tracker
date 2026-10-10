@@ -155,7 +155,7 @@ public class DashboardService {
         Streak streak = StreakCalculator.calculate(habit.getFrequencyType(), habit.getFrequencyConfig(), done, start,
                 today);
         return new TodayHabit(habit.getId(), habit.getName(), habit.getCategory(), habit.getFrequencyType(),
-                habit.getTargetCount(), completedCount, doneToday, due, doneThisWeek, timesPerWeek, streak.current(),
+                habit.getTargetCount(), habit.getUnit(), completedCount, doneToday, due, doneThisWeek, timesPerWeek, streak.current(),
                 streak.unit());
     }
 }
