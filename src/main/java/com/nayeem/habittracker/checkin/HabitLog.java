@@ -44,6 +44,10 @@ public class HabitLog extends AuditModel {
     @Column(length = 500)
     private String note;
 
+    /** A rest day (PLAN.md §3.4): neither breaks nor extends the streak. A check-in that day ends it. */
+    @Column(nullable = false)
+    private boolean rest;
+
     public boolean isDone() {
         return completedCount >= targetCount;
     }

@@ -98,6 +98,19 @@ class ReminderServiceIntegrationTest extends IntegrationTest {
     }
 
     @Test
+    void skipsAHabitRestedToday() {
+        User user = user("remind.rest@example.com", "Asia/Dhaka");
+        HabitResponse rested = habit(user, "07:30", FrequencyType.DAILY, null);
+        entityManager.createNativeQuery("""
+                        insert into habit_logs (habit_id, log_date, completed_count, target_count, rest, created_at)
+                        values (:h, date '2030-01-01', 0, 1, true, now())""")
+                .setParameter("h", rested.id()).executeUpdate();
+
+        reminderService.sendDue(DHAKA_0730);
+        assertEquals(0, unread(user));
+    }
+
+    @Test
     void specificDaysRemindOnlyOnTheirWeekdays() {
         User user = user("remind.days@example.com", "Asia/Dhaka");
         habit(user, "07:30", FrequencyType.SPECIFIC_DAYS, new FrequencyConfig(Set.of(DayOfWeek.MONDAY), null));
