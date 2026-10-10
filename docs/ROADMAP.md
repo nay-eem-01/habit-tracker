@@ -70,7 +70,9 @@ into the base; the base PRs into `staging`.
 
 | # | Step | Status |
 |---|---|---|
-| 10.1 | Push subscriptions + VAPID; reminders sent as web push | ⬜ |
+| 10.1a | RFC 8291 encryption and VAPID-signed sender | ✅ |
+| 10.1b | Push subscriptions API | ✅ |
+| 10.1c | Reminders sent as web push | ⬜ |
 
 ## Later
 
