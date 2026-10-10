@@ -17,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Stream;
 
 import static com.nayeem.habittracker.auth.AuthController.REFRESH_COOKIE;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -61,7 +62,8 @@ class PasswordResetIntegrationTest extends IntegrationTest {
                 .andExpect(jsonPath("$.payload.accessToken").isNotEmpty())
                 .andExpect(cookie().exists(REFRESH_COOKIE));
 
-        login("reset.ok@example.com", "new-password").andExpect(status().isOk());
+        login("reset.ok@example.com", "new-password").andExpect(status().isOk())
+                .andExpect(jsonPath("$.payload.user.emailVerified").value(true));   // the link proved the address
         login("reset.ok@example.com", "old-password").andExpect(status().isUnauthorized());
         // single use
         reset(link.group(2), "another-password")
@@ -74,7 +76,7 @@ class PasswordResetIntegrationTest extends IntegrationTest {
         forgot("nobody@example.com")
                 .andExpect(status().isAccepted())
                 .andExpect(jsonPath("$.message").value("If an account exists for that email, a reset link is on its way"));
-        assertThat(events.stream(OutgoingNotification.class)).isEmpty();
+        assertThat(resetEmails()).isEmpty();
     }
 
     @Test
@@ -96,7 +98,7 @@ class PasswordResetIntegrationTest extends IntegrationTest {
     void anExpiredOrMadeUpLinkIsRefused() throws Exception {
         register("reset.expired@example.com", "old-password");
         forgot("reset.expired@example.com");
-        jdbcTemplate.update("update password_reset_tokens set expires_at = now() - interval '1 minute'"
+        jdbcTemplate.update("update one_time_tokens set expires_at = now() - interval '1 minute'"
                 + " where user_id = (select id from users where email = ?)", "reset.expired@example.com");
         entityManager.clear();   // drop the cached token so the expired row is read
 
@@ -113,7 +115,7 @@ class PasswordResetIntegrationTest extends IntegrationTest {
         forgot("reset.two@example.com");
         backdateRequests("reset.two@example.com", "2 minutes");   // past the one-a-minute limit
         forgot("reset.two@example.com");
-        List<OutgoingNotification> emails = events.stream(OutgoingNotification.class).toList();
+        List<OutgoingNotification> emails = resetEmails().toList();
         assertThat(emails).hasSize(2);
 
         reset(token(emails.get(1)), "new-password").andExpect(status().isOk());
@@ -126,17 +128,17 @@ class PasswordResetIntegrationTest extends IntegrationTest {
         register("reset.limit@example.com", "old-password");
         forgot("reset.limit@example.com");
         forgot("reset.limit@example.com").andExpect(status().isAccepted());   // same answer, no email
-        assertThat(events.stream(OutgoingNotification.class)).hasSize(1);
+        assertThat(resetEmails()).hasSize(1);
 
         backdateRequests("reset.limit@example.com", "10 minutes");
         for (int i = 0; i < 4; i++) {
             jdbcTemplate.update("""
-                    insert into password_reset_tokens (user_id, token_hash, expires_at, created_at)
-                    select id, md5(random()::text) || md5(random()::text), now(), now() - interval '20 minutes'
+                    insert into one_time_tokens (user_id, purpose, token_hash, expires_at, created_at)
+                    select id, 'PASSWORD_RESET', md5(random()::text) || md5(random()::text), now(), now() - interval '20 minutes'
                     from users where email = ?""", "reset.limit@example.com");
         }
         forgot("reset.limit@example.com").andExpect(status().isAccepted());
-        assertThat(events.stream(OutgoingNotification.class)).hasSize(1);
+        assertThat(resetEmails()).hasSize(1);
     }
 
     @Test
@@ -190,7 +192,7 @@ class PasswordResetIntegrationTest extends IntegrationTest {
     }
 
     private OutgoingNotification onlyEmail() {
-        List<OutgoingNotification> emails = events.stream(OutgoingNotification.class).toList();
+        List<OutgoingNotification> emails = resetEmails().toList();
         assertThat(emails).hasSize(1);
         return emails.getFirst();
     }
@@ -202,7 +204,12 @@ class PasswordResetIntegrationTest extends IntegrationTest {
     }
 
     private void backdateRequests(String email, String interval) {
-        jdbcTemplate.update("update password_reset_tokens set created_at = created_at - cast(? as interval)"
+        jdbcTemplate.update("update one_time_tokens set created_at = created_at - cast(? as interval)"
                 + " where user_id = (select id from users where email = ?)", interval, email);
+    }
+
+    /** Reset emails only — signing up also sends a confirmation email. */
+    private Stream<OutgoingNotification> resetEmails() {
+        return events.stream(OutgoingNotification.class).filter(e -> e.title().contains("password"));
     }
 }

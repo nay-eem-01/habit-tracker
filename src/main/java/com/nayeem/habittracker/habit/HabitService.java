@@ -17,6 +17,7 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -80,6 +81,13 @@ public class HabitService {
         return HabitResponse.from(habit);
     }
 
+    /** Deletes the habit; its logs and notifications go with it (database cascade, V10). */
+    @Transactional
+    public void delete(Long userId, Long habitId) {
+        habitRepository.deleteHabit(find(userId, habitId).getId());
+        log.info("Habit {} deleted by user {}", habitId, userId);
+    }
+
     /**
      * Links the habit to one of the user's active goals (or changes the target of an existing
      * link). Archived habits can't be linked; unarchive first.
@@ -111,6 +119,13 @@ public class HabitService {
             log.info("Habit {} unlinked from its goal by user {}", habitId, userId);
         }
         return HabitResponse.from(habit);
+    }
+
+    /** Every habit of the user, archived ones included, oldest first — for the data export. */
+    @Transactional(readOnly = true)
+    public List<HabitResponse> exportAll(Long userId) {
+        return habitRepository.findAllByUserId(userId).stream()
+                .sorted(Comparator.comparing(Habit::getId)).map(HabitResponse::from).toList();
     }
 
     /** Every habit of the user, archived ones included (what they earned stays — levels, M4). */

@@ -15,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Clock;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.util.List;
 import java.util.Set;
 
 /** Check-ins (PLAN.md §12.1). "Today" is always the habit owner's today, in their timezone. */
@@ -71,6 +72,15 @@ public class CheckInService {
         return PageResponse.from(
                 habitLogRepository.findAllByHabitIdAndLogDateBetween(habit.getId(), start, end, pageable),
                 HabitLogResponse::from);
+    }
+
+    /** Every logged day of every habit of the user, by habit then date — for the data export. */
+    @Transactional(readOnly = true)
+    public List<ExportedCheckIn> exportAll(Long userId) {
+        return habitLogRepository.findAllByHabitUserIdOrderByHabitIdAscLogDateAsc(userId).stream()
+                .map(l -> new ExportedCheckIn(l.getHabit().getId(), l.getLogDate(), l.getCompletedCount(),
+                        l.getTargetCount(), l.getNote()))
+                .toList();
     }
 
     private LocalDate today(Habit habit) {

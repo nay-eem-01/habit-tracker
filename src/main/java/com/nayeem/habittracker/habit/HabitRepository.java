@@ -3,6 +3,7 @@ package com.nayeem.habittracker.habit;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -22,6 +23,11 @@ interface HabitRepository extends JpaRepository<Habit, Long> {
     List<Habit> findAllByGoalIdAndUserIdOrderById(Long goalId, Long userId);
 
     List<Habit> findAllByUserId(Long userId);
+
+    /** One statement, so no loaded log can still point at the habit; the database cascades (V10). */
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("delete from Habit h where h.id = :id")
+    void deleteHabit(@Param("id") Long id);
 
     Page<Habit> findAllByUserIdAndArchived(Long userId, boolean archived, Pageable pageable);
 

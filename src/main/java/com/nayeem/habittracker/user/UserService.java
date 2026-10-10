@@ -10,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.sql.SQLException;
+import java.time.Clock;
 import java.time.ZoneId;
 import java.util.Locale;
 import java.util.Optional;
@@ -23,6 +24,7 @@ public class UserService {
     public static final String DEFAULT_TIMEZONE = "UTC";
 
     private final UserRepository userRepository;
+    private final Clock clock;
 
     /**
      * Creates an email/password account.
@@ -69,6 +71,33 @@ public class UserService {
     @Transactional
     public void updatePasswordHash(Long userId, String passwordHash) {
         getById(userId).setPasswordHash(passwordHash);
+    }
+
+    @Transactional
+    public UserResponse updateProfile(Long userId, UpdateProfileRequest request) {
+        User user = getById(userId);
+        user.setName(request.getName().trim());
+        user.setTimezone(normalizeTimezone(request.getTimezone()));
+        user.setMarketingEmails(request.getMarketingEmails());
+        log.info("Profile of user {} updated", userId);
+        return UserResponse.from(userRepository.saveAndFlush(user));
+    }
+
+    /** Deletes the user; the database cascades to everything they own (V10). */
+    @Transactional
+    public void delete(Long userId) {
+        userRepository.delete(getById(userId));
+        userRepository.flush();
+        log.info("User {} deleted", userId);
+    }
+
+    /** Records that the user owns their address; the first time counts. */
+    @Transactional
+    public void markEmailVerified(Long userId) {
+        User user = getById(userId);
+        if (user.getEmailVerifiedAt() == null) {
+            user.setEmailVerifiedAt(clock.instant());
+        }
     }
 
     @Transactional(readOnly = true)

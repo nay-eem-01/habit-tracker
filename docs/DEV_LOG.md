@@ -50,6 +50,34 @@ Phase 6 → 10 in roadmap order. Then the decisions in `PLAN.md` §6 (integratio
 
 ## Log
 
+**2026-10-10** — 8.5: `DELETE /api/habits/{id}` → 204; its logs and notifications go by cascade, and
+with them the XP and goal progress they earned (archive keeps them). A JPQL bulk delete, so no loaded
+log can still reference the habit at flush. Phase 8 done except 2.3 (waits for the client id).
+
+**2026-10-10** — 8.4: `GET /api/me/export` → `devhabit-export.json` (attachment, `no-store`): profile,
+habits incl. archived, every check-in with the target it was judged by, goals, resources (file
+entries, not bytes), in one read-only transaction. Each feature exposes an `exportAll(userId)`.
+
+**2026-10-10** — 8.3: `DELETE /api/me` (password when the account has one; same 5-miss limit as
+change password, now shared as `AuthService.confirmPassword`). V10 puts `on delete cascade` on every
+foreign key to `users`, and on logs/notifications to `habits` (for 8.5). File bytes go after commit.
+New `account` package orchestrates (it needs user, auth and file).
+
+**2026-10-10** — 8.2: `PUT /api/me` replaces name, timezone (region names only) and
+`marketingEmails` (V9, default off). The web app detects the browser's timezone and offers to switch
+when it differs from the profile's.
+
+**2026-10-10** — 8.1b: `users.email_verified_at` (V8). Sign-up emails a 24-hour link
+(`<frontend>/verify-email#token=…`); `POST /api/auth/email/verify` (public) confirms it,
+`POST /api/auth/email/verification` (signed in) sends another (409 when already confirmed). A password
+reset also confirms the address. `emailVerified` on the user. Nothing is blocked for unverified users
+yet; Google linking (2.3) and promotional email will require it. Found: a used one-time token stayed
+usable within the same persistence context (bulk update only) — the token is now marked used itself.
+
+**2026-10-10** — 8.1a: `password_reset_tokens` → `one_time_tokens` with a `purpose`
+(`PASSWORD_RESET`, `EMAIL_VERIFICATION`; V7). `OneTimeTokenService` issues (1 a minute, N an hour),
+consumes (purpose must match) and retires; `PasswordResetService` keeps only the reset email.
+
 **2026-10-10** — 7.6: `Dockerfile` (JDK build → JRE run, non-root, `prod` profile), `.dockerignore`,
 `.env.example` with every variable, GitHub Actions CI (`./mvnw -B verify` on PRs and on pushes to
 `staging`/`main`). Smoke-ran the image against Postgres; it found two start-up crashes the tests

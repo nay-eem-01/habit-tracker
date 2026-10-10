@@ -27,6 +27,8 @@ public enum ErrorCode {
     AUTH_INVALID_RESET_TOKEN(HttpStatus.BAD_REQUEST, "This reset link is invalid or has expired; ask for a new one"),
     // 400, not 401: the session is fine — a 401 would make the client think it was signed out
     AUTH_WRONG_PASSWORD(HttpStatus.BAD_REQUEST, "Your current password is wrong"),
+    AUTH_INVALID_VERIFY_TOKEN(HttpStatus.BAD_REQUEST, "This confirmation link is invalid or has expired; ask for a new one"),
+    AUTH_EMAIL_ALREADY_VERIFIED(HttpStatus.CONFLICT, "Your email is already confirmed"),
     AUTH_PASSWORD_NOT_SET(HttpStatus.CONFLICT, "This account has no password yet; use \"Forgot password\" to set one"),
 
     USER_EMAIL_TAKEN(HttpStatus.CONFLICT, "An account with this email already exists"),

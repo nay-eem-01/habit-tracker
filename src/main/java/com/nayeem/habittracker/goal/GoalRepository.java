@@ -21,5 +21,7 @@ interface GoalRepository extends JpaRepository<Goal, Long> {
 
     long countByUserIdAndStatus(Long userId, GoalStatus status);
 
+    List<Goal> findAllByUserIdOrderById(Long userId);
+
     List<Goal> findAllByUserIdAndStatusOrderById(Long userId, GoalStatus status);
 }
