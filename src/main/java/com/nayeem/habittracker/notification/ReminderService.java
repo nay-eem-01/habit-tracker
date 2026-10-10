@@ -5,8 +5,10 @@ import com.nayeem.habittracker.habit.DueRules;
 import com.nayeem.habittracker.habit.FrequencyType;
 import com.nayeem.habittracker.habit.Habit;
 import com.nayeem.habittracker.habit.HabitService;
+import com.nayeem.habittracker.push.PushMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionTemplate;
 
@@ -16,8 +18,8 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 
 /**
- * Turns "this habit's reminder time is now" into an in-app notification — never an email
- * (PLAN.md §3.6). Minutes missed while the app was down are not made up. Logs ids only — never
+ * Turns "this habit's reminder time is now" into an in-app notification and a web push — never an
+ * email (PLAN.md §3.6). Minutes missed while the app was down are not made up. Logs ids only — never
  * habit names or emails.
  */
 @Slf4j
@@ -29,6 +31,7 @@ public class ReminderService {
     private final HabitProgressService habitProgressService;
     private final NotificationRepository notificationRepository;
     private final TransactionTemplate transactionTemplate;
+    private final ApplicationEventPublisher events;
 
     /**
      * Each habit in its own transaction: one that fails is logged and skipped, the others still get
@@ -64,6 +67,7 @@ public class ReminderService {
         if (inserted == 0) {
             return false;
         }
+        events.publishEvent(new PushMessage(habit.getUser().getId(), title, body, "/"));   // sent after commit
         log.info("Reminder created for habit {} (user {}) on {}", habit.getId(), habit.getUser().getId(), today);
         return true;
     }
