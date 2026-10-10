@@ -2,6 +2,7 @@ package com.nayeem.habittracker.level;
 
 import com.nayeem.habittracker.checkin.CountedDays;
 import com.nayeem.habittracker.checkin.HabitProgressService;
+import com.nayeem.habittracker.checkin.XpBalance;
 import com.nayeem.habittracker.goal.GoalService;
 import com.nayeem.habittracker.habit.Habit;
 import com.nayeem.habittracker.habit.HabitService;
@@ -24,7 +25,7 @@ import java.util.Set;
  */
 @Service
 @RequiredArgsConstructor
-public class LevelService {
+public class LevelService implements XpBalance {
 
     private final HabitService habitService;
     private final HabitProgressService habitProgressService;
@@ -38,7 +39,14 @@ public class LevelService {
         ZoneId zone = ZoneId.of(userService.getById(userId).getTimezone());
         LocalDate today = LocalDate.now(clock.withZone(zone));
         return levelOf(habitService.findAllOwned(userId), habitProgressService.doneDaysByHabit(userId),
-                habitProgressService.restDaysByHabit(userId), zone, today, goalService.countAchieved(userId));
+                habitProgressService.restDaysByHabit(userId), zone, today, goalService.countAchieved(userId),
+                habitProgressService.restXpSpent(userId));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public long balance(Long userId) {
+        return level(userId).xpBalance();
     }
 
     /**
@@ -47,7 +55,8 @@ public class LevelService {
      * @param habits every habit of the user, archived ones included
      */
     public static Level levelOf(List<Habit> habits, Map<Long, Set<LocalDate>> doneDays,
-                                Map<Long, Set<LocalDate>> restDays, ZoneId zone, LocalDate today, long achievedGoals) {
+                                Map<Long, Set<LocalDate>> restDays, ZoneId zone, LocalDate today, long achievedGoals,
+                                long spentXp) {
         long xp = XpCalculator.goalXp(achievedGoals);
         for (Habit habit : habits) {
             LocalDate start = habit.startDay(zone);
@@ -60,6 +69,6 @@ public class LevelService {
                 xp += XpCalculator.habitXp(past.type(), past.config(), done, rest, past.from(), past.until());
             }
         }
-        return Level.of(xp);
+        return Level.of(xp, spentXp);
     }
 }

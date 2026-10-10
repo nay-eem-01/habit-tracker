@@ -58,6 +58,7 @@ public enum ErrorCode {
     REST_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "This habit can't rest on that day"),
     REST_DAY_DONE(HttpStatus.CONFLICT, "The habit is already done that day"),
     REST_LIMIT_REACHED(HttpStatus.CONFLICT, "No rest days left for this habit this week"),
+    XP_NOT_ENOUGH(HttpStatus.CONFLICT, "You don't have enough XP to spend"),
 
     LOG_DATE_OUT_OF_RANGE(HttpStatus.BAD_REQUEST, "You can't check in for that date"),
 

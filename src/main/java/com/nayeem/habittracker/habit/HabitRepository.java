@@ -1,8 +1,10 @@
 package com.nayeem.habittracker.habit;
 
+import jakarta.persistence.LockModeType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -19,6 +21,10 @@ import java.util.Optional;
 interface HabitRepository extends JpaRepository<Habit, Long> {
 
     Optional<Habit> findByIdAndUserId(Long id, Long userId);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select h from Habit h where h.id = :id and h.user.id = :userId")
+    Optional<Habit> findByIdAndUserIdForUpdate(@Param("id") Long id, @Param("userId") Long userId);
 
     List<Habit> findAllByGoalIdAndUserIdOrderById(Long goalId, Long userId);
 

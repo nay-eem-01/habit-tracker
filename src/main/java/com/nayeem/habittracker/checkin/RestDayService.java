@@ -20,24 +20,26 @@ import java.time.temporal.TemporalAdjusters;
 /**
  * Rest days (PLAN.md §3.4): one habit, one scheduled day off that neither breaks nor extends the
  * streak. Daily and chosen-weekday build habits only — an N-a-week habit already has its slack, a
- * quit habit has nothing to rest from. Same dates as a check-in.
+ * quit habit has nothing to rest from. Same dates as a check-in. The week's first is free, the 2nd
+ * and 3rd cost XP from the spendable balance; taking one back refunds it.
  */
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class RestDayService {
 
-    /** Rest days per habit per Monday–Sunday week. */
-    static final int PER_WEEK = 1;
+    /** XP the 1st, 2nd and 3rd rest day of a habit's Monday–Sunday week cost; there is no 4th. */
+    static final int[] COST = {0, 100, 200};
 
     private final HabitService habitService;
     private final HabitLogRepository habitLogRepository;
+    private final XpBalance xpBalance;
     private final Clock clock;
 
     /** Rests the habit on {@code date} (today when null); resting a rested day again is fine. */
     @Transactional
     public HabitLogResponse rest(Long userId, Long habitId, LocalDate date) {
-        Habit habit = habitService.getOwnedHabit(userId, habitId);
+        Habit habit = habitService.getOwnedHabitForUpdate(userId, habitId);   // so two rests can't both be "the 2nd"
         if (habit.isArchived()) {
             throw new ApplicationException(ErrorCode.HABIT_ARCHIVED);
         }
@@ -55,12 +57,18 @@ public class RestDayService {
             throw new ApplicationException(ErrorCode.REST_DAY_DONE);
         }
         LocalDate monday = day.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
-        if (habitLogRepository.countRestDays(habit.getId(), monday, monday.plusDays(6)) >= PER_WEEK) {
+        int restsThisWeek = (int) habitLogRepository.countRestDays(habit.getId(), monday, monday.plusDays(6));
+        if (restsThisWeek >= COST.length) {
             throw new ApplicationException(ErrorCode.REST_LIMIT_REACHED);
         }
-        habitLogRepository.markRest(habit.getId(), day, habit.getTargetCount(), clock.instant(),
+        int cost = COST[restsThisWeek];
+        // shortcut: two paid rests on different habits at once can both pass this; lock the user if it matters
+        if (cost > 0 && xpBalance.balance(userId) < cost) {
+            throw new ApplicationException(ErrorCode.XP_NOT_ENOUGH, "This rest day costs " + cost + " XP");
+        }
+        habitLogRepository.markRest(habit.getId(), day, habit.getTargetCount(), cost, clock.instant(),
                 habit.getUser().getEmail());
-        log.info("Habit {} rested on {} by user {}", habit.getId(), day, userId);
+        log.info("Habit {} rested on {} by user {} for {} XP", habit.getId(), day, userId, cost);
         return HabitLogResponse.from(habitLogRepository.findByHabitIdAndLogDate(habit.getId(), day).orElseThrow());
     }
 

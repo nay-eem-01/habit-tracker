@@ -166,6 +166,12 @@ public class HabitService {
         return find(userId, habitId);
     }
 
+    /** {@link #getOwnedHabit}, row-locked until the transaction ends — for changes that count first. */
+    public Habit getOwnedHabitForUpdate(Long userId, Long habitId) {
+        return habitRepository.findByIdAndUserIdForUpdate(habitId, userId)
+                .orElseThrow(() -> new ApplicationException(ErrorCode.HABIT_NOT_FOUND));
+    }
+
     Habit find(Long userId, Long habitId) {
         return habitRepository.findByIdAndUserId(habitId, userId)
                 .orElseThrow(() -> new ApplicationException(ErrorCode.HABIT_NOT_FOUND));

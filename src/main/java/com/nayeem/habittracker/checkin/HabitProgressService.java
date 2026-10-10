@@ -64,6 +64,12 @@ public class HabitProgressService {
         return byHabit;
     }
 
+    /** XP the user has spent on rest days that still stand. */
+    @Transactional(readOnly = true)
+    public long restXpSpent(Long userId) {
+        return habitLogRepository.sumRestCostOfUser(userId);
+    }
+
     /** The user's done days since {@code from}, with when each was first logged. */
     @Transactional(readOnly = true)
     public List<CheckInTime> doneCheckInTimes(Long userId, LocalDate from) {
