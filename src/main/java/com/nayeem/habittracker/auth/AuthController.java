@@ -124,6 +124,27 @@ class AuthController {
         return withRefreshCookie(HttpStatus.OK, "Password changed", authService.changePassword(user.id(), request));
     }
 
+    @Operation(summary = "Confirm my email address with the emailed token",
+            description = "Public: the link may be opened on a device that isn't signed in. Single use, valid 24 hours.")
+    @ApiResponse(responseCode = "200", description = "Email confirmed")
+    @ApiResponse(responseCode = "400", description = "Invalid, expired or used link (AUTH_INVALID_VERIFY_TOKEN)")
+    @PostMapping("/email/verify")
+    ResponseEntity<HttpResponse> verifyEmail(@Valid @RequestBody VerifyEmailRequest request) {
+        authService.verifyEmail(request.getToken());
+        return HttpResponse.ok("Email confirmed", null);
+    }
+
+    @Operation(summary = "Send me a new confirmation email",
+            description = "One sent at sign-up already. At most one a minute and 5 an hour; past that nothing is sent.")
+    @ApiResponse(responseCode = "202", description = "Accepted")
+    @ApiResponse(responseCode = "409", description = "Already confirmed (AUTH_EMAIL_ALREADY_VERIFIED)")
+    @SecurityRequirement(name = AppConstants.JWT_TOKEN)
+    @PostMapping("/email/verification")
+    ResponseEntity<HttpResponse> resendVerification(@AuthenticationPrincipal AuthUser user) {
+        authService.resendVerification(user.id());
+        return HttpResponse.of(HttpStatus.ACCEPTED, "A confirmation email is on its way", null);
+    }
+
     @Operation(summary = "The signed-in user")
     @ApiResponse(responseCode = "200", description = "The user")
     @ApiResponse(responseCode = "401", description = "Missing or expired access token")

@@ -53,6 +53,7 @@ class OneTimeTokenService {
         return repository.findByTokenHashForUpdate(RefreshTokenService.hash(raw))
                 .filter(t -> t.getPurpose() == purpose && t.isUsableAt(now))
                 .map(t -> {
+                    t.setUsedAt(now);
                     repository.retireAll(t.getUser().getId(), purpose, now);
                     return t.getUser();
                 });

@@ -10,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.sql.SQLException;
+import java.time.Clock;
 import java.time.ZoneId;
 import java.util.Locale;
 import java.util.Optional;
@@ -23,6 +24,7 @@ public class UserService {
     public static final String DEFAULT_TIMEZONE = "UTC";
 
     private final UserRepository userRepository;
+    private final Clock clock;
 
     /**
      * Creates an email/password account.
@@ -69,6 +71,15 @@ public class UserService {
     @Transactional
     public void updatePasswordHash(Long userId, String passwordHash) {
         getById(userId).setPasswordHash(passwordHash);
+    }
+
+    /** Records that the user owns their address; the first time counts. */
+    @Transactional
+    public void markEmailVerified(Long userId) {
+        User user = getById(userId);
+        if (user.getEmailVerifiedAt() == null) {
+            user.setEmailVerifiedAt(clock.instant());
+        }
     }
 
     @Transactional(readOnly = true)
