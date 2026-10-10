@@ -16,7 +16,9 @@ import org.springframework.context.annotation.Import;
 @SpringBootTest(properties = {"app.security.jwt.secret=" + IntegrationTest.TEST_JWT_SECRET,
         "app.reminders.enabled=false", "app.files.enabled=true", "app.files.dir=target/test-files",
         // the tests share one client IP; AuthRateLimitFilterTest covers the limits
-        "app.security.rate-limits.enabled=false"})
+        "app.security.rate-limits.enabled=false",
+        // never a developer's .env: tests must not send real email or pick up local names
+        "APP_ENV_FILE=target/no-env-file"})
 @AutoConfigureMockMvc
 @Import(TestcontainersConfiguration.class)
 public abstract class IntegrationTest {
