@@ -76,6 +76,17 @@ class HabitController {
         return HttpResponse.ok("Habit archived", habitService.setArchived(user.id(), id, true));
     }
 
+    @Operation(summary = "Delete a habit for good",
+            description = "Its check-ins and reminders go too, and the XP and goal progress they earned. "
+                    + "To stop a habit but keep its history, archive it instead.")
+    @ApiResponse(responseCode = "204", description = "Deleted")
+    @ApiResponse(responseCode = "404", description = "No such habit, or not yours (HABIT_NOT_FOUND)")
+    @DeleteMapping("/{id}")
+    ResponseEntity<Void> delete(@AuthenticationPrincipal AuthUser user, @PathVariable Long id) {
+        habitService.delete(user.id(), id);
+        return ResponseEntity.noContent().build();
+    }
+
     @Operation(summary = "Bring an archived habit back")
     @ApiResponse(responseCode = "200", description = "The habit")
     @ApiResponse(responseCode = "404", description = "No such habit, or not yours (HABIT_NOT_FOUND)")

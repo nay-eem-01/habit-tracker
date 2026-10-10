@@ -81,6 +81,13 @@ public class HabitService {
         return HabitResponse.from(habit);
     }
 
+    /** Deletes the habit; its logs and notifications go with it (database cascade, V10). */
+    @Transactional
+    public void delete(Long userId, Long habitId) {
+        habitRepository.deleteHabit(find(userId, habitId).getId());
+        log.info("Habit {} deleted by user {}", habitId, userId);
+    }
+
     /**
      * Links the habit to one of the user's active goals (or changes the target of an existing
      * link). Archived habits can't be linked; unarchive first.

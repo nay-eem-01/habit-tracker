@@ -50,6 +50,10 @@ Phase 6 → 10 in roadmap order. Then the decisions in `PLAN.md` §6 (integratio
 
 ## Log
 
+**2026-10-10** — 8.5: `DELETE /api/habits/{id}` → 204; its logs and notifications go by cascade, and
+with them the XP and goal progress they earned (archive keeps them). A JPQL bulk delete, so no loaded
+log can still reference the habit at flush. Phase 8 done except 2.3 (waits for the client id).
+
 **2026-10-10** — 8.4: `GET /api/me/export` → `devhabit-export.json` (attachment, `no-store`): profile,
 habits incl. archived, every check-in with the target it was judged by, goals, resources (file
 entries, not bytes), in one read-only transaction. Each feature exposes an `exportAll(userId)`.
