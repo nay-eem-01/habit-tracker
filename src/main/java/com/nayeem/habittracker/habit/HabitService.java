@@ -38,6 +38,7 @@ public class HabitService {
     public HabitResponse create(Long userId, HabitRequest request) {
         Habit habit = new Habit();
         habit.setUser(userService.getById(userId));
+        habit.getUser().getPlan().checkRoomForHabit(habitRepository.countByUserIdAndArchivedFalse(userId));
         habit.startAs(request.getKind() == null ? HabitKind.BUILD : request.getKind());
         apply(habit, request);
         habit = habitRepository.save(habit);
@@ -78,6 +79,9 @@ public class HabitService {
     public HabitResponse setArchived(Long userId, Long habitId, boolean archived) {
         Habit habit = find(userId, habitId);
         if (habit.isArchived() != archived) {
+            if (!archived) {
+                habit.getUser().getPlan().checkRoomForHabit(habitRepository.countByUserIdAndArchivedFalse(userId));
+            }
             habit.setArchived(archived);
             habit = habitRepository.saveAndFlush(habit);
             log.info("Habit {} {} by user {}", habitId, archived ? "archived" : "unarchived", userId);

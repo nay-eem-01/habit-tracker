@@ -30,6 +30,8 @@ interface HabitRepository extends JpaRepository<Habit, Long> {
 
     List<Habit> findAllByUserId(Long userId);
 
+    long countByUserIdAndArchivedFalse(Long userId);
+
     /** One statement, so no loaded log can still point at the habit; the database cascades (V10). */
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("delete from Habit h where h.id = :id")
