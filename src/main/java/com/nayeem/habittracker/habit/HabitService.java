@@ -38,6 +38,8 @@ public class HabitService {
     public HabitResponse create(Long userId, HabitRequest request) {
         Habit habit = new Habit();
         habit.setUser(userService.getById(userId));
+        habit.getUser().getPlan().checkRoomForHabit(habitRepository.countByUserIdAndArchivedFalse(userId));
+        habit.startAs(request.getKind() == null ? HabitKind.BUILD : request.getKind());
         apply(habit, request);
         habit = habitRepository.save(habit);
         log.info("Habit {} created by user {}", habit.getId(), userId);
@@ -59,6 +61,9 @@ public class HabitService {
     @Transactional
     public HabitResponse update(Long userId, Long habitId, HabitRequest request) {
         Habit habit = find(userId, habitId);
+        if (request.getKind() != null && request.getKind() != habit.getKind()) {
+            throw quitInvalid("A habit's kind can't change; create a new habit instead");
+        }
         ZoneId zone = ZoneId.of(habit.getUser().getTimezone());
         habit.startNewScheduleIfChanged(request.getFrequencyType(), request.getFrequencyConfig(),
                 LocalDate.now(clock.withZone(zone)), zone);
@@ -74,6 +79,9 @@ public class HabitService {
     public HabitResponse setArchived(Long userId, Long habitId, boolean archived) {
         Habit habit = find(userId, habitId);
         if (habit.isArchived() != archived) {
+            if (!archived) {
+                habit.getUser().getPlan().checkRoomForHabit(habitRepository.countByUserIdAndArchivedFalse(userId));
+            }
             habit.setArchived(archived);
             habit = habitRepository.saveAndFlush(habit);
             log.info("Habit {} {} by user {}", habitId, archived ? "archived" : "unarchived", userId);
@@ -97,6 +105,9 @@ public class HabitService {
         Habit habit = find(userId, habitId);
         if (habit.isArchived()) {
             throw new ApplicationException(ErrorCode.HABIT_ARCHIVED);
+        }
+        if (habit.getKind() == HabitKind.QUIT) {
+            throw quitInvalid("A quit habit can't be linked to a goal");
         }
         Goal goal = goalService.getOwnedGoal(userId, request.getGoalId());
         if (goal.getStatus() != GoalStatus.ACTIVE) {
@@ -159,6 +170,12 @@ public class HabitService {
         return find(userId, habitId);
     }
 
+    /** {@link #getOwnedHabit}, row-locked until the transaction ends — for changes that count first. */
+    public Habit getOwnedHabitForUpdate(Long userId, Long habitId) {
+        return habitRepository.findByIdAndUserIdForUpdate(habitId, userId)
+                .orElseThrow(() -> new ApplicationException(ErrorCode.HABIT_NOT_FOUND));
+    }
+
     Habit find(Long userId, Long habitId) {
         return habitRepository.findByIdAndUserId(habitId, userId)
                 .orElseThrow(() -> new ApplicationException(ErrorCode.HABIT_NOT_FOUND));
@@ -170,6 +187,16 @@ public class HabitService {
                 ? null : request.getCategory().trim());
         habit.schedule(request.getFrequencyType(), request.getFrequencyConfig());
         habit.setTargetCount(request.getTargetCount() == null ? 1 : request.getTargetCount());
+        habit.setUnit(request.getUnit() == null || request.getUnit().isBlank() ? null : request.getUnit().trim());
         habit.setReminderTime(request.getReminderTime());
+        if (habit.getKind() == HabitKind.QUIT
+                && (habit.getFrequencyType() != FrequencyType.DAILY || habit.getTargetCount() != 1
+                || habit.getReminderTime() != null)) {
+            throw quitInvalid("A quit habit is daily, with a target of 1 and no reminder");
+        }
+    }
+
+    private static ApplicationException quitInvalid(String message) {
+        return new ApplicationException(ErrorCode.HABIT_QUIT_INVALID, message);
     }
 }

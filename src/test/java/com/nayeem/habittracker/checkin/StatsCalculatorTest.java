@@ -79,6 +79,15 @@ class StatsCalculatorTest {
     }
 
     @Test
+    void aRestDayIsNotExpected() {
+        // last 7 days: done 5, rested 1, today open
+        WindowStats stats = StatsCalculator.window(FrequencyType.DAILY, null, daysAgo(1, 2, 3, 4, 5), daysAgo(6),
+                LONG_AGO, TODAY, 7);
+        assertThat(stats.expected()).isEqualTo(5.0);
+        assertThat(stats.rate()).isEqualTo(1.0);
+    }
+
+    @Test
     void previousWindowIsTheSameLengthJustBefore() {
         // previous 7 days = 13..7 days ago: 7–10 done (4 of 7); this week's check-ins don't count there
         Set<LocalDate> done = daysAgo(0, 1, 7, 8, 9, 10);

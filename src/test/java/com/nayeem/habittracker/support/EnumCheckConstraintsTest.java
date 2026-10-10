@@ -26,8 +26,10 @@ class EnumCheckConstraintsTest extends IntegrationTest {
     /** "Entity.attribute" → the check constraint guarding its column. */
     private static final Map<String, String> CONSTRAINTS = Map.of(
             "User.authProvider", "users_auth_provider_check",
+            "User.plan", "users_plan_check",
             "Goal.status", "goals_status_check",
             "Habit.frequencyType", "habits_frequency_type_check",
+            "Habit.kind", "habits_kind_check",
             "Notification.type", "notifications_type_check",
             "Resource.type", "resources_type_check",
             "OneTimeToken.purpose", "one_time_tokens_purpose_check");

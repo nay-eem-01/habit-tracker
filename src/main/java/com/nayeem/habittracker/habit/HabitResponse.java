@@ -9,9 +9,11 @@ public record HabitResponse(
         Long id,
         String name,
         String category,
+        HabitKind kind,
         FrequencyType frequencyType,
         FrequencyConfig frequencyConfig,
         int targetCount,
+        String unit,
         @JsonFormat(pattern = "HH:mm") LocalTime reminderTime,
         boolean archived,
         Long goalId,
@@ -19,8 +21,8 @@ public record HabitResponse(
         Instant createdAt) {
 
     static HabitResponse from(Habit habit) {
-        return new HabitResponse(habit.getId(), habit.getName(), habit.getCategory(), habit.getFrequencyType(),
-                habit.getFrequencyConfig(), habit.getTargetCount(), habit.getReminderTime(),
+        return new HabitResponse(habit.getId(), habit.getName(), habit.getCategory(), habit.getKind(), habit.getFrequencyType(),
+                habit.getFrequencyConfig(), habit.getTargetCount(), habit.getUnit(), habit.getReminderTime(),
                 habit.isArchived(), habit.getGoal() == null ? null : habit.getGoal().getId(),
                 habit.getGoalTargetDays(), habit.getCreatedAt());
     }

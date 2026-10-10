@@ -7,6 +7,7 @@ import com.nayeem.habittracker.dashboard.DashboardResponse.HabitRate;
 import com.nayeem.habittracker.dashboard.DashboardResponse.Period;
 import com.nayeem.habittracker.dashboard.DashboardResponse.TodayHabit;
 import com.nayeem.habittracker.habit.FrequencyType;
+import com.nayeem.habittracker.habit.HabitKind;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;
@@ -73,13 +74,13 @@ class HighlightCalculatorTest {
     }
 
     private static TodayHabit daily(Long id, int streak, boolean due, boolean done) {
-        return new TodayHabit(id, "h" + id, null, FrequencyType.DAILY, 1, done ? 1 : 0, done, due, null, null,
-                streak, StreakUnit.DAYS);
+        return new TodayHabit(id, "h" + id, null, HabitKind.BUILD, FrequencyType.DAILY, 1, null, done ? 1 : 0, done,
+                false, due, null, null, streak, StreakUnit.DAYS);
     }
 
     private static TodayHabit weekly(Long id, int doneThisWeek, boolean doneToday) {
-        return new TodayHabit(id, "h" + id, null, FrequencyType.X_TIMES_PER_WEEK, 1, doneToday ? 1 : 0, doneToday,
-                true, doneThisWeek, 3, 5, StreakUnit.WEEKS);
+        return new TodayHabit(id, "h" + id, null, HabitKind.BUILD, FrequencyType.X_TIMES_PER_WEEK, 1, null,
+                doneToday ? 1 : 0, doneToday, false, true, doneThisWeek, 3, 5, StreakUnit.WEEKS);
     }
 
     private static HabitCompletion completion(Long id, Double rate30, Double change30) {

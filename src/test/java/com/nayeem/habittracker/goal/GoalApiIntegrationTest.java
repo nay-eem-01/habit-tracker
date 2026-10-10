@@ -83,13 +83,14 @@ class GoalApiIntegrationTest extends IntegrationTest {
     @Test
     void listIsPagedAndFiltersByStatus() throws Exception {
         String token = bearerFor("goal.list@example.com");
-        createGoal(token, HALF_MARATHON);
-        createGoal(token, """
-                {"title":"Learn Spanish"}""");
+        // achieved before the others: the free plan keeps 2 goals active at a time
         Integer done = createGoal(token, """
                 {"title":"Read 12 books"}""");
         goalRepository.findById(done.longValue()).orElseThrow().setStatus(GoalStatus.ACHIEVED);
         goalRepository.flush();
+        createGoal(token, HALF_MARATHON);
+        createGoal(token, """
+                {"title":"Learn Spanish"}""");
 
         mockMvc.perform(get("/api/goals").header(HttpHeaders.AUTHORIZATION, token))
                 .andExpect(jsonPath("$.payload.totalElements").value(3));

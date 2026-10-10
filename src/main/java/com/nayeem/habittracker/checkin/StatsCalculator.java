@@ -26,8 +26,14 @@ public final class StatsCalculator {
 
     public static WindowStats window(FrequencyType type, FrequencyConfig config, Set<LocalDate> doneDays,
                                      LocalDate start, LocalDate today, int days) {
+        return window(type, config, doneDays, Set.of(), start, today, days);
+    }
+
+    /** @param restDays days the user rested: not expected (PLAN.md §3.4) */
+    public static WindowStats window(FrequencyType type, FrequencyConfig config, Set<LocalDate> doneDays,
+                                     Set<LocalDate> restDays, LocalDate start, LocalDate today, int days) {
         LocalDate to = doneDays.contains(today) ? today : today.minusDays(1);
-        return range(type, config, doneDays, start, today.minusDays(days - 1L), to, days);
+        return range(type, config, doneDays, restDays, start, today.minusDays(days - 1L), to, days);
     }
 
     /**
@@ -36,13 +42,19 @@ public final class StatsCalculator {
      */
     public static WindowStats previousWindow(FrequencyType type, FrequencyConfig config, Set<LocalDate> doneDays,
                                              LocalDate start, LocalDate today, int days) {
+        return previousWindow(type, config, doneDays, Set.of(), start, today, days);
+    }
+
+    public static WindowStats previousWindow(FrequencyType type, FrequencyConfig config, Set<LocalDate> doneDays,
+                                             Set<LocalDate> restDays, LocalDate start, LocalDate today, int days) {
         LocalDate to = today.minusDays(days);
-        return range(type, config, doneDays, start, to.minusDays(days - 1L), to, days);
+        return range(type, config, doneDays, restDays, start, to.minusDays(days - 1L), to, days);
     }
 
     /** {@code from..to} inclusive, clipped to the habit's first day; empty when it ends first. */
     private static WindowStats range(FrequencyType type, FrequencyConfig config, Set<LocalDate> doneDays,
-                                     LocalDate start, LocalDate windowStart, LocalDate to, int days) {
+                                     Set<LocalDate> restDays, LocalDate start, LocalDate windowStart, LocalDate to,
+                                     int days) {
         LocalDate from = windowStart.isBefore(start) ? start : windowStart;
 
         int done = 0;
@@ -58,7 +70,8 @@ public final class StatsCalculator {
             expected = config.timesPerWeek() * span / 7.0;
         } else {
             for (LocalDate day = from; !day.isAfter(to); day = day.plusDays(1)) {
-                boolean scheduled = type == FrequencyType.DAILY || config.days().contains(day.getDayOfWeek());
+                boolean scheduled = (type == FrequencyType.DAILY || config.days().contains(day.getDayOfWeek()))
+                        && !restDays.contains(day);
                 if (scheduled) {
                     expected++;
                     if (doneDays.contains(day)) {

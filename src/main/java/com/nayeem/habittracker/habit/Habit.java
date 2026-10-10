@@ -45,6 +45,12 @@ public class Habit extends AuditModel {
     @Column(nullable = false, length = 120)
     private String name;
 
+    /** Set at creation, never changed: it decides what the logs mean. */
+    @Setter(AccessLevel.NONE)
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 10, updatable = false)
+    private HabitKind kind = HabitKind.BUILD;
+
     @Column(length = 50)
     private String category;
 
@@ -72,6 +78,10 @@ public class Habit extends AuditModel {
     /** Completions a day needs to count as done, e.g. 8 for "drink water 8×". */
     @Column(nullable = false)
     private int targetCount = 1;
+
+    /** What a counted habit counts ("glasses"); null = no unit. */
+    @Column(length = 20)
+    private String unit;
 
     /** Local time of day, in the owner's timezone, to remind about the habit; null = no reminder. */
     private LocalTime reminderTime;
@@ -115,6 +125,11 @@ public class Habit extends AuditModel {
             pastSchedules = past;
         }
         scheduleSince = today;
+    }
+
+    /** For a new habit only; a habit's kind never changes. */
+    public void startAs(HabitKind kind) {
+        this.kind = kind;
     }
 
     /** The owner's first day of the current schedule: where streaks, stats and current XP start. */

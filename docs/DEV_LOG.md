@@ -50,6 +50,31 @@ Phase 6 → 10 in roadmap order. Then the decisions in `PLAN.md` §6 (integratio
 
 ## Log
 
+**2026-10-10** — 9.4: `users.plan` `FREE`/`PRO` (V15, everyone FREE; no billing). The `Plan` enum holds
+the limits — FREE 7 active habits, 2 active goals — checked on create and unarchive; 403
+`PLAN_LIMIT_REACHED`. `plan` on the user. Phase 9 done.
+
+**2026-10-10** — 9.3d: `habit_logs.rest_cost_xp` (V14). Per habit and week: 1st rest free, 2nd 100 XP,
+3rd 200, no 4th (409 `REST_LIMIT_REACHED`); 409 `XP_NOT_ENOUGH` when the balance is short. Level
+gains `spentXp` and `xpBalance` (= lifetime XP − spent); the level itself never drops. Ending a rest
+(cancel, or a check-in that day) refunds it. `checkin.XpBalance` is implemented by `LevelService`, so
+checkin needn't depend on level. The habit row is locked while a rest is priced.
+
+**2026-10-10** — 9.3a–c (split in three PRs to stay small): `habit_logs.rest` (V13). `POST /api/habits/{id}/rest` (date, default today;
+check-in date rules) and `DELETE …/rest?date=`. Daily and chosen-weekday build habits, on a due day
+not yet done, one a week (Mon–Sun). The calculators take the rest days and skip them like an
+unscheduled day (overloads keep the old signatures); reminders skip a rested habit; dashboard shows
+`resting`. A check-in on the day ends the rest.
+
+**2026-10-10** — 9.2: `habits.kind` `BUILD`/`QUIT` (V12, fixed at creation). A quit habit is daily,
+target 1, no reminder, no goal (400 `HABIT_QUIT_INVALID`); a check-in records a slip.
+`CountedDays` turns slips into clean days (today included while clean) and hands the streak walk
+tomorrow as "today", so a slip today breaks the run at once — one rule for streak, stats, dashboard
+and XP. Quit habits are never due and stay out of the patterns.
+
+**2026-10-10** — 9.1: optional `unit` (≤ 20, V11) on habits, in habit responses and on the
+dashboard's today list.
+
 **2026-10-10** — 8.5: `DELETE /api/habits/{id}` → 204; its logs and notifications go by cascade, and
 with them the XP and goal progress they earned (archive keeps them). A JPQL bulk delete, so no loaded
 log can still reference the habit at flush. Phase 8 done except 2.3 (waits for the client id).

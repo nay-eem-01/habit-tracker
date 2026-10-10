@@ -1,8 +1,10 @@
 package com.nayeem.habittracker.habit;
 
+import jakarta.persistence.LockModeType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -20,9 +22,15 @@ interface HabitRepository extends JpaRepository<Habit, Long> {
 
     Optional<Habit> findByIdAndUserId(Long id, Long userId);
 
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select h from Habit h where h.id = :id and h.user.id = :userId")
+    Optional<Habit> findByIdAndUserIdForUpdate(@Param("id") Long id, @Param("userId") Long userId);
+
     List<Habit> findAllByGoalIdAndUserIdOrderById(Long goalId, Long userId);
 
     List<Habit> findAllByUserId(Long userId);
+
+    long countByUserIdAndArchivedFalse(Long userId);
 
     /** One statement, so no loaded log can still point at the habit; the database cascades (V10). */
     @Modifying(clearAutomatically = true, flushAutomatically = true)
@@ -33,8 +41,8 @@ interface HabitRepository extends JpaRepository<Habit, Long> {
 
     /**
      * Active habits whose reminder time is this minute <em>in their owner's timezone</em> and that
-     * aren't done yet on the owner's today (plan §12.2). The zone conversion is Postgres's, so one
-     * query serves every user. Whether the habit is due today is the caller's rule.
+     * aren't done (or rested) yet on the owner's today (plan §12.2). The zone conversion is
+     * Postgres's, so one query serves every user. Whether the habit is due today is the caller's rule.
      */
     @Query(nativeQuery = true, value = """
             select h.id from habits h
@@ -46,7 +54,7 @@ interface HabitRepository extends JpaRepository<Habit, Long> {
                   select 1 from habit_logs l
                   where l.habit_id = h.id
                     and l.log_date = (cast(:now as timestamptz) at time zone u.timezone)::date
-                    and l.completed_count >= l.target_count)
+                    and (l.completed_count >= l.target_count or l.rest))
             """)
     List<Long> findRemindableAt(@Param("now") Instant now);
 }

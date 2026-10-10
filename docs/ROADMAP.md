@@ -58,10 +58,13 @@ into the base; the base PRs into `staging`.
 
 | # | Step | Status |
 |---|---|---|
-| 9.1 | Units on counted habits ("8 glasses") | ⬜ |
-| 9.2 | Quit habits (clean days, a check-in is a slip) | ⬜ |
-| 9.3 | Rest days with weekly limit and XP cost; spendable XP balance | ⬜ |
-| 9.4 | Free plan limits: 7 active habits, 2 active goals | ⬜ |
+| 9.1 | Units on counted habits ("8 glasses") | ✅ |
+| 9.2 | Quit habits (clean days, a check-in is a slip) | ✅ |
+| 9.3a | Rest days in the streak, stats and XP calculators | ✅ |
+| 9.3b | Rest a habit on a day: one a week; reminders skip it | ✅ |
+| 9.3c | Dashboard and level count rest days | ✅ |
+| 9.3d | 2nd and 3rd rest day of a week cost 100 / 200 XP from a spendable balance | ✅ |
+| 9.4 | Free plan limits: 7 active habits, 2 active goals | ✅ |
 
 ## Phase 10 — Web push (base `feat/push-base`)
 

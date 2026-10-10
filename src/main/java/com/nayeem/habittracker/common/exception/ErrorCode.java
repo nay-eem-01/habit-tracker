@@ -20,6 +20,7 @@ public enum ErrorCode {
     NOT_FOUND(HttpStatus.NOT_FOUND, "Not found"),
     METHOD_NOT_ALLOWED(HttpStatus.METHOD_NOT_ALLOWED, "Method not allowed"),
     INTERNAL_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "Something went wrong"),
+    PLAN_LIMIT_REACHED(HttpStatus.FORBIDDEN, "Your plan doesn't allow more of these"),
     RATE_LIMITED(HttpStatus.TOO_MANY_REQUESTS, "Too many attempts; wait a little and try again"),
 
     AUTH_INVALID_CREDENTIALS(HttpStatus.UNAUTHORIZED, "Invalid email or password"),
@@ -37,6 +38,7 @@ public enum ErrorCode {
 
     HABIT_NOT_FOUND(HttpStatus.NOT_FOUND, "Habit not found"),
     HABIT_INVALID_FREQUENCY(HttpStatus.BAD_REQUEST, "The schedule doesn't match the frequency type"),
+    HABIT_QUIT_INVALID(HttpStatus.BAD_REQUEST, "That isn't possible for a quit habit"),
     HABIT_ARCHIVED(HttpStatus.CONFLICT, "This habit is archived; unarchive it first"),
 
     GOAL_NOT_FOUND(HttpStatus.NOT_FOUND, "Goal not found"),
@@ -53,6 +55,11 @@ public enum ErrorCode {
     FILE_TYPE_NOT_ALLOWED(HttpStatus.UNSUPPORTED_MEDIA_TYPE,
             "Only PNG, JPEG, WebP, GIF, PDF and text (.txt, .md) files can be uploaded"),
     FILE_QUOTA_EXCEEDED(HttpStatus.CONTENT_TOO_LARGE, "Your file storage is full; delete a file first"),
+
+    REST_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "This habit can't rest on that day"),
+    REST_DAY_DONE(HttpStatus.CONFLICT, "The habit is already done that day"),
+    REST_LIMIT_REACHED(HttpStatus.CONFLICT, "No rest days left for this habit this week"),
+    XP_NOT_ENOUGH(HttpStatus.CONFLICT, "You don't have enough XP to spend"),
 
     LOG_DATE_OUT_OF_RANGE(HttpStatus.BAD_REQUEST, "You can't check in for that date"),
 

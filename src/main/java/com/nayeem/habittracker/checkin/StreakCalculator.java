@@ -53,9 +53,15 @@ public final class StreakCalculator {
      */
     public static Streak calculate(FrequencyType type, FrequencyConfig config, Set<LocalDate> doneDays,
                                    LocalDate start, LocalDate today) {
+        return calculate(type, config, doneDays, Set.of(), start, today);
+    }
+
+    /** @param restDays days the user rested: skipped like an unscheduled day (PLAN.md §3.4) */
+    public static Streak calculate(FrequencyType type, FrequencyConfig config, Set<LocalDate> doneDays,
+                                   Set<LocalDate> restDays, LocalDate start, LocalDate today) {
         int[] current = {0};
         int[] longest = {0};
-        walk(type, config, doneDays, start, today, (countedDays, run) -> {
+        walk(type, config, doneDays, restDays, start, today, (countedDays, run) -> {
             current[0] = run;
             longest[0] = Math.max(longest[0], run);
         });
@@ -64,20 +70,20 @@ public final class StreakCalculator {
 
     /** Walks the habit's units from {@code start} to {@code today} with the same rules as {@link #calculate}. */
     public static void walk(FrequencyType type, FrequencyConfig config, Set<LocalDate> doneDays,
-                            LocalDate start, LocalDate today, UnitVisitor visitor) {
+                            Set<LocalDate> restDays, LocalDate start, LocalDate today, UnitVisitor visitor) {
         switch (type) {
-            case DAILY -> walkDays(doneDays, start, today, null, visitor);
-            case SPECIFIC_DAYS -> walkDays(doneDays, start, today, config.days(), visitor);
+            case DAILY -> walkDays(doneDays, restDays, start, today, null, visitor);
+            case SPECIFIC_DAYS -> walkDays(doneDays, restDays, start, today, config.days(), visitor);
             case X_TIMES_PER_WEEK -> walkWeeks(doneDays, start, today, config.timesPerWeek(), visitor);
         }
     }
 
     /** @param days the scheduled weekdays, or {@code null} for every day */
-    private static void walkDays(Set<LocalDate> doneDays, LocalDate start, LocalDate today, Set<DayOfWeek> days,
-                                 UnitVisitor visitor) {
+    private static void walkDays(Set<LocalDate> doneDays, Set<LocalDate> restDays, LocalDate start, LocalDate today,
+                                 Set<DayOfWeek> days, UnitVisitor visitor) {
         int run = 0;
         for (LocalDate day = start; !day.isAfter(today); day = day.plusDays(1)) {
-            if (days != null && !days.contains(day.getDayOfWeek())) {
+            if ((days != null && !days.contains(day.getDayOfWeek())) || restDays.contains(day)) {
                 continue;
             }
             boolean done = doneDays.contains(day);

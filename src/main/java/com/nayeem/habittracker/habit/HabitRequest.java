@@ -28,6 +28,10 @@ public class HabitRequest {
     @Schema(example = "Learning")
     private String category;
 
+    @Schema(description = "BUILD (default): check in when done. QUIT: check in when you slip; daily, no reminder, "
+            + "target 1, no goal. Set at creation; it can't change.")
+    private HabitKind kind;
+
     @NotNull
     @Schema(example = "SPECIFIC_DAYS")
     private FrequencyType frequencyType;
@@ -38,6 +42,10 @@ public class HabitRequest {
     @Max(100)
     @Schema(description = "Completions a day needs to count as done. Defaults to 1.", example = "1")
     private Integer targetCount;
+
+    @Size(max = 20)
+    @Schema(description = "What is counted, shown with the target: \"8 glasses\". Optional.", example = "glasses")
+    private String unit;
 
     @JsonFormat(pattern = "HH:mm")
     @Schema(type = "string", example = "07:30",

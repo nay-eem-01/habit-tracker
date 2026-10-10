@@ -2,6 +2,7 @@ package com.nayeem.habittracker.dashboard;
 
 import com.nayeem.habittracker.checkin.StreakUnit;
 import com.nayeem.habittracker.habit.FrequencyType;
+import com.nayeem.habittracker.habit.HabitKind;
 import com.nayeem.habittracker.level.Level;
 import io.swagger.v3.oas.annotations.media.Schema;
 
@@ -54,10 +55,13 @@ public record DashboardResponse(
             Long habitId,
             String name,
             String category,
+            @Schema(description = "QUIT: done = no slip today, never due") HabitKind kind,
             FrequencyType frequencyType,
             int targetCount,
+            String unit,
             @Schema(description = "Today's count so far") int completedCount,
             @Schema(description = "Today's count reached the target") boolean done,
+            @Schema(description = "Today is a rest day for this habit") boolean resting,
             @Schema(description = "Daily: always. Chosen weekdays: on them. N-a-week: until this week's N is met "
                     + "(and on a day it was done)") boolean due,
             @Schema(description = "N-a-week only: done days this week (Mon–Sun), today included") Integer doneThisWeek,

@@ -43,6 +43,10 @@ public class User extends AuditModel {
     /** When the user proved they own the address (an emailed link, or a password reset); null until then. */
     private Instant emailVerifiedAt;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 10)
+    private Plan plan = Plan.FREE;
+
     /** Consent to promotional email; off until the user opts in. */
     @Column(nullable = false)
     private boolean marketingEmails;
