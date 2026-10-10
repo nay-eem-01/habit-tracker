@@ -8,9 +8,13 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.CacheControl;
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -23,6 +27,19 @@ import org.springframework.web.bind.annotation.RestController;
 class AccountController {
 
     private final AccountService accountService;
+
+    @Operation(summary = "Download all my data as JSON",
+            description = "Profile, habits (archived too), every check-in, goals, notes, links and file entries "
+                    + "(not the files themselves — download those one by one). Same shapes as the rest of the API.")
+    @ApiResponse(responseCode = "200", description = "devhabit-export.json, as an attachment")
+    @GetMapping("/export")
+    ResponseEntity<AccountExport> export(@AuthenticationPrincipal AuthUser user) {
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, ContentDisposition.attachment()
+                        .filename("devhabit-export.json").build().toString())
+                .cacheControl(CacheControl.noStore().cachePrivate())
+                .body(accountService.export(user.id()));
+    }
 
     @Operation(summary = "Delete my account and everything in it",
             description = "Habits, check-ins, goals, notes, links, files, notifications and sessions — for good. "
