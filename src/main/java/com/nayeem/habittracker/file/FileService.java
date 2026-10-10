@@ -42,6 +42,9 @@ public class FileService {
     /** Must run inside the caller's transaction, so the row and the feature's row commit together. */
     @Transactional
     public StoredFile store(Long userId, MultipartFile upload) {
+        if (!properties.isEnabled()) {
+            throw new ApplicationException(ErrorCode.FILE_UPLOADS_DISABLED);
+        }
         if (upload.isEmpty()) {
             throw new ApplicationException(ErrorCode.FILE_EMPTY);
         }

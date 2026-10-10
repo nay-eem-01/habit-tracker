@@ -39,7 +39,7 @@ class JsonSecurityErrorHandler implements AuthenticationEntryPoint, AccessDenied
         write(response, ErrorCode.FORBIDDEN);
     }
 
-    private void write(HttpServletResponse response, ErrorCode code) throws IOException {
+    void write(HttpServletResponse response, ErrorCode code) throws IOException {
         HttpResponse body = HttpResponse.error(code, code.getDefaultMessage(),
                 MDC.get(CorrelationIdFilter.MDC_KEY), null);
         response.setStatus(code.getStatus().value());

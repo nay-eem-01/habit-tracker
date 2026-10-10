@@ -20,6 +20,7 @@ public class SecurityProperties {
     private final RefreshToken refreshToken = new RefreshToken();
     private final PasswordReset passwordReset = new PasswordReset();
     private final Cors cors = new Cors();
+    private final RateLimits rateLimits = new RateLimits();
 
     @Getter
     @Setter
@@ -51,5 +52,12 @@ public class SecurityProperties {
     public static class Cors {
         /** Exact origins; never {@code *} — the refresh cookie needs credentials. */
         private List<String> allowedOrigins = new ArrayList<>();
+    }
+
+    @Getter
+    @Setter
+    public static class RateLimits {
+        /** Per-IP limits on the public auth endpoints ({@link AuthRateLimitFilter}). Tests switch them off. */
+        private boolean enabled = true;
     }
 }

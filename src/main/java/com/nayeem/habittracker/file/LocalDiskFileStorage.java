@@ -32,7 +32,9 @@ class LocalDiskFileStorage implements FileStorage {
             throw new IllegalStateException("app.files.dir must be set");
         }
         root = properties.getDir().toAbsolutePath().normalize();
-        Files.createDirectories(root);
+        if (properties.isEnabled()) {   // switched off, nothing is written: don't need a writable disk to start
+            Files.createDirectories(root);
+        }
     }
 
     @Override

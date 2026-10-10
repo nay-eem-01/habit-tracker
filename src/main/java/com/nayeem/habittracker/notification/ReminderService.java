@@ -7,7 +7,6 @@ import com.nayeem.habittracker.habit.Habit;
 import com.nayeem.habittracker.habit.HabitService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionTemplate;
 
@@ -17,8 +16,9 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 
 /**
- * Turns "this habit's reminder time is now" into a notification (plan §12.2). Minutes missed
- * while the app was down are not made up. Logs ids only — never habit names or emails.
+ * Turns "this habit's reminder time is now" into an in-app notification — never an email
+ * (PLAN.md §3.6). Minutes missed while the app was down are not made up. Logs ids only — never
+ * habit names or emails.
  */
 @Slf4j
 @Service
@@ -28,7 +28,6 @@ public class ReminderService {
     private final HabitService habitService;
     private final HabitProgressService habitProgressService;
     private final NotificationRepository notificationRepository;
-    private final ApplicationEventPublisher events;
     private final TransactionTemplate transactionTemplate;
 
     /**
@@ -65,8 +64,6 @@ public class ReminderService {
         if (inserted == 0) {
             return false;
         }
-        events.publishEvent(new OutgoingNotification(habit.getUser().getId(), habit.getUser().getEmail(),
-                title, body)); // sent after commit, only for a new reminder
         log.info("Reminder created for habit {} (user {}) on {}", habit.getId(), habit.getUser().getId(), today);
         return true;
     }

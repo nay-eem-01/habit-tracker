@@ -1,6 +1,6 @@
 package com.nayeem.habittracker.notification;
 
-/** A delivery channel beyond the in-app list (plan §12.2). Push joins here once there is a frontend. */
+/** Sends account email: password reset, email verification (PLAN.md §3.6). Reminders are never emailed. */
 public interface NotificationSender {
 
     void send(OutgoingNotification notification);

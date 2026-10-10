@@ -14,7 +14,9 @@ import org.springframework.context.annotation.Import;
  * cached context (and one container).
  */
 @SpringBootTest(properties = {"app.security.jwt.secret=" + IntegrationTest.TEST_JWT_SECRET,
-        "app.reminders.enabled=false", "app.files.dir=target/test-files"})
+        "app.reminders.enabled=false", "app.files.enabled=true", "app.files.dir=target/test-files",
+        // the tests share one client IP; AuthRateLimitFilterTest covers the limits
+        "app.security.rate-limits.enabled=false"})
 @AutoConfigureMockMvc
 @Import(TestcontainersConfiguration.class)
 public abstract class IntegrationTest {
