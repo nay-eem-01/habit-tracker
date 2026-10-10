@@ -26,7 +26,7 @@ into the base; the base PRs into `staging`.
 |---|---|---|
 | 6.1 | Docs: plan rewritten (overview, decisions, architecture), roadmap and dev log compacted | ✅ |
 | 6.2 | Logging: OpenTelemetry out (`[cid=…]` stays), async appenders block instead of drop; unused deps and config out | ✅ |
-| 6.3 | A done day keeps the target it was logged with (review C1) | ⬜ |
+| 6.3 | A done day keeps the target it was logged with (review C1) | ✅ |
 | 6.4 | A schedule change starts a new streak and keeps the XP earned (review C1) | ⬜ |
 | 6.5 | Reminders: one failing habit doesn't stop the others; injected clock for refresh tokens; one-query mark-all-read (C2–C4) | ⬜ |
 

@@ -37,10 +37,14 @@ public class HabitLog extends AuditModel {
     @Column(nullable = false)
     private int completedCount;
 
+    /** The habit's target when this day was logged; the day is judged by it, not today's target. */
+    @Column(nullable = false)
+    private int targetCount;
+
     @Column(length = 500)
     private String note;
 
     public boolean isDone() {
-        return completedCount >= habit.getTargetCount();
+        return completedCount >= targetCount;
     }
 }
