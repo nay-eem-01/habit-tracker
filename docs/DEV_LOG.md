@@ -45,6 +45,11 @@ Phase 6 → 10 in roadmap order. Then the decisions in `PLAN.md` §6 (integratio
 
 ## Log
 
+**2026-10-10** — 7.1: `application-prod.properties` (`SPRING_PROFILES_ACTIVE=prod`): INFO logs, no SQL,
+no Swagger or API docs, actuator health/info only, forwarded headers trusted, `CORS_ALLOWED_ORIGINS`
+and `APP_FRONTEND_URL` required; logs to stdout only under `prod`. Nightly job deletes refresh tokens
+and reset links expired over a day ago. A test boots the prod profile.
+
 **2026-10-10** — 6.5: reminders run one transaction per habit (a failure is logged, the rest still
 go out); `RefreshTokenService` uses the injected clock; mark-all-read is one `update`. Found while
 there: PostgreSQL reads an offset like `+06:00` as UTC−6 in `at time zone`, so sign-up now accepts

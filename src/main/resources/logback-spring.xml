@@ -54,7 +54,13 @@
     </appender>
 
     <root level="INFO">
-        <appender-ref ref="ASYNC_FILE"/>
         <appender-ref ref="ASYNC_STDOUT"/>
     </root>
+
+    <!-- The rolling file needs a lasting disk; in production (a container) logs go to stdout only. -->
+    <springProfile name="!prod">
+        <root>
+            <appender-ref ref="ASYNC_FILE"/>
+        </root>
+    </springProfile>
 </configuration>
