@@ -5,6 +5,8 @@ import com.nayeem.habittracker.common.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -128,6 +130,33 @@ public class UserService {
         user.setMarketingEmails(request.getMarketingEmails());
         log.info("Profile of user {} updated", userId);
         return UserResponse.from(userRepository.saveAndFlush(user));
+    }
+
+    /** For admins: every user, or those whose email contains {@code query}. */
+    @Transactional(readOnly = true)
+    public Page<User> search(String query, Pageable pageable) {
+        return StringUtils.hasText(query)
+                ? userRepository.findByEmailContaining(normalizeEmail(query), pageable)
+                : userRepository.findAll(pageable);
+    }
+
+    @Transactional
+    public User setPlan(Long userId, Plan plan) {
+        User user = getById(userId);
+        user.setPlan(plan);
+        return userRepository.saveAndFlush(user);
+    }
+
+    /** Suspends (from now) or lifts a suspension; suspending again keeps the first time. */
+    @Transactional
+    public User setSuspended(Long userId, boolean suspended) {
+        User user = getById(userId);
+        if (!suspended) {
+            user.setSuspendedAt(null);
+        } else if (user.getSuspendedAt() == null) {
+            user.setSuspendedAt(clock.instant());
+        }
+        return userRepository.saveAndFlush(user);
     }
 
     /** Deletes the user; the database cascades to everything they own (V10). */

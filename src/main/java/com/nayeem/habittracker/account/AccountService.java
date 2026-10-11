@@ -36,10 +36,16 @@ public class AccountService {
                 resourceService.exportAll(userId));
     }
 
-    /** Everything goes: rows by cascade, file bytes after commit, sessions with their tokens. */
+    /** The user's own delete: their password first, when they have one. */
     @Transactional
     public void delete(Long userId, DeleteAccountRequest request) {
         authService.confirmPassword(userService.getById(userId), request.getPassword());
+        deleteEverything(userId);
+    }
+
+    /** Everything goes: rows by cascade, file bytes after commit, sessions with their tokens. */
+    @Transactional
+    public void deleteEverything(Long userId) {
         fileService.deleteAllOfUserAfterCommit(userId);
         userService.delete(userId);
     }

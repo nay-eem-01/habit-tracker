@@ -5,16 +5,15 @@ Entries are short: what changed, what was decided, what bit us. Details live in 
 
 ## Where we are
 
-- M1–M5 on `staging`. Phases 6–10 (from the 2026-10-09 review) built on stacked step branches,
-  waiting for review and merge in roadmap order: fixes, security and launch, accounts, habits (units,
-  quit habits, rest days, free plan), web push.
+- Phases 6–10 and Google sign-in (2.3) merged to `staging`. Email (Gmail SMTP) and web push (VAPID)
+  set up locally. Phase 12 (admin API) built on stacked step branches, waiting for merge.
 - Frontend: `habit-tracker-web`, its own plan and log; built by another agent. What it needs from
   these phases is listed below.
 
 ## Next up
 
-1. Merge Phases 6–10. 2. Decisions in `PLAN.md` §6: integrations (Phase 11), host (D.3, files back
-on), Google client id (2.3). 3. Frontend work below.
+1. Merge Phase 12 (admin). 2. Decisions in `PLAN.md` §6: integrations (Phase 11), host (D.3, files
+back on). 3. Frontend: Phase N below, then its Phase A (admin, `habit-tracker-web/docs/ADMIN.md`).
 
 ## Frontend needs (from Phases 6–10)
 
@@ -39,7 +38,6 @@ on), Google client id (2.3). 3. Frontend work below.
 | Item | Who | Blocks |
 |---|---|---|
 | Choose a host | Nayeem | D.3, file uploads back on |
-| Gmail app account + app password (`docs/LAUNCH_GUIDE.md` §2; Brevo's SMS didn't arrive) | Nayeem | real email in production |
 | Which integrations first | Nayeem | Phase 11 |
 
 ## How to run
@@ -67,6 +65,27 @@ on), Google client id (2.3). 3. Frontend work below.
 ---
 
 ## Log
+
+**2026-10-11** — 12.3 `GET /api/admin/stats`: users (total, verified, with Google, Pro, suspended,
+sign-ups per UTC day for 30 days), active users (logged anything in the last 24 h / 7 / 30 days),
+usage (active habits and goals, push users, free users at a limit — the likely Pro buyers, check-ins
+per day), delivery (emails sent/failed, pushes sent/gone/failed). Delivery numbers are Micrometer
+counters in memory, since `since` (app start); a restart zeroes them. `PushService` now also logs
+"Push to user N: x of y browser(s) accepted", so a user with no subscribed browser no longer looks
+like a silent failure (found 2026-10-10 testing reminders).
+
+**2026-10-11** — 12.2 admin users API (`/api/admin/users`): list (`q` = part of the email, sort by
+`createdAt`/`email`), one user with counts (active/archived habits, check-ins, goals, last active, push
+browsers — read with plain SQL in `AdminQueries`, never content), `PUT …/{id}/plan`,
+`POST …/{id}/suspend` (also ends their sessions) and `/unsuspend`, `DELETE …/{id}` (same as the
+user's own delete, no password). Admins can't be suspended or deleted (409 `ADMIN_TARGET_IS_ADMIN`),
+which also stops an admin locking themselves out. Every admin action is logged with the admin's id.
+
+**2026-10-11** — 12.1 roles and suspension (V18): `users.role` USER/ADMIN, made admin by hand
+(`update users set role = 'ADMIN' where email = …`); `/api/admin/**` is ADMIN only, 404 for anyone
+else. `users.suspended_at`: the JWT filter treats a suspended user as anonymous (401), and every
+sign-in path ends in `issueTokens`, which refuses with 403 `AUTH_ACCOUNT_SUSPENDED` — after the
+password check, so a wrong password still says nothing. `/api/auth/me` now has `role`.
 
 **2026-10-10** — 2.3 Google sign-in: `POST /api/auth/google {idToken, timezone?}`. Verified locally with
 `spring-security-oauth2-jose` (Google's JWKS, `iss`, `aud` = client id, `exp`); unverified Google email

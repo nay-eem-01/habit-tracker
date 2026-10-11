@@ -1,5 +1,7 @@
 package com.nayeem.habittracker.notification;
 
+import com.nayeem.habittracker.common.AppMetrics;
+import io.micrometer.core.instrument.MeterRegistry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -16,6 +18,7 @@ class EmailNotificationSender implements NotificationSender {
 
     private final JavaMailSender mailSender;
     private final NotificationProperties properties;
+    private final MeterRegistry meterRegistry;
 
     @Override
     public void send(OutgoingNotification notification) {
@@ -24,7 +27,13 @@ class EmailNotificationSender implements NotificationSender {
         message.setTo(notification.email());
         message.setSubject(notification.title());
         message.setText(notification.body());
-        mailSender.send(message);
+        try {
+            mailSender.send(message);
+        } catch (RuntimeException e) {
+            meterRegistry.counter(AppMetrics.EMAILS, AppMetrics.OUTCOME, "failed").increment();
+            throw e;
+        }
+        meterRegistry.counter(AppMetrics.EMAILS, AppMetrics.OUTCOME, "sent").increment();
         log.info("Email sent to user {}", notification.userId());
     }
 }

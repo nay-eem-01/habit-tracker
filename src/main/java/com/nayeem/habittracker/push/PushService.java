@@ -1,8 +1,10 @@
 package com.nayeem.habittracker.push;
 
+import com.nayeem.habittracker.common.AppMetrics;
 import com.nayeem.habittracker.common.exception.ApplicationException;
 import com.nayeem.habittracker.common.exception.ErrorCode;
 import com.nayeem.habittracker.user.UserService;
+import io.micrometer.core.instrument.MeterRegistry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -35,6 +37,7 @@ public class PushService {
     private final WebPushSender sender;
     private final PushProperties properties;
     private final ObjectMapper objectMapper;
+    private final MeterRegistry meterRegistry;
 
     public PushKeyResponse publicKey() {
         return new PushKeyResponse(properties.isEnabled(), properties.isEnabled() ? properties.getPublicKey() : null);
@@ -72,14 +75,20 @@ public class PushService {
             return;
         }
         byte[] payload = objectMapper.writeValueAsBytes(Map.of("title", title, "body", body, "url", url));
+        int sent = 0;
         for (PushSubscription subscription : subscriptions) {
+            String outcome = "failed";
             try {
                 int status = sender.send(subscription, payload);
                 if (GONE.contains(status)) {
+                    outcome = "gone";
                     repository.delete(subscription);
                     log.info("Push subscription {} of user {} is gone; deleted", subscription.getId(), userId);
                 } else if (status >= 400) {
                     log.warn("Push to subscription {} of user {} refused: {}", subscription.getId(), userId, status);
+                } else {
+                    outcome = "sent";
+                    sent++;
                 }
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
@@ -88,7 +97,10 @@ public class PushService {
                 log.warn("Push to subscription {} of user {} failed: {}", subscription.getId(), userId,
                         e.getClass().getSimpleName());
             }
+            meterRegistry.counter(AppMetrics.PUSHES, AppMetrics.OUTCOME, outcome).increment();
         }
+        // also when there are none: "no browser subscribed" must not look like a silent failure
+        log.info("Push to user {}: {} of {} browser(s) accepted", userId, sent, subscriptions.size());
     }
 
     static void checkEndpoint(String endpoint) {

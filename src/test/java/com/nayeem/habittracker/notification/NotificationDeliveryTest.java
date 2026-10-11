@@ -1,5 +1,7 @@
 package com.nayeem.habittracker.notification;
 
+import com.nayeem.habittracker.common.AppMetrics;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.mail.MailSendException;
@@ -10,6 +12,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
@@ -27,7 +30,9 @@ class NotificationDeliveryTest {
         NotificationProperties properties = new NotificationProperties();
         properties.getEmail().setFrom("habits@example.com");
 
-        new EmailNotificationSender(mailSender, properties).send(MESSAGE);
+        SimpleMeterRegistry meters = new SimpleMeterRegistry();
+
+        new EmailNotificationSender(mailSender, properties, meters).send(MESSAGE);
 
         var captor = forClass(SimpleMailMessage.class);
         verify(mailSender).send(captor.capture());
@@ -36,6 +41,18 @@ class NotificationDeliveryTest {
         assertEquals("reader@example.com", sent.getTo()[0]);
         assertEquals("Reminder: Read", sent.getSubject());
         assertEquals("Time to do it.", sent.getText());
+        assertEquals(1, meters.counter(AppMetrics.EMAILS, AppMetrics.OUTCOME, "sent").count());
+    }
+
+    @Test
+    void aFailedEmailIsCountedAndStillThrown() {
+        JavaMailSender mailSender = mock(JavaMailSender.class);
+        doThrow(new MailSendException("smtp down")).when(mailSender).send(any(SimpleMailMessage.class));
+        SimpleMeterRegistry meters = new SimpleMeterRegistry();
+        var sender = new EmailNotificationSender(mailSender, new NotificationProperties(), meters);
+
+        assertThrows(MailSendException.class, () -> sender.send(MESSAGE));
+        assertEquals(1, meters.counter(AppMetrics.EMAILS, AppMetrics.OUTCOME, "failed").count());
     }
 
     @Test
