@@ -42,12 +42,13 @@ interface HabitRepository extends JpaRepository<Habit, Long> {
     /**
      * Active habits whose reminder time is this minute <em>in their owner's timezone</em> and that
      * aren't done (or rested) yet on the owner's today (plan §12.2). The zone conversion is
-     * Postgres's, so one query serves every user. Whether the habit is due today is the caller's rule.
+     * Postgres's, so one query serves every user. Whether the habit is due today is the caller's rule. Admins get no reminders.
      */
     @Query(nativeQuery = true, value = """
             select h.id from habits h
             join users u on u.id = h.user_id
             where h.archived = false
+              and u.role = 'USER'
               and h.reminder_time is not null
               and h.reminder_time = date_trunc('minute', cast(:now as timestamptz) at time zone u.timezone)::time
               and not exists (

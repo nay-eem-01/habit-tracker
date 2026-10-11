@@ -41,9 +41,9 @@ class AdminStatsIntegrationTest extends IntegrationTest {
 
         mockMvc.perform(get("/api/admin/stats").header(HttpHeaders.AUTHORIZATION, admin))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.payload.users.total").value(greaterThanOrEqualTo(2)))
+                .andExpect(jsonPath("$.payload.users.total").value(greaterThanOrEqualTo(1)))
                 .andExpect(jsonPath("$.payload.users.signUps", hasSize(30)))
-                .andExpect(jsonPath("$.payload.users.signUps[29].count").value(greaterThanOrEqualTo(2)))
+                .andExpect(jsonPath("$.payload.users.signUps[29].count").value(greaterThanOrEqualTo(1)))
                 .andExpect(jsonPath("$.payload.active.day").value(greaterThanOrEqualTo(1)))
                 .andExpect(jsonPath("$.payload.usage.activeHabits").value(greaterThanOrEqualTo(1)))
                 .andExpect(jsonPath("$.payload.usage.checkIns", hasSize(30)))

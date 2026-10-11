@@ -16,6 +16,7 @@ import java.util.List;
 /**
  * Read-only numbers across features for admins (PLAN.md §3.2). Plain SQL over the tables rather than
  * a count method on every feature's service; it never writes — changes go through the services.
+ * People numbers count users only, not admins.
  */
 @Repository
 @RequiredArgsConstructor
@@ -48,13 +49,14 @@ class AdminQueries {
 
     Users users() {
         List<DayCount> signUps = jdbc.sql("select d::date, count(u.id) from " + LAST_30_DAYS
-                        + " left join users u on (u.created_at at time zone 'UTC')::date = d::date group by d order by d")
+                        + " left join users u on (u.created_at at time zone 'UTC')::date = d::date and u.role = 'USER'"
+                        + " group by d order by d")
                 .query((rs, row) -> new DayCount(rs.getObject(1, LocalDate.class), rs.getLong(2)))
                 .list();
         return jdbc.sql("""
                         select count(*), count(email_verified_at), count(provider_id),
                                count(*) filter (where plan = 'PRO'), count(suspended_at)
-                          from users""")
+                          from users where role = 'USER'""")
                 .query((rs, row) -> new Users(rs.getLong(1), rs.getLong(2), rs.getLong(3), rs.getLong(4),
                         rs.getLong(5), signUps))
                 .single();
@@ -67,6 +69,7 @@ class AdminQueries {
                                count(distinct h.user_id)
                           from habit_logs l
                           join habits h on h.id = l.habit_id
+                          join users u on u.id = h.user_id and u.role = 'USER'
                          cross join lateral (select coalesce(l.last_modified_at, l.created_at) as at) t
                          where t.at >= now() - interval '30 days'""")
                 .query((rs, row) -> new Active(rs.getLong(1), rs.getLong(2), rs.getLong(3)))
@@ -83,7 +86,7 @@ class AdminQueries {
                         select (select count(*) from habits where not archived),
                                (select count(*) from goals where status = 'ACTIVE'),
                                (select count(distinct user_id) from push_subscriptions),
-                               (select count(*) from users u where u.plan = 'FREE' and (
+                               (select count(*) from users u where u.role = 'USER' and u.plan = 'FREE' and (
                                    (select count(*) from habits h where h.user_id = u.id and not h.archived) >= :maxHabits
                                    or (select count(*) from goals g where g.user_id = u.id and g.status = 'ACTIVE')
                                       >= :maxGoals))""")

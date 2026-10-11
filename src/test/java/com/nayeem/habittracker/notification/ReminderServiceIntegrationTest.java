@@ -8,6 +8,7 @@ import com.nayeem.habittracker.habit.HabitRequest;
 import com.nayeem.habittracker.habit.HabitResponse;
 import com.nayeem.habittracker.habit.HabitService;
 import com.nayeem.habittracker.support.IntegrationTest;
+import com.nayeem.habittracker.user.Role;
 import com.nayeem.habittracker.user.User;
 import com.nayeem.habittracker.user.UserService;
 import jakarta.persistence.EntityManager;
@@ -77,6 +78,17 @@ class ReminderServiceIntegrationTest extends IntegrationTest {
         HabitResponse archived = habit(user, "07:30", FrequencyType.DAILY, null);
         habitService.setArchived(user.getId(), archived.id(), true);
         habit(user, null, FrequencyType.DAILY, null);
+        entityManager.flush();
+
+        reminderService.sendDue(DHAKA_0730);
+        assertEquals(0, unread(user));
+    }
+
+    @Test
+    void anAdminGetsNoReminders() {
+        User user = user("remind.admin@example.com", "Asia/Dhaka");
+        habit(user, "07:30", FrequencyType.DAILY, null);   // made while still a user
+        user.setRole(Role.ADMIN);
         entityManager.flush();
 
         reminderService.sendDue(DHAKA_0730);
