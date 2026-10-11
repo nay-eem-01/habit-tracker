@@ -1,18 +1,25 @@
 package com.nayeem.habittracker.admin;
 
 import com.nayeem.habittracker.account.AccountService;
+import com.nayeem.habittracker.admin.AdminStatsResponse.Delivery;
 import com.nayeem.habittracker.auth.AuthService;
+import com.nayeem.habittracker.common.AppMetrics;
 import com.nayeem.habittracker.common.exception.ApplicationException;
 import com.nayeem.habittracker.common.exception.ErrorCode;
 import com.nayeem.habittracker.common.response.PageResponse;
 import com.nayeem.habittracker.user.Plan;
 import com.nayeem.habittracker.user.Role;
 import com.nayeem.habittracker.user.UserService;
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.MeterRegistry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.lang.management.ManagementFactory;
+import java.time.Instant;
 
 /** What an admin can do to accounts. Every change is logged with the admin's id (the audit trail). */
 @Slf4j
@@ -24,6 +31,21 @@ public class AdminService {
     private final AuthService authService;
     private final AccountService accountService;
     private final AdminQueries queries;
+    private final MeterRegistry meterRegistry;
+
+    /** One read-only transaction, so the numbers agree with each other. */
+    @Transactional(readOnly = true)
+    public AdminStatsResponse stats() {
+        Delivery delivery = new Delivery(Instant.ofEpochMilli(ManagementFactory.getRuntimeMXBean().getStartTime()),
+                count(AppMetrics.EMAILS, "sent"), count(AppMetrics.EMAILS, "failed"),
+                count(AppMetrics.PUSHES, "sent"), count(AppMetrics.PUSHES, "gone"), count(AppMetrics.PUSHES, "failed"));
+        return new AdminStatsResponse(queries.users(), queries.active(), queries.usage(), delivery);
+    }
+
+    private long count(String name, String outcome) {
+        Counter counter = meterRegistry.find(name).tag(AppMetrics.OUTCOME, outcome).counter();
+        return counter == null ? 0 : (long) counter.count();
+    }
 
     @Transactional(readOnly = true)
     public PageResponse<AdminUserResponse> users(String query, Pageable pageable) {

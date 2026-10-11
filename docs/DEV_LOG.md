@@ -6,14 +6,14 @@ Entries are short: what changed, what was decided, what bit us. Details live in 
 ## Where we are
 
 - Phases 6–10 and Google sign-in (2.3) merged to `staging`. Email (Gmail SMTP) and web push (VAPID)
-  set up locally. Phase 12 (admin) in progress on stacked step branches.
+  set up locally. Phase 12 (admin API) built on stacked step branches, waiting for merge.
 - Frontend: `habit-tracker-web`, its own plan and log; built by another agent. What it needs from
   these phases is listed below.
 
 ## Next up
 
-1. Phase 12 admin: 12.2 users API, 12.3 stats API, 12.4 frontend handoff. 2. Decisions in `PLAN.md`
-§6: integrations (Phase 11), host (D.3, files back on). 3. Frontend work below.
+1. Merge Phase 12 (admin). 2. Decisions in `PLAN.md` §6: integrations (Phase 11), host (D.3, files
+back on). 3. Frontend: Phase N below, then its Phase A (admin, `habit-tracker-web/docs/ADMIN.md`).
 
 ## Frontend needs (from Phases 6–10)
 
@@ -65,6 +65,14 @@ Entries are short: what changed, what was decided, what bit us. Details live in 
 ---
 
 ## Log
+
+**2026-10-11** — 12.3 `GET /api/admin/stats`: users (total, verified, with Google, Pro, suspended,
+sign-ups per UTC day for 30 days), active users (logged anything in the last 24 h / 7 / 30 days),
+usage (active habits and goals, push users, free users at a limit — the likely Pro buyers, check-ins
+per day), delivery (emails sent/failed, pushes sent/gone/failed). Delivery numbers are Micrometer
+counters in memory, since `since` (app start); a restart zeroes them. `PushService` now also logs
+"Push to user N: x of y browser(s) accepted", so a user with no subscribed browser no longer looks
+like a silent failure (found 2026-10-10 testing reminders).
 
 **2026-10-11** — 12.2 admin users API (`/api/admin/users`): list (`q` = part of the email, sort by
 `createdAt`/`email`), one user with counts (active/archived habits, check-ins, goals, last active, push

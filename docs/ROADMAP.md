@@ -80,8 +80,8 @@ into the base; the base PRs into `staging`.
 |---|---|---|
 | 12.1 | Roles (USER/ADMIN, set by hand) and suspended accounts; `/api/admin/**` admins only | ✅ |
 | 12.2 | Admin users API: search, view (counts only), change plan, suspend/unsuspend, delete | ✅ |
-| 12.3 | Admin stats API: growth, usage, email and push delivery | ⬜ |
-| 12.4 | Frontend handoff for the `/admin` screens (in `habit-tracker-web/docs`) | ⬜ |
+| 12.3 | Admin stats API: growth, usage, email and push delivery | ✅ |
+| 12.4 | Frontend handoff for the `/admin` screens (`habit-tracker-web/docs/ADMIN.md`, its Phase A) | ✅ |
 
 ## Later
 
