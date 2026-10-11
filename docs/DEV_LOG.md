@@ -66,6 +66,14 @@ Entries are short: what changed, what was decided, what bit us. Details live in 
 
 ## Log
 
+**2026-10-11** — 12.3 `GET /api/admin/stats`: users (total, verified, with Google, Pro, suspended,
+sign-ups per UTC day for 30 days), active users (logged anything in the last 24 h / 7 / 30 days),
+usage (active habits and goals, push users, free users at a limit — the likely Pro buyers, check-ins
+per day), delivery (emails sent/failed, pushes sent/gone/failed). Delivery numbers are Micrometer
+counters in memory, since `since` (app start); a restart zeroes them. `PushService` now also logs
+"Push to user N: x of y browser(s) accepted", so a user with no subscribed browser no longer looks
+like a silent failure (found 2026-10-10 testing reminders).
+
 **2026-10-11** — 12.2 admin users API (`/api/admin/users`): list (`q` = part of the email, sort by
 `createdAt`/`email`), one user with counts (active/archived habits, check-ins, goals, last active, push
 browsers — read with plain SQL in `AdminQueries`, never content), `PUT …/{id}/plan`,

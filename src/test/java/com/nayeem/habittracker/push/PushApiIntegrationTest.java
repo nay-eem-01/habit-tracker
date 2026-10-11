@@ -1,6 +1,8 @@
 package com.nayeem.habittracker.push;
 
+import com.nayeem.habittracker.common.AppMetrics;
 import com.nayeem.habittracker.support.IntegrationTest;
+import io.micrometer.core.instrument.MeterRegistry;
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,6 +44,8 @@ class PushApiIntegrationTest extends IntegrationTest {
     private PushService pushService;
     @Autowired
     private PushProperties properties;
+    @Autowired
+    private MeterRegistry meterRegistry;
     @MockitoBean
     private WebPushSender sender;
 
@@ -84,6 +88,7 @@ class PushApiIntegrationTest extends IntegrationTest {
         pushService.sendToUser(userId, "t", "b", "/");
         verify(sender, never()).send(any(), any());
 
+        double goneBefore = meterRegistry.counter(AppMetrics.PUSHES, AppMetrics.OUTCOME, "gone").count();
         properties.setEnabled(true);
         try {
             when(sender.send(any(), any())).thenReturn(410);
@@ -94,6 +99,7 @@ class PushApiIntegrationTest extends IntegrationTest {
         entityManager.flush();
         assertThat(jdbcTemplate.queryForObject("select count(*) from push_subscriptions where user_id = ?",
                 Long.class, userId)).isZero();
+        assertThat(meterRegistry.counter(AppMetrics.PUSHES, AppMetrics.OUTCOME, "gone").count()).isEqualTo(goneBefore + 1);
     }
 
     @Test
