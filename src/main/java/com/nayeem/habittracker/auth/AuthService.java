@@ -193,6 +193,11 @@ public class AuthService {
         emailVerificationService.verify(token);
     }
 
+    /** Ends every session of the user (their refresh tokens); access tokens run out within 15 minutes. */
+    public int signOutEverywhere(Long userId) {
+        return refreshTokenService.revokeAll(userId);
+    }
+
     public void logout(String refreshToken) {
         refreshTokenService.revoke(refreshToken);
     }

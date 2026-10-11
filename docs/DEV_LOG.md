@@ -66,6 +66,13 @@ Entries are short: what changed, what was decided, what bit us. Details live in 
 
 ## Log
 
+**2026-10-11** — 12.2 admin users API (`/api/admin/users`): list (`q` = part of the email, sort by
+`createdAt`/`email`), one user with counts (active/archived habits, check-ins, goals, last active, push
+browsers — read with plain SQL in `AdminQueries`, never content), `PUT …/{id}/plan`,
+`POST …/{id}/suspend` (also ends their sessions) and `/unsuspend`, `DELETE …/{id}` (same as the
+user's own delete, no password). Admins can't be suspended or deleted (409 `ADMIN_TARGET_IS_ADMIN`),
+which also stops an admin locking themselves out. Every admin action is logged with the admin's id.
+
 **2026-10-11** — 12.1 roles and suspension (V18): `users.role` USER/ADMIN, made admin by hand
 (`update users set role = 'ADMIN' where email = …`); `/api/admin/**` is ADMIN only, 404 for anyone
 else. `users.suspended_at`: the JWT filter treats a suspended user as anonymous (401), and every

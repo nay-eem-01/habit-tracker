@@ -40,6 +40,8 @@ public enum ErrorCode {
     USER_NOT_FOUND(HttpStatus.NOT_FOUND, "User not found"),
     USER_INVALID_TIMEZONE(HttpStatus.BAD_REQUEST, "Unknown timezone"),
 
+    ADMIN_TARGET_IS_ADMIN(HttpStatus.CONFLICT, "Admins can't be suspended or deleted"),
+
     HABIT_NOT_FOUND(HttpStatus.NOT_FOUND, "Habit not found"),
     HABIT_INVALID_FREQUENCY(HttpStatus.BAD_REQUEST, "The schedule doesn't match the frequency type"),
     HABIT_QUIT_INVALID(HttpStatus.BAD_REQUEST, "That isn't possible for a quit habit"),
