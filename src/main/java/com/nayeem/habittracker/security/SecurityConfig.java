@@ -20,7 +20,7 @@ import java.util.List;
 /**
  * One stateless chain for <b>every</b> path — no {@code securityMatcher}, so nothing (e.g.
  * {@code /actuator/**}) falls outside Spring Security. Public paths are listed here and nowhere
- * else; everything else needs a valid access token.
+ * else; {@code /api/admin/**} needs the ADMIN role; everything else needs a valid access token.
  */
 @Configuration
 @EnableMethodSecurity
@@ -64,6 +64,7 @@ public class SecurityConfig {
                 .requestCache(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(PUBLIC_PATHS).permitAll()
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated())
                 .exceptionHandling(ex -> ex
                         .authenticationEntryPoint(errorHandler)

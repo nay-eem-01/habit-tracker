@@ -5,16 +5,15 @@ Entries are short: what changed, what was decided, what bit us. Details live in 
 
 ## Where we are
 
-- M1–M5 on `staging`. Phases 6–10 (from the 2026-10-09 review) built on stacked step branches,
-  waiting for review and merge in roadmap order: fixes, security and launch, accounts, habits (units,
-  quit habits, rest days, free plan), web push.
+- Phases 6–10 and Google sign-in (2.3) merged to `staging`. Email (Gmail SMTP) and web push (VAPID)
+  set up locally. Phase 12 (admin) in progress on stacked step branches.
 - Frontend: `habit-tracker-web`, its own plan and log; built by another agent. What it needs from
   these phases is listed below.
 
 ## Next up
 
-1. Merge Phases 6–10. 2. Decisions in `PLAN.md` §6: integrations (Phase 11), host (D.3, files back
-on), Google client id (2.3). 3. Frontend work below.
+1. Phase 12 admin: 12.2 users API, 12.3 stats API, 12.4 frontend handoff. 2. Decisions in `PLAN.md`
+§6: integrations (Phase 11), host (D.3, files back on). 3. Frontend work below.
 
 ## Frontend needs (from Phases 6–10)
 
@@ -39,7 +38,6 @@ on), Google client id (2.3). 3. Frontend work below.
 | Item | Who | Blocks |
 |---|---|---|
 | Choose a host | Nayeem | D.3, file uploads back on |
-| Gmail app account + app password (`docs/LAUNCH_GUIDE.md` §2; Brevo's SMS didn't arrive) | Nayeem | real email in production |
 | Which integrations first | Nayeem | Phase 11 |
 
 ## How to run
@@ -67,6 +65,12 @@ on), Google client id (2.3). 3. Frontend work below.
 ---
 
 ## Log
+
+**2026-10-11** — 12.1 roles and suspension (V18): `users.role` USER/ADMIN, made admin by hand
+(`update users set role = 'ADMIN' where email = …`); `/api/admin/**` is ADMIN only, 404 for anyone
+else. `users.suspended_at`: the JWT filter treats a suspended user as anonymous (401), and every
+sign-in path ends in `issueTokens`, which refuses with 403 `AUTH_ACCOUNT_SUSPENDED` — after the
+password check, so a wrong password still says nothing. `/api/auth/me` now has `role`.
 
 **2026-10-10** — 2.3 Google sign-in: `POST /api/auth/google {idToken, timezone?}`. Verified locally with
 `spring-security-oauth2-jose` (Google's JWKS, `iss`, `aud` = client id, `exp`); unverified Google email

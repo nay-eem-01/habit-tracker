@@ -19,7 +19,7 @@ import java.io.IOException;
 
 /**
  * Authenticates a request from its {@code Authorization: Bearer} header. An invalid or expired
- * token, or one naming a user who no longer exists, leaves the request anonymous — the security
+ * token, or one naming a user who no longer exists or is suspended, leaves the request anonymous — the security
  * chain then answers 401 for anything that needs a user.
  *
  * <p>Not a {@code @Component}: Boot would also register it as a plain servlet filter. It is
@@ -53,6 +53,9 @@ class JwtAuthenticationFilter extends OncePerRequestFilter {
         try {
             user = userDetailsService.loadUserByUsername(email);
         } catch (UsernameNotFoundException e) {
+            return;
+        }
+        if (!user.isEnabled()) {
             return;
         }
         var authentication = UsernamePasswordAuthenticationToken.authenticated(user, null, user.getAuthorities());

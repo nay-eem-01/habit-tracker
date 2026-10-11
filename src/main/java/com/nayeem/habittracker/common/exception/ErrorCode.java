@@ -33,6 +33,7 @@ public enum ErrorCode {
     AUTH_INVALID_GOOGLE_TOKEN(HttpStatus.UNAUTHORIZED, "Google sign-in failed; please try again"),
     AUTH_GOOGLE_EMAIL_UNVERIFIED(HttpStatus.UNAUTHORIZED, "Your Google account's email isn't verified"),
     AUTH_GOOGLE_DISABLED(HttpStatus.SERVICE_UNAVAILABLE, "Google sign-in isn't available"),
+    AUTH_ACCOUNT_SUSPENDED(HttpStatus.FORBIDDEN, "This account is suspended"),
     AUTH_PASSWORD_NOT_SET(HttpStatus.CONFLICT, "This account has no password yet; use \"Forgot password\" to set one"),
 
     USER_EMAIL_TAKEN(HttpStatus.CONFLICT, "An account with this email already exists"),
