@@ -76,6 +76,12 @@ Settled decisions, grouped by area. A change to one is written here first.
   locally against Google's keys (`iss`, `aud` = our client id, `exp`, `email_verified`), then finds,
   links or creates the user and issues our tokens. `POST /api/auth/google`.
 
+- **Admins (decided 2026-10-11):** `users.role` USER/ADMIN; an admin is made by hand with SQL, never
+  through the API. `/api/admin/**` needs ADMIN; anyone else gets 404. The role is read from the
+  database on every request, so a change applies at once. A **suspended** user (`suspended_at`) gets
+  no tokens from any sign-in and their access tokens stop working. Admins see accounts and counts,
+  never a user's habit names, notes or links. Admins can't suspend or delete an admin.
+
 ### 3.3 Habits, check-ins and streaks
 - **Frequency:** `DAILY`, `SPECIFIC_DAYS` (chosen weekdays), `X_TIMES_PER_WEEK` (1–6, Mon–Sun weeks).
 - **Kinds:** a *build* habit is done by checking in; a *quit* habit ("no sugar") is clean every day
@@ -166,6 +172,7 @@ Settled decisions, grouped by area. A change to one is written here first.
 | `level`, `dashboard` | XP and levels; dashboard and patterns |
 | `notification` | in-app notifications, reminder scheduler, email sender |
 | `push` | web push subscriptions, RFC 8291 encryption, VAPID-signed sending |
+| `admin` | admin API: users, plans, suspension, app-wide numbers |
 
 **Request path:** the correlation id goes into the MDC first, so every line of a request — even a
 401 — carries it. The JWT filter puts an `AuthUser` (ids only) in the security context; controllers

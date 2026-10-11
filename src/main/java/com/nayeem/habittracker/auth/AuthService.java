@@ -201,7 +201,12 @@ public class AuthService {
         return UserResponse.from(userService.getById(userId));
     }
 
+    /** Every way in ends here, so a suspended account gets no tokens, whichever way it tried. */
     private AuthResult issueTokens(User user) {
+        if (user.getSuspendedAt() != null) {
+            log.info("Sign-in refused for user {}: suspended", user.getId());
+            throw new ApplicationException(ErrorCode.AUTH_ACCOUNT_SUSPENDED);
+        }
         String accessToken = jwtService.generateAccessToken(user.getId(), user.getEmail());
         AuthTokenResponse body =
                 AuthTokenResponse.bearer(accessToken, jwtService.accessTokenTtlSeconds(), UserResponse.from(user));

@@ -19,7 +19,8 @@ import java.io.IOException;
 
 /**
  * 401 and 403 from the security chain, in the same {@link HttpResponse} shape as every other
- * error. Status and content type are set before the body is written.
+ * error. Status and content type are set before the body is written. A non-admin on the admin API
+ * gets 404, as for anything else that isn't theirs: it doesn't confirm the admin API exists.
  */
 @Component
 @RequiredArgsConstructor
@@ -36,7 +37,7 @@ class JsonSecurityErrorHandler implements AuthenticationEntryPoint, AccessDenied
     @Override
     public void handle(HttpServletRequest request, HttpServletResponse response,
                        AccessDeniedException accessDeniedException) throws IOException {
-        write(response, ErrorCode.FORBIDDEN);
+        write(response, request.getRequestURI().startsWith("/api/admin/") ? ErrorCode.NOT_FOUND : ErrorCode.FORBIDDEN);
     }
 
     void write(HttpServletResponse response, ErrorCode code) throws IOException {

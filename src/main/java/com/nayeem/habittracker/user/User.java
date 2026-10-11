@@ -47,6 +47,13 @@ public class User extends AuditModel {
     @Column(nullable = false, length = 10)
     private Plan plan = Plan.FREE;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 10)
+    private Role role = Role.USER;
+
+    /** Set by an admin; while set, the user can't sign in and their access tokens are refused. */
+    private Instant suspendedAt;
+
     /** Consent to promotional email; off until the user opts in. */
     @Column(nullable = false)
     private boolean marketingEmails;
