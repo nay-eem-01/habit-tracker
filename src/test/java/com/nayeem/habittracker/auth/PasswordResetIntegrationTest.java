@@ -51,7 +51,7 @@ class PasswordResetIntegrationTest extends IntegrationTest {
                 .andExpect(jsonPath("$.message").value("If an account exists for that email, a reset link is on its way"));
         OutgoingNotification email = onlyEmail();
         assertThat(email.email()).isEqualTo("reset.ok@example.com");
-        assertThat(email.title()).isEqualTo("Reset your Habit Tracker password");
+        assertThat(email.title()).isEqualTo("Reset your AveryDay password");
         Matcher link = LINK.matcher(email.body());
         assertThat(link.find()).isTrue();
         assertThat(link.group(1)).isEqualTo("http://localhost:5173/reset-password");
@@ -151,7 +151,7 @@ class PasswordResetIntegrationTest extends IntegrationTest {
 
         forgot("reset.google@example.com");
         OutgoingNotification email = onlyEmail();
-        assertThat(email.title()).isEqualTo("Set your Habit Tracker password");
+        assertThat(email.title()).isEqualTo("Set your AveryDay password");
         assertThat(email.body()).contains("you sign in with Google today");
 
         reset(token(email), "first-password").andExpect(status().isOk());
