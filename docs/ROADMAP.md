@@ -40,7 +40,7 @@ into the base; the base PRs into `staging`.
 | 7.4 | Email: sent off the request thread; reminders no longer emailed; free SMTP set-up documented | ✅ |
 | 7.5 | File uploads behind `app.files.enabled` (off) | ✅ |
 | 7.6 | Dockerfile and CI (tests on every PR) | ✅ |
-| D.3 | Deploy: host, TLS, managed Postgres + backups, same-site domains | ⏸ host not chosen |
+| D.3 | Deploy: host, TLS, managed Postgres + backups, same-site domains | 🔨 beta on Vercel + Render + Supabase (`docs/DEPLOY.md`) |
 
 ## Phase 8 — Accounts (base `feat/accounts-base`)
 

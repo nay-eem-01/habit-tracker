@@ -6,14 +6,15 @@ Entries are short: what changed, what was decided, what bit us. Details live in 
 ## Where we are
 
 - Phases 6–10 and Google sign-in (2.3) merged to `staging`. Email (Gmail SMTP) and web push (VAPID)
-  set up locally. Phase 12 (admin API) merged; 12.5 (admins only administer) waiting for merge.
+  set up locally. Phase 12 (admin API, 12.5 admins only administer) merged. Beta deploy: `docs/DEPLOY.md`.
 - Frontend: `habit-tracker-web`, its own plan and log; built by another agent. What it needs from
   these phases is listed below.
 
 ## Next up
 
-1. Merge Phase 12 (admin). 2. Decisions in `PLAN.md` §6: integrations (Phase 11), host (D.3, files
-back on). 3. Frontend: Phase N below, then its Phase A (admin, `habit-tracker-web/docs/ADMIN.md`).
+1. Deploy the beta from `staging` by `docs/DEPLOY.md` (AveryDay; no card, so Vercel + Render + Supabase).
+2. Frontend: rename to AveryDay, `vercel.json`, A.5 (admin UI apart). 3. Later: `production` branch,
+then integrations (Phase 11), a domain, Oracle or a paid host (files back on).
 
 ## Frontend needs (from Phases 6–10)
 
@@ -37,7 +38,8 @@ back on). 3. Frontend: Phase N below, then its Phase A (admin, `habit-tracker-we
 
 | Item | Who | Blocks |
 |---|---|---|
-| Choose a host | Nayeem | D.3, file uploads back on |
+| Host with a disk (Oracle needs a card) | Nayeem | file uploads back on |
+| Client IP behind Vercel → Render | — | per-IP rate limits before public launch |
 | Which integrations first | Nayeem | Phase 11 |
 
 ## How to run
@@ -65,6 +67,14 @@ back on). 3. Frontend: Phase N below, then its Phase A (admin, `habit-tracker-we
 ---
 
 ## Log
+
+**2026-10-13** — Beta deploy plan, `docs/DEPLOY.md`: the app is **AveryDay** (default display name).
+No card, so no Oracle or VPS: Vercel (web, proxies `/api`) + Render free (API, kept awake by UptimeRobot)
++ Supabase. `staging` is the beta, a new `production` branch replaces `main` later. Checked the image at
+512 MB: ~340 MB idle, 383 MB under load. That check found a trap: Flyway's baseline-on-migrate on a
+non-empty schema skips V1 and fails at V2, so the prod profile turns it off. Daily encrypted
+`pg_dump` by GitHub Actions (public repo), 30 days. CI runs on `staging`/`production` with a
+read-only token.
 
 **2026-10-12** — 12.5 an admin account only administers (found by Nayeem: an admin could create
 habits and saw the user dashboard). Security: `/api/admin/**` ADMIN, `/api/auth/**` any signed-in

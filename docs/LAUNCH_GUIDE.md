@@ -1,5 +1,8 @@
 # Launch Guide — what to set up, in order, for $0
 
+> **The plan in use is `docs/DEPLOY.md`** (AveryDay beta: Vercel + Render + Supabase, no card). This guide
+> keeps the background: the Gmail app password, the Google client, VAPID keys, and Option A for later.
+
 Everything here is free, needs no domain, and is done once. Do the steps in order: later ones use
 values from earlier ones. Write every value you get into a password manager (or a private note), never
 into git.
@@ -135,7 +138,7 @@ deleted after 30 days, so the database lives on Supabase's free plan instead.
    `jdbc:postgresql://<pooler-host>:5432/postgres?sslmode=require`. A free project pauses after a week
    without activity — the reminder scheduler keeps it active.
 2. **Render** (`render.com`): New → Web Service → this repo → it finds the `Dockerfile`. Instance type
-   Free. Environment variables from step 6, plus `JAVA_TOOL_OPTIONS=-XX:MaxRAMPercentage=70`. You get
+   Free. Environment variables from step 6 (no JVM flags needed: checked at 512 MB). You get
    `https://<name>.onrender.com`.
 3. Keep it awake (reminders run every minute): a free job at `cron-job.org` that GETs
    `https://<name>.onrender.com/actuator/health` every 10 minutes. One always-on free service uses

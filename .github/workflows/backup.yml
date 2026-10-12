@@ -1,0 +1,40 @@
+name: Database backup
+
+# Daily dump of the live database, kept 30 days as a workflow artifact (the privacy policy says 30).
+# The repository is public and anyone signed in to GitHub can download artifacts, so the dump is
+# encrypted: useless without BACKUP_PASSPHRASE. Restore steps: docs/DEPLOY.md §8.
+# Scheduled runs use the default branch's copy of this file (staging).
+
+on:
+  schedule:
+    - cron: '30 21 * * *'   # daily, 21:30 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Dump and encrypt
+        env:
+          # libpq form, not JDBC: postgresql://user:password@host:5432/postgres?sslmode=require
+          DATABASE_URL: ${{ secrets.BACKUP_DATABASE_URL }}
+          BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+        run: |
+          set -euo pipefail
+          # pg_dump must be at least the server's major version; Supabase runs 17
+          docker run --rm -e DATABASE_URL postgres:17 \
+            sh -c 'pg_dump --schema=public --no-owner --no-privileges "$DATABASE_URL"' \
+            | gzip \
+            | gpg --batch --yes --pinentry-mode loopback --symmetric --cipher-algo AES256 \
+                  --passphrase-fd 3 -o backup.sql.gz.gpg 3<<<"$BACKUP_PASSPHRASE"
+          # an empty dump means the connection failed quietly; fail the run so it shows up
+          test "$(stat -c %s backup.sql.gz.gpg)" -gt 1000
+      - uses: actions/upload-artifact@v4
+        with:
+          name: db-${{ github.run_number }}
+          path: backup.sql.gz.gpg
+          retention-days: 30
+          if-no-files-found: error
