@@ -77,7 +77,10 @@ Settled decisions, grouped by area. A change to one is written here first.
   links or creates the user and issues our tokens. `POST /api/auth/google`.
 
 - **Admins (decided 2026-10-11):** `users.role` USER/ADMIN; an admin is made by hand with SQL, never
-  through the API. `/api/admin/**` needs ADMIN; anyone else gets 404. The role is read from the
+  through the API. `/api/admin/**` needs ADMIN; anyone else gets 404. **An admin account only
+  administers:** besides the admin API it may use `/api/auth/**` (me, change password, sign out); the
+  app itself (habits, goals, dashboard, …) needs the USER role, so an admin gets 403 there. Admins
+  get no reminders and aren't counted in the admin stats. Use a separate account to administer. The role is read from the
   database on every request, so a change applies at once. A **suspended** user (`suspended_at`) gets
   no tokens from any sign-in and their access tokens stop working. Admins see accounts and counts,
   never a user's habit names, notes or links. Admins can't suspend or delete an admin.

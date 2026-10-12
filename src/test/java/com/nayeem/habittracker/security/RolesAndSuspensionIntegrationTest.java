@@ -34,6 +34,26 @@ class RolesAndSuspensionIntegrationTest extends IntegrationTest {
     }
 
     @Test
+    void anAdminOnlyAdministersAndNeverUsesTheAppItself() throws Exception {
+        String token = register("roles.admin@example.com");
+        jdbcTemplate.update("update users set role = 'ADMIN' where email = ?", "roles.admin@example.com");
+
+        mockMvc.perform(get("/api/admin/stats").header(HttpHeaders.AUTHORIZATION, token)).andExpect(status().isOk());
+        mockMvc.perform(get("/api/auth/me").header(HttpHeaders.AUTHORIZATION, token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.payload.role").value("ADMIN"));
+        for (String path : new String[]{"/api/habits", "/api/dashboard", "/api/goals", "/api/notifications",
+                "/api/me/export"}) {
+            mockMvc.perform(get(path).header(HttpHeaders.AUTHORIZATION, token))
+                    .andExpect(status().isForbidden())
+                    .andExpect(jsonPath("$.errorCode").value("FORBIDDEN"));
+        }
+        mockMvc.perform(post("/api/habits").header(HttpHeaders.AUTHORIZATION, token)
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"name\":\"Run\",\"frequencyType\":\"DAILY\"}"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
     void aSuspendedUserLosesAccessAtOnceAndCannotSignInAgain() throws Exception {
         String token = register("roles.suspended@example.com");
         jdbcTemplate.update("update users set suspended_at = now() where email = ?", "roles.suspended@example.com");

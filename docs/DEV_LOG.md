@@ -6,7 +6,7 @@ Entries are short: what changed, what was decided, what bit us. Details live in 
 ## Where we are
 
 - Phases 6–10 and Google sign-in (2.3) merged to `staging`. Email (Gmail SMTP) and web push (VAPID)
-  set up locally. Phase 12 (admin API) built on stacked step branches, waiting for merge.
+  set up locally. Phase 12 (admin API) merged; 12.5 (admins only administer) waiting for merge.
 - Frontend: `habit-tracker-web`, its own plan and log; built by another agent. What it needs from
   these phases is listed below.
 
@@ -65,6 +65,12 @@ back on). 3. Frontend: Phase N below, then its Phase A (admin, `habit-tracker-we
 ---
 
 ## Log
+
+**2026-10-12** — 12.5 an admin account only administers (found by Nayeem: an admin could create
+habits and saw the user dashboard). Security: `/api/admin/**` ADMIN, `/api/auth/**` any signed-in
+role, everything else USER — an admin gets 403 on habits, goals, dashboard, `/api/me`, …. The reminder
+query skips admins; stats count users only. Make a separate account for administering; an account
+promoted to admin keeps its old data, unused.
 
 **2026-10-11** — 12.3 `GET /api/admin/stats`: users (total, verified, with Google, Pro, suspended,
 sign-ups per UTC day for 30 days), active users (logged anything in the last 24 h / 7 / 30 days),

@@ -20,7 +20,8 @@ import java.util.List;
 /**
  * One stateless chain for <b>every</b> path — no {@code securityMatcher}, so nothing (e.g.
  * {@code /actuator/**}) falls outside Spring Security. Public paths are listed here and nowhere
- * else; {@code /api/admin/**} needs the ADMIN role; everything else needs a valid access token.
+ * else. {@code /api/admin/**} needs the ADMIN role, {@code /api/auth/**} any signed-in user, and
+ * everything else (the app itself) the USER role: an admin account only administers (PLAN.md §3.2).
  */
 @Configuration
 @EnableMethodSecurity
@@ -65,7 +66,10 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(PUBLIC_PATHS).permitAll()
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
-                        .anyRequest().authenticated())
+                        // the account itself (me, change password, verification): any signed-in role
+                        .requestMatchers("/api/auth/**").authenticated()
+                        // the app (habits, goals, dashboard, …) is for users; an admin only administers
+                        .anyRequest().hasRole("USER"))
                 .exceptionHandling(ex -> ex
                         .authenticationEntryPoint(errorHandler)
                         .accessDeniedHandler(errorHandler))
