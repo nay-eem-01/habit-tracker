@@ -43,7 +43,7 @@ class EmailVerificationIntegrationTest extends IntegrationTest {
 
         OutgoingNotification email = events.stream(OutgoingNotification.class).findFirst().orElseThrow();
         assertThat(email.email()).isEqualTo("verify.ok@example.com");
-        assertThat(email.title()).isEqualTo("Confirm your Habit Tracker email");
+        assertThat(email.title()).isEqualTo("Confirm your AveryDay email");
         Matcher link = LINK.matcher(email.body());
         assertThat(link.find()).isTrue();
         assertThat(link.group(1)).isEqualTo("http://localhost:5173/verify-email");
