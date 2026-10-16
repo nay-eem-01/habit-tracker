@@ -12,7 +12,7 @@ when you sign up.
 | Web app | Vercel Hobby (free, no card) | `https://averyday.vercel.app` (the one address users see) |
 | API | Render free web service, Docker | `https://averyday-api.onrender.com`, reached through Vercel |
 | Database | Supabase free | Postgres 17, region near your users |
-| Email | Gmail app password, `averydayhabits@gmail.com` | ~500 recipients a day |
+| Email | Resend free, sandbox sender `onboarding@resend.dev` | 100 a day; only reaches the Resend account's own address until there's a domain |
 | Push | Web Push, VAPID | — |
 | Uptime alerts and keep-awake | UptimeRobot free | pings `/actuator/health` every 5 min |
 | Backups | GitHub Actions, `.github/workflows/backup.yml` | encrypted daily dump, kept 30 days |
@@ -89,7 +89,7 @@ them under Actions.
 | `JWT_SECRET` | `openssl rand -base64 48` | everyone is signed out |
 | `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY` | `npx web-push generate-vapid-keys` (**new** for beta; never reuse the laptop's) | every browser's push subscription silently stops working |
 | `DB_PASSWORD` | Supabase generates it (§3) | reset it in Supabase, then update Render |
-| `SPRING_MAIL_PASSWORD` | Gmail app password (LAUNCH_GUIDE §2) | revoke it in Google, make a new one |
+| `RESEND_API_KEY` | resend.com, signed up as `averydayhabits@gmail.com` → API Keys → "Sending access" | delete it in Resend, make a new one |
 | `BACKUP_PASSPHRASE` | `openssl rand -base64 32` | the old backups can't be opened |
 
 Rules:
@@ -137,9 +137,9 @@ Rules:
    | `CORS_ALLOWED_ORIGINS` | `https://averyday.vercel.app` |
    | `APP_DISPLAY_NAME` | `AveryDay` (also the default now) |
    | `APP_NOTIFICATIONS_EMAIL_ENABLED` | `true` |
-   | `APP_NOTIFICATIONS_EMAIL_FROM`, `SPRING_MAIL_USERNAME` | `averydayhabits@gmail.com` |
-   | `SPRING_MAIL_HOST`, `SPRING_MAIL_PORT` | `smtp.gmail.com`, `587` |
-   | `SPRING_MAIL_PASSWORD` | the Gmail app password |
+   | `APP_NOTIFICATIONS_EMAIL_PROVIDER` | `resend` (Render free blocks SMTP ports 25/465/587, so Gmail SMTP can't work) |
+   | `APP_NOTIFICATIONS_EMAIL_FROM` | `AveryDay <onboarding@resend.dev>` |
+   | `RESEND_API_KEY` | §2 |
    | `APP_PUSH_ENABLED` | `true` |
    | `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY` | §2 |
    | `VAPID_SUBJECT` | `mailto:averydayhabits@gmail.com` |
@@ -229,7 +229,8 @@ Day 1, setup (about 3 hours):
 - [ ] §6 Google origin and test users, §7 UptimeRobot, §8 backup run plus restore test
 
 Day 2, check everything on `https://averyday.vercel.app` (desktop Chrome **and** a phone):
-- [ ] Sign up with email → the verification mail arrives (check spam, mark "not spam") → the link works
+- [ ] Sign up with `averydayhabits@gmail.com` (the Resend account's address; no other inbox gets mail
+      yet) → the verification mail arrives (check spam, mark "not spam") → the link works
 - [ ] Sign out, sign in. Sign in with Google (as a test user).
 - [ ] Forgot password → the mail arrives → reset works → the old session is signed out
 - [ ] Create a habit, check in, the streak and the dashboard look right, a goal works
@@ -238,8 +239,8 @@ Day 2, check everything on `https://averyday.vercel.app` (desktop Chrome **and**
 - [ ] Settings: change timezone. Export data downloads JSON. Delete a test account, and it's gone.
 - [ ] Wrong password 6 times for one email → the 6th answers "too many attempts" (5 failures per 15 min)
 - [ ] `https://averyday-api.onrender.com/v3/api-docs` and `/swagger-ui.html` are 404 (prod profile)
-- [ ] Admin: sign up **a separate account**, e.g. `averydayhabits+admin@gmail.com` (the mail
-      arrives in the same inbox). Supabase SQL editor:
+- [ ] Admin: sign up **a separate account**, e.g. `averydayhabits+admin@gmail.com` (Resend may refuse
+      the `+admin` address in sandbox mode; nothing needs the mail, so that's fine). Supabase SQL editor:
       `update users set role = 'ADMIN' where email = 'averydayhabits+admin@gmail.com';`
       → `/admin` works, and the user app answers that account with 403. Until the web app's A.5 is built,
       use this account only on `/admin`.
@@ -259,8 +260,8 @@ When the beta has run cleanly for a while:
 5. Before opening sign-ups to the public:
    - Publish the Google app (out of Testing).
    - Fix the shared-IP rate limits (below).
-   - Get a domain plus a transactional mail provider (SPF/DKIM), and move off Vercel Hobby once you
-     charge money.
+   - Get a domain, verify it in Resend (SPF/DKIM DNS records), set `APP_NOTIFICATIONS_EMAIL_FROM` to an
+     address on it. Move off Vercel Hobby once you charge money.
 
 **Rollback:** Render → Deploys → pick the last good one → Rollback. This is safe only because
 migrations only **add** (columns, tables): code one release back still runs on the newer schema. Keep it
@@ -278,7 +279,10 @@ resort, because it loses everything since the dump.
 - **Vercel Hobby is for non-commercial use.** It's fine while Pro is free. Move before you charge.
 - A deploy or a Render restart pauses the scheduler for about a minute; a reminder due in that minute is
   skipped.
-- Gmail: a ~500/day limit and no SPF/DKIM of your own, so the first mails may go to spam. Tell testers.
+- **Email reaches only you.** Resend's sandbox sender delivers only to the Resend account's address;
+  any other recipient gets HTTP 403, logged as `Resend refused the email to user N with HTTP 403`.
+  Testers can use everything (nothing needs a verified email), but they get no verification or
+  password-reset mail. Tell them; reset a tester's password by hand if needed. A domain ends this.
 - Supabase free has no point-in-time recovery; the daily dump is the backup. At most a day of data can
   be lost.
 - Render's free build minutes are limited. Merge to `staging` in batches, not every small PR.
