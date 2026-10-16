@@ -26,6 +26,7 @@ public class UserService {
     public static final String DEFAULT_TIMEZONE = "UTC";
 
     private final UserRepository userRepository;
+    private final UserAvatarRepository avatarRepository;
     private final Clock clock;
 
     /**
@@ -130,6 +131,37 @@ public class UserService {
         user.setMarketingEmails(request.getMarketingEmails());
         log.info("Profile of user {} updated", userId);
         return UserResponse.from(userRepository.saveAndFlush(user));
+    }
+
+    /** Stores {@code upload} as the user's profile picture, replacing any earlier one. See {@link AvatarImage}. */
+    @Transactional
+    public UserResponse setAvatar(Long userId, byte[] upload) {
+        byte[] jpeg = AvatarImage.normalize(upload);
+        User user = getById(userId);
+        UserAvatar avatar = avatarRepository.findById(userId).orElseGet(UserAvatar::new);
+        avatar.setUserId(userId);
+        avatar.setContent(jpeg);
+        avatarRepository.save(avatar);
+        user.setAvatarUpdatedAt(clock.instant());
+        log.info("Avatar of user {} set ({} bytes)", userId, jpeg.length);
+        return UserResponse.from(userRepository.saveAndFlush(user));
+    }
+
+    /** The user's profile picture as JPEG bytes. */
+    @Transactional(readOnly = true)
+    public byte[] getAvatar(Long userId) {
+        return avatarRepository.findById(userId)
+                .map(UserAvatar::getContent)
+                .orElseThrow(() -> new ApplicationException(ErrorCode.USER_AVATAR_NOT_FOUND));
+    }
+
+    /** Removes the profile picture; nothing happens when there is none. */
+    @Transactional
+    public void deleteAvatar(Long userId) {
+        User user = getById(userId);
+        avatarRepository.deleteById(userId);
+        user.setAvatarUpdatedAt(null);
+        log.info("Avatar of user {} removed", userId);
     }
 
     /** For admins: every user, or those whose email contains {@code query}. */
