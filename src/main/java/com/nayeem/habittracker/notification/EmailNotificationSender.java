@@ -9,10 +9,11 @@ import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Component;
 
-/** Plain-text mail over SMTP. Only exists when {@code app.notifications.email.enabled=true}. */
+/** Plain-text mail over SMTP. Only exists when email is enabled with provider {@code smtp} (the default). */
 @Slf4j
 @Component
 @ConditionalOnProperty(name = "app.notifications.email.enabled", havingValue = "true")
+@ConditionalOnProperty(name = "app.notifications.email.provider", havingValue = "smtp", matchIfMissing = true)
 @RequiredArgsConstructor
 class EmailNotificationSender implements NotificationSender {
 
