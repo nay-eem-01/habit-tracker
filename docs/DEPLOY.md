@@ -148,7 +148,7 @@ Rules:
 
    The image already sets `SPRING_PROFILES_ACTIVE=prod`. Don't add `JAVA_TOOL_OPTIONS`: it isn't needed,
    and the image's `-XX:MaxRAMPercentage=75` would override it anyway.
-3. First deploy: the log should show `Successfully applied 18 migrations` and `Started`.
+3. First deploy: the log should show `Successfully applied 19 migrations` and `Started`.
    `https://averyday-api.onrender.com/actuator/health` shows `{"status":"UP"}`.
 
 ## 5. Vercel (web app, `habit-tracker_web`)
