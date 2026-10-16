@@ -55,6 +55,9 @@ then integrations (Phase 11), a domain, Oracle or a paid host (files back on).
   `JWT_SECRET` (≥ 32 bytes), optional `DB_URL`. Real environment variables override it.
 - Tests need Docker (Testcontainers). After switching between far-apart branches: `./mvnw clean test`.
 - Local email: Mailpit in Docker with `MAIL_SMTP_AUTH=false`.
+- Resend (the beta's mail, over HTTPS): `APP_NOTIFICATIONS_EMAIL_ENABLED=true`,
+  `APP_NOTIFICATIONS_EMAIL_PROVIDER=resend`, `RESEND_API_KEY`, `APP_NOTIFICATIONS_EMAIL_FROM=onboarding@resend.dev`
+  (sandbox: delivers only to the Resend account's own address until a domain is verified).
 - Real email, free (Brevo, 300/day): sign up at brevo.com → add and verify the sender address →
   SMTP & API → create an SMTP key. Then set `APP_NOTIFICATIONS_EMAIL_ENABLED=true`,
   `SPRING_MAIL_HOST=smtp-relay.brevo.com`, `SPRING_MAIL_PORT=587`, `SPRING_MAIL_USERNAME=<Brevo SMTP
@@ -68,6 +71,8 @@ then integrations (Phase 11), a domain, Oracle or a paid host (files back on).
 - Only a SQLSTATE 23505 means "email taken"; other integrity errors are real faults.
 - Jackson 3 writes `HttpStatus` as `"404 NOT_FOUND"`; the envelope stores the enum name.
 - SMTP with auth on and no username fails every send (`MAIL_SMTP_AUTH=false` for Mailpit).
+- Render's free tier blocks outbound SMTP (25/465/587) since 2025-09: Gmail/Brevo SMTP time out
+  there. Hence the Resend HTTPS sender.
 - Refresh-token reuse is only a *rotated* token presented again; otherwise a password change signed
   out the session it was made in.
 
@@ -80,6 +85,10 @@ disk is wiped on every deploy. The server re-encodes every upload (centre square
 which drops metadata such as a photo's location, and decodes with subsampling so a huge picture can't
 fill the 512 MB heap. `users.avatar_updated_at` is in `UserResponse`, so loading a user never loads the
 image. Not done yet: filling it from the Google photo at sign-in.
+**2026-10-16** — Resend email sender: `app.notifications.email.provider=resend` sends account mail over
+Resend's HTTPS API (`smtp` stays the default). Render free blocks SMTP ports, so DEPLOY.md's Gmail plan
+couldn't have worked. No domain yet, so the sender is `onboarding@resend.dev`, which only reaches the
+Resend account's own address: testers get no verification or reset mail until a domain is verified.
 
 **2026-10-13** — Beta deploy plan, `docs/DEPLOY.md`: the app is **AveryDay** (default display name).
 No card, so no Oracle or VPS: Vercel (web, proxies `/api`) + Render free (API, kept awake by UptimeRobot)
