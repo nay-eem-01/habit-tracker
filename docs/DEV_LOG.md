@@ -31,6 +31,13 @@ then integrations (Phase 11), a domain, Oracle or a paid host (files back on).
 - Habits: `unit` field; `kind` QUIT on create (daily, no reminder; check-in = "I slipped"); delete
   (`DELETE /api/habits/{id}`); rest day (`POST/DELETE /api/habits/{id}/rest`) showing `restCostXp` and the
   level's `xpBalance`; today list has `resting` and `kind`.
+- Profile picture (8.6): `PUT /api/me/avatar` (multipart `file`, JPEG/PNG/GIF ≤ 5 MB; crop square and
+  shrink in the browser first, since phone rotation lives in EXIF and is dropped), `GET` it with the
+  bearer token as a blob keyed by `user.avatarUpdatedAt` (null = show initials), `DELETE` to remove.
+  WebP is refused (`USER_AVATAR_INVALID`, 415): export JPEG from the canvas.
+- Goal page, "link a habit": a "+ New habit" button next to the picker, always shown (not only when
+  there are no habits). It opens `/habits/new?goal={id}`; after the habit is created the form calls
+  the existing link endpoint with the target days and returns to `/goals/{id}`. Backend unchanged.
 - Errors to handle: `RATE_LIMITED` (429, `Retry-After`), `PLAN_LIMIT_REACHED` (403),
   `FILE_UPLOADS_DISABLED` (hide uploads), `XP_NOT_ENOUGH`, `REST_LIMIT_REACHED`.
 
@@ -73,6 +80,11 @@ then integrations (Phase 11), a domain, Oracle or a paid host (files back on).
 
 ## Log
 
+**2026-10-16** — 8.6 profile picture. Stored in Postgres (`user_avatars`, V19), not on disk: Render's
+disk is wiped on every deploy. The server re-encodes every upload (centre square, ≤ 256 px, JPEG 0.85),
+which drops metadata such as a photo's location, and decodes with subsampling so a huge picture can't
+fill the 512 MB heap. `users.avatar_updated_at` is in `UserResponse`, so loading a user never loads the
+image. Not done yet: filling it from the Google photo at sign-in.
 **2026-10-16** — Resend email sender: `app.notifications.email.provider=resend` sends account mail over
 Resend's HTTPS API (`smtp` stays the default). Render free blocks SMTP ports, so DEPLOY.md's Gmail plan
 couldn't have worked. No domain yet, so the sender is `onboarding@resend.dev`, which only reaches the

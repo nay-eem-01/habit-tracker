@@ -18,7 +18,7 @@ import static org.mockito.Mockito.when;
 class UserServiceTest {
 
     private final UserRepository repository = mock(UserRepository.class);
-    private final UserService service = new UserService(repository, Clock.systemUTC());
+    private final UserService service = new UserService(repository, mock(UserAvatarRepository.class), Clock.systemUTC());
 
     private static DataIntegrityViolationException violation(String sqlState) {
         return new DataIntegrityViolationException("constraint", new SQLException("failed", sqlState));

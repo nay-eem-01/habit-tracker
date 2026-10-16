@@ -39,6 +39,9 @@ public enum ErrorCode {
     USER_EMAIL_TAKEN(HttpStatus.CONFLICT, "An account with this email already exists"),
     USER_NOT_FOUND(HttpStatus.NOT_FOUND, "User not found"),
     USER_INVALID_TIMEZONE(HttpStatus.BAD_REQUEST, "Unknown timezone"),
+    USER_AVATAR_INVALID(HttpStatus.UNSUPPORTED_MEDIA_TYPE, "Use a JPEG, PNG or GIF picture"),
+    USER_AVATAR_TOO_LARGE(HttpStatus.CONTENT_TOO_LARGE, "The picture is too large; the limit is 5 MB"),
+    USER_AVATAR_NOT_FOUND(HttpStatus.NOT_FOUND, "No profile picture"),
 
     ADMIN_TARGET_IS_ADMIN(HttpStatus.CONFLICT, "Admins can't be suspended or deleted"),
 

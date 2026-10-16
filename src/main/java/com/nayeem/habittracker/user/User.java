@@ -58,6 +58,9 @@ public class User extends AuditModel {
     @Column(nullable = false)
     private boolean marketingEmails;
 
+    /** When the profile picture last changed; null when there is none. The image is in {@link UserAvatar}. */
+    private Instant avatarUpdatedAt;
+
     /** IANA zone id, e.g. {@code Asia/Dhaka}. Decides what "today" is for check-ins (PLAN.md §8 Q4). */
     @Column(nullable = false, length = 64)
     private String timezone = UserService.DEFAULT_TIMEZONE;
