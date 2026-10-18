@@ -19,11 +19,23 @@ public class NotificationProperties {
     public static class Email {
         /** Off: reminders are only logged. On: sent by {@link #provider}. */
         private boolean enabled;
-        /** {@code smtp} (needs {@code spring.mail.host}) or {@code resend} (HTTPS API, needs {@link #resend}). */
+        /**
+         * {@code smtp} (needs {@code spring.mail.host}), or an HTTPS API: {@code brevo} (needs {@link #brevo})
+         * or {@code resend} (needs {@link #resend}).
+         */
         private String provider = "smtp";
         /** The From address. */
         private String from;
+        private final Brevo brevo = new Brevo();
         private final Resend resend = new Resend();
+    }
+
+    @Getter
+    @Setter
+    public static class Brevo {
+        /** Secret. */
+        private String apiKey;
+        private String url = "https://api.brevo.com/v3/smtp/email";
     }
 
     @Getter
