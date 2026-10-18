@@ -55,14 +55,14 @@ then integrations (Phase 11), a domain, Oracle or a paid host (files back on).
   `JWT_SECRET` (≥ 32 bytes), optional `DB_URL`. Real environment variables override it.
 - Tests need Docker (Testcontainers). After switching between far-apart branches: `./mvnw clean test`.
 - Local email: Mailpit in Docker with `MAIL_SMTP_AUTH=false`.
-- Resend (the beta's mail, over HTTPS): `APP_NOTIFICATIONS_EMAIL_ENABLED=true`,
-  `APP_NOTIFICATIONS_EMAIL_PROVIDER=resend`, `RESEND_API_KEY`, `APP_NOTIFICATIONS_EMAIL_FROM=onboarding@resend.dev`
-  (sandbox: delivers only to the Resend account's own address until a domain is verified).
-- Real email, free (Brevo, 300/day): sign up at brevo.com → add and verify the sender address →
-  SMTP & API → create an SMTP key. Then set `APP_NOTIFICATIONS_EMAIL_ENABLED=true`,
-  `SPRING_MAIL_HOST=smtp-relay.brevo.com`, `SPRING_MAIL_PORT=587`, `SPRING_MAIL_USERNAME=<Brevo SMTP
-  login>`, `SPRING_MAIL_PASSWORD=<SMTP key>`, `APP_NOTIFICATIONS_EMAIL_FROM=<verified sender>`. Once
-  there is a domain, authenticate it in Brevo (SPF, DKIM, DMARC) so mail doesn't land in spam.
+- Brevo (the beta's mail, over HTTPS, 300/day, reaches anyone): brevo.com → Senders → add and verify
+  `averydayhabits@gmail.com` → SMTP & API → API Keys → create one. Then `APP_NOTIFICATIONS_EMAIL_ENABLED=true`,
+  `APP_NOTIFICATIONS_EMAIL_PROVIDER=brevo`, `BREVO_API_KEY`,
+  `APP_NOTIFICATIONS_EMAIL_FROM=AveryDay <averydayhabits@gmail.com>`. Once there is a domain, authenticate
+  it in Brevo (SPF, DKIM, DMARC) so mail doesn't land in spam.
+- Resend (kept for when there's a domain): `APP_NOTIFICATIONS_EMAIL_PROVIDER=resend`, `RESEND_API_KEY`,
+  `APP_NOTIFICATIONS_EMAIL_FROM=onboarding@resend.dev` (sandbox: delivers only to the Resend account's
+  own address until a domain is verified).
 
 ## Gotchas worth remembering
 
@@ -72,7 +72,7 @@ then integrations (Phase 11), a domain, Oracle or a paid host (files back on).
 - Jackson 3 writes `HttpStatus` as `"404 NOT_FOUND"`; the envelope stores the enum name.
 - SMTP with auth on and no username fails every send (`MAIL_SMTP_AUTH=false` for Mailpit).
 - Render's free tier blocks outbound SMTP (25/465/587) since 2025-09: Gmail/Brevo SMTP time out
-  there. Hence the Resend HTTPS sender.
+  there. Hence the HTTPS senders (Brevo, Resend).
 - Refresh-token reuse is only a *rotated* token presented again; otherwise a password change signed
   out the session it was made in.
 
@@ -80,6 +80,11 @@ then integrations (Phase 11), a domain, Oracle or a paid host (files back on).
 
 ## Log
 
+**2026-10-18** — Brevo email sender: `app.notifications.email.provider=brevo` sends account mail over
+Brevo's HTTPS API. Resend's sandbox only reached our own inbox, and Gmail SMTP is blocked on Render free,
+so the beta uses Brevo with the verified sender `averydayhabits@gmail.com`: it reaches every tester.
+Mail from a gmail.com address sent through Brevo may land in spam until there's a domain; then switch
+back to Resend (or authenticate the domain in Brevo).
 **2026-10-16** — 8.6 profile picture. Stored in Postgres (`user_avatars`, V19), not on disk: Render's
 disk is wiped on every deploy. The server re-encodes every upload (centre square, ≤ 256 px, JPEG 0.85),
 which drops metadata such as a photo's location, and decodes with subsampling so a huge picture can't
